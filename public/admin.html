@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin - Home Service HP</title>
+    <title>Panel Admin - Home Service</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -131,7 +131,7 @@
 
 <div id="mainPanelWrapper">
     <header>
-        <div class="logo">⚙️ Panel Admin Servis HP</div>
+        <div class="logo">⚙️ Panel Admin Servis</div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
             <!-- TAMBAHAN: TOMBOL DARK MODE -->
             <button onclick="toggleDarkModeAdmin()" class="btn" style="background:rgba(255,255,255,0.2);"><i class="bi bi-moon-fill" id="iconDarkAdmin"></i></button>
@@ -181,7 +181,7 @@
                 <tr>
                     <th>Kode</th>
                     <th>Nama</th>
-                    <th>HP</th>
+                    <th>Perangkat</th>
                     <th>Status DP</th>
                     <th>Tanggal Jadwal</th>
                     <th>Status Kerja</th>
@@ -220,10 +220,10 @@
 
                     <div id="wrapperPenjadwalan">
                         <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">📅 Langkah 2: Atur Penjadwalan Teknisi</h4>
-                        <label>Lokasi Perbaikan HP:</label>
+                        <label>Lokasi Perbaikan:</label>
                         <select id="lokasiServis">
                             <option value="home_service">Service di Rumah Pelanggan (On-Site)</option>
-                            <option value="workshop">HP Dibawa oleh Teknisi (Ke Workshop)</option>
+                            <option value="workshop">Barang Dibawa oleh Teknisi (Ke Workshop)</option>
                         </select>
 
                         <label>Status Progres Kerja</label>
@@ -259,7 +259,7 @@
                             
                             <div id="subFormTambahan" style="display:none; margin-top:0.5rem;">
                                 <label>Komponen / Kendala Baru</label>
-                                <input type="text" id="infoTambahan" placeholder="Contoh: IC Power Lemah">
+                                <input type="text" id="infoTambahan" placeholder="Contoh: IC Power Lemah / Motor Kipas Mati">
                                 <label>Harga Tambahan Part/Jasa (Rp)</label>
                                 <input type="number" id="biayaTambahan" placeholder="0" oninput="hitungTotal()">
                                 <p style="font-size:0.85rem; margin-top:0.3rem;">Status Persetujuan User: <strong id="txtResponPelanggan" style="color:#2563eb;">PENDING</strong></p>
@@ -325,11 +325,12 @@ let chartInstance = null; // Tambahan state Chart.js
 // --- INISIALISASI WEBSOCKET ADMIN ---
 const socket = io(window.location.origin);
 
-socketAdmin.on("updateDashboardAdmin", () => {
+// PERBAIKAN: Mengubah "socketAdmin" menjadi "socket" agar sesuai dengan inisialisasi di atas
+socket.on("updateDashboardAdmin", () => {
     muatData(); // Update data instan tanpa delay 4 detik
 });
 
-socketAdmin.on("chatBaruDiterima", (kodeChat) => {
+socket.on("chatBaruDiterima", (kodeChat) => {
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
 });
 // ------------------------------------
