@@ -179,13 +179,22 @@
         }
         @keyframes chatSlide { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .chat-widget.minimized {width: auto; border-radius: 30px;}
+        /* FITUR BARU: BENTUK MINIMIZE MENJADI ICON BULAT SEPERTI WIDGET PROFESIONAL */
+        .chat-widget.minimized {
+            width: 65px; height: 65px; border-radius: 50%; border: none; cursor: pointer;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; }
+        .chat-widget.minimized .chat-header-left span, .chat-widget.minimized .chat-toggle-btn { display: none; }
+        .chat-widget.minimized .chat-header-left i { font-size: 2rem; margin: 0; color: white; display: flex; align-items: center; justify-content: center; width:100%; height:100%; }
         .chat-widget.minimized .chat-messages,
         .chat-widget.minimized .chat-input-row {display: none !important;}
-        .chat-widget.minimized .chat-header {padding: 0.8rem 1.2rem; cursor: pointer; border-radius: 30px;}
+        /* ------------------------------------------------------------------------- */
 
-        .chat-header {background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;}
-        .chat-header-left { display: flex; align-items: center; gap: 0.5rem; }
+        .chat-header {background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; cursor:pointer;}
+        .chat-header-left { display: flex; align-items: center; gap: 0.5rem; width:100%; }
         .chat-toggle-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; padding: 0 0.2rem; display: flex; align-items: center; transition: transform 0.2rem;}
         .chat-toggle-btn:hover { color: #38bdf8; }
 
@@ -209,6 +218,7 @@
         body.dark-mode .kategori-card { background: #0f172a; border-color: #334155; }
         body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
         body.dark-mode optgroup { background: #0f172a; color: #0ea5e9;}
+        body.dark-mode .review-card { background: #1e293b; color: #f8fafc; border-color: #334155; }
         
         .hero-section { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 4rem 2rem; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); margin-bottom: 2rem;}
         .hero-section h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;}
@@ -221,6 +231,11 @@
         .rating-stars { display: flex; gap: 8px; justify-content: center; font-size: 2rem; margin: 1rem 0; cursor: pointer;}
         .rating-stars i { color: #cbd5e1; transition: 0.2s; }
         .rating-stars i:hover, .rating-stars i.active { color: #f59e0b; }
+
+        /* FITUR BARU: CSS UNTUK KARTU ULASAN PUBLIK */
+        .reviews-container { display:flex; gap:1.2rem; overflow-x:auto; padding:1rem 0; scroll-snap-type: x mandatory; scrollbar-width: none;}
+        .review-card { min-width:280px; background:white; padding:1.2rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.04); scroll-snap-align: start; border: 1px solid #e2e8f0;}
+        /* ------------------------------------------- */
     </style>
 </head>
 <body>
@@ -238,6 +253,13 @@
     <h1>Servis HP & Elektronik Bergaransi</h1>
     <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari smartphone Anda.</p>
 </div>
+
+<!-- FITUR BARU: BAGIAN TAMPILAN ULASAN PUBLIK (Di bawah Hero Section) -->
+<div class="container" id="publicReviewsSection" style="margin-top:-1rem; margin-bottom:2.5rem; display:none;">
+    <h3 style="text-align:center; font-size:1.2rem; margin-bottom:0;"><i class="bi bi-chat-heart-fill" style="color:#ef4444;"></i> Ulasan Pelanggan Kami</h3>
+    <div class="reviews-container" id="reviewList"></div>
+</div>
+<!-- ----------------------------------------------------------------- -->
 
 <div class="container">
     <div class="progress-container">
@@ -260,20 +282,21 @@
             <!-- KARTU SMARTPHONE -->
             <div class="kategori-card hp">
                 <h4><i class="bi bi-phone-vibrate"></i> Layanan Smartphone</h4>
-                <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()"> Pembersihan Dalam (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
+                <!-- FITUR BARU: Tambahkan onchange="updateBrandOptions()" dan simpanDraft() -->
+                <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan Dalam (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
             </div>
             
             <!-- KARTU ELEKTRONIK -->
             <div class="kategori-card elektronik">
                 <h4><i class="bi bi-plug"></i> Elektronik Rumah Tangga</h4>
-                <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()"> Servis Rice Cooker / Magic Com</label><span class="harga">Mulai Rp 50rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker / Magic Com</label><span class="harga">Mulai Rp 50rb</span></div>
+                <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
             </div>
         </div>
 
@@ -285,22 +308,23 @@
     <div class="content-box" id="step-2">
         <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi Perangkat</h3>
         
+        <!-- FITUR BARU: Tambahkan oninput="simpanDraft()" ke setiap input -->
         <label>Nama Lengkap <span style="color:red;">*</span></label>
-        <input type="text" id="nama" placeholder="Contoh: Budi Santoso">
+        <input type="text" id="nama" placeholder="Contoh: Budi Santoso" oninput="simpanDraft()">
         <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
         
         <label>Nomor WhatsApp <span style="color:red;">*</span></label>
-        <input type="tel" id="wa" placeholder="0812xxxxxxx">
+        <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
         <div class="error-text" id="errWa">Nomor WhatsApp wajib diisi!</div>
         
         <label>Alamat Lengkap</label>
-        <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan"></textarea>
+        <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
         
         <label>Merek Perangkat <span style="color:red;">*</span></label>
-        <!-- IMPLEMENTASI UI OPTGROUP UNTUK MEREK -->
+        <!-- IMPLEMENTASI UI OPTGROUP UNTUK MEREK DENGAN ID UNTUK FILTER DINAMIS -->
         <select id="merek" onchange="toggleMerekLainnya()">
             <option value="">-- Silakan Pilih Kategori Merek --</option>
-            <optgroup label="📱 Kategori Smartphone">
+            <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
                 <option value="Samsung">Samsung</option>
                 <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
                 <option value="OPPO">OPPO / Realme</option>
@@ -309,7 +333,7 @@
                 <option value="Infinix">Infinix / Tecno</option>
                 <option value="Asus">Asus / ROG</option>
             </optgroup>
-            <optgroup label="🔌 Kategori Elektronik">
+            <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
                 <option value="Miyako">Miyako</option>
                 <option value="Cosmos">Cosmos</option>
                 <option value="Maspion">Maspion</option>
@@ -323,16 +347,16 @@
                 <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
             </optgroup>
         </select>
-        <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;">
+        <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
         <div class="error-text" id="errMerek">Pilih salah satu merek perangkat!</div>
         <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
         
         <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-        <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Rice Cooker CRJ-3301">
+        <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Rice Cooker CRJ-3301" oninput="simpanDraft()">
         <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
         
         <label>Kerusakan / Keluhan</label>
-        <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)"></textarea>
+        <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
 
         <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
         <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
@@ -522,8 +546,8 @@
         </div>
     </div>
 
-    <!-- FLOATING CHAT WIDGET DENGAN TAMPILAN PREMIUM -->
-    <div class="chat-widget" id="chatWidgetPelanggan">
+    <!-- FLOATING CHAT WIDGET DENGAN TAMPILAN PREMIUM (DIUBAH MENJADI ICON BULAT KETIKA MINIMIZED) -->
+    <div class="chat-widget minimized" id="chatWidgetPelanggan">
         <div class="chat-header" onclick="toggleChatWidget()">
             <div class="chat-header-left">
                 <i class="bi bi-chat-dots-fill"></i> 
@@ -581,6 +605,81 @@ socket.on("chatBaruDiterima", (kodeChat) => {
     if(kodeChat === kodeSaya) muatLogPesan();
 });
 
+// FITUR BARU: AUTO SAVE & RESTORE DRAFT
+function simpanDraft() {
+    if(currentStep > 2 || kodeSaya) return; // Hanya simpan saat mengisi form awal
+    const layananChecked = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.id);
+    const draft = {
+        step: currentStep, layanan: layananChecked,
+        nama: document.getElementById("nama").value, wa: document.getElementById("wa").value,
+        alamat: document.getElementById("alamat").value, merek: document.getElementById("merek").value,
+        merekLainnya: document.getElementById("merekLainnya").value,
+        tipe: document.getElementById("tipe").value, kerusakan: document.getElementById("kerusakan").value
+    };
+    localStorage.setItem("draftFormServis", JSON.stringify(draft));
+}
+
+function restoreDraft() {
+    const draft = localStorage.getItem("draftFormServis");
+    if(draft && !kodeSaya) {
+        try {
+            const data = JSON.parse(draft);
+            currentStep = data.step || 1;
+            document.getElementById("nama").value = data.nama || "";
+            document.getElementById("wa").value = data.wa || "";
+            document.getElementById("alamat").value = data.alamat || "";
+            document.getElementById("merek").value = data.merek || "";
+            document.getElementById("merekLainnya").value = data.merekLainnya || "";
+            document.getElementById("tipe").value = data.tipe || "";
+            document.getElementById("kerusakan").value = data.kerusakan || "";
+            
+            data.layanan.forEach(id => { const cb = document.getElementById(id); if(cb) cb.checked = true; });
+            updateBrandOptions();
+            toggleMerekLainnya();
+        } catch(e){}
+    }
+}
+
+// FITUR BARU: FILTER MEREK DINAMIS BERDASARKAN KATEGORI LAYANAN
+function updateBrandOptions() {
+    const isHP = Array.from(document.querySelectorAll('.kategori-card.hp input[type="checkbox"]')).some(cb => cb.checked);
+    const isElek = Array.from(document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]')).some(cb => cb.checked);
+    
+    const optHP = document.getElementById("optgroup-hp");
+    const optElek = document.getElementById("optgroup-elektronik");
+    const merekSelect = document.getElementById("merek");
+    
+    if (optHP) { optHP.style.display = isHP || (!isHP && !isElek) ? "block" : "none"; optHP.disabled = !(isHP || (!isHP && !isElek)); }
+    if (optElek) { optElek.style.display = isElek || (!isHP && !isElek) ? "block" : "none"; optElek.disabled = !(isElek || (!isHP && !isElek)); }
+    
+    // Reset selection if the currently selected option becomes disabled
+    if (merekSelect.selectedOptions[0] && merekSelect.selectedOptions[0].parentElement.disabled) {
+        merekSelect.value = "";
+    }
+}
+
+// FITUR BARU: MUAT ULASAN PUBLIK
+function muatUlasanPublik() {
+    fetch(`${API_URL}/reviews`)
+    .then(res => res.json())
+    .then(data => {
+        if(data.length > 0) {
+            document.getElementById("publicReviewsSection").style.display = "block";
+            const list = document.getElementById("reviewList");
+            list.innerHTML = "";
+            data.forEach(rev => {
+                let stars = "";
+                for(let i=0; i<5; i++) stars += i < rev.rating ? '<i class="bi bi-star-fill" style="color:#f59e0b;"></i>' : '<i class="bi bi-star" style="color:#cbd5e1;"></i>';
+                list.innerHTML += `<div class="review-card">
+                    <p style="font-weight:bold; font-size:0.9rem; margin-bottom:3px;">${rev.nama} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">- ${rev.merek} ${rev.tipe}</span></p>
+                    <div style="font-size:0.8rem; margin-bottom:8px;">${stars}</div>
+                    <p style="font-size:0.85rem; font-style:italic;">"${rev.ulasan}"</p>
+                </div>`;
+            });
+        }
+    });
+}
+
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const icon = document.getElementById('iconDark');
@@ -605,12 +704,15 @@ document.addEventListener("DOMContentLoaded", () => {
     kodeSaya = localStorage.getItem("kodeAktifPelanggan") || "";
     if(kodeSaya) {
         document.getElementById("heroLandingPage").style.display = "none";
+        document.getElementById("publicReviewsSection").style.display = "none";
         cekStatus();
         aktifkanSistemChat();
     } else {
+        restoreDraft();
         updateProgress();
         showContent();
         pasangListenerValidasiRealTime();
+        muatUlasanPublik();
     }
 
     document.querySelectorAll('#starContainer i').forEach(star => {
@@ -634,6 +736,7 @@ function nextStep() {
     } else {
         if (currentStep < 7) {
             currentStep++;
+            simpanDraft();
             updateProgress();
             showContent();
         }
@@ -643,6 +746,7 @@ function nextStep() {
 function prevStep() {
     if (currentStep > 1) {
         currentStep--;
+        simpanDraft();
         updateProgress();
         showContent();
     }
@@ -659,6 +763,7 @@ function toggleMerekLainnya() {
         validasiInputRealTime(inputLainnya, 'errMerekLainnya'); 
     }
     validasiInputRealTime(select, 'errMerek');
+    simpanDraft();
 }
 
 function validasiInputRealTime(element, errId) {
@@ -675,16 +780,17 @@ function validasiInputRealTime(element, errId) {
 }
 
 function pasangListenerValidasiRealTime() {
-    document.getElementById('nama').addEventListener('input', function() { validasiInputRealTime(this, 'errNama'); });
+    document.getElementById('nama').addEventListener('input', function() { validasiInputRealTime(this, 'errNama'); simpanDraft(); });
     document.getElementById('wa').addEventListener('input', function() { 
         if(this.value.startsWith('0')) {
             this.value = '62' + this.value.substring(1);
         }
         validasiInputRealTime(this, 'errWa'); 
+        simpanDraft();
     });
     document.getElementById('merek').addEventListener('change', function() { validasiInputRealTime(this, 'errMerek'); });
-    document.getElementById('tipe').addEventListener('input', function() { validasiInputRealTime(this, 'errTipe'); });
-    document.getElementById('merekLainnya').addEventListener('input', function() { validasiInputRealTime(this, 'errMerekLainnya'); });
+    document.getElementById('tipe').addEventListener('input', function() { validasiInputRealTime(this, 'errTipe'); simpanDraft();});
+    document.getElementById('merekLainnya').addEventListener('input', function() { validasiInputRealTime(this, 'errMerekLainnya'); simpanDraft();});
 }
 
 function tampilPratinjau() {
@@ -781,7 +887,9 @@ function kirimPesanan() {
     })
     .then(() => {
         localStorage.setItem("kodeAktifPelanggan", kodeSaya);
+        localStorage.removeItem("draftFormServis"); // Hapus draft karena pesanan sudah sukses
         document.getElementById("heroLandingPage").style.display = "none";
+        document.getElementById("publicReviewsSection").style.display = "none";
         document.getElementById("kodePesananDP").textContent = kodeSaya;
         document.getElementById("kodePesanan").textContent = kodeSaya;
         document.getElementById("txtChatKode").textContent = kodeSaya;
@@ -909,6 +1017,7 @@ function tanyaKodeLacak() {
                 kodeSaya = data.kode;
                 localStorage.setItem("kodeAktifPelanggan", kodeSaya);
                 document.getElementById("heroLandingPage").style.display = "none";
+                document.getElementById("publicReviewsSection").style.display = "none";
                 document.getElementById("kodePesananDP").textContent = kodeSaya;
                 document.getElementById("kodePesanan").textContent = kodeSaya;
                 document.getElementById("txtChatKode").textContent = kodeSaya;
@@ -1148,7 +1257,7 @@ function kembaliKeAwal() {
 
 function aktifkanSistemChat() {
     const widget = document.getElementById("chatWidgetPelanggan");
-    if(widget) widget.style.display = "block";
+    if(widget) widget.style.display = "flex";
     muatLogPesan();
 }
 
