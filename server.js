@@ -33,7 +33,7 @@ mongoose.connect(MONGO_URI)
 
 // --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
-    kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String,
+    kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String, // Ditambahkan field layanan
     status: { type: String, default: "baru" },
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     teknisi: String, jadwal: String, lokasiServis: String,
@@ -157,6 +157,23 @@ app.get('/api/chats/:kode', async (req, res) => {
         res.json(logChat);
     } catch (error) { res.status(500).json({ error: "Gagal memuat chat" }); }
 });
+
+// --- FITUR BARU: ROUTE API UNTUK RATING & ULASAN ---
+app.post('/api/orders/:kode/rating', async (req, res) => {
+    try {
+        const { rating, ulasan } = req.body;
+        await Order.findOneAndUpdate({ kode: req.params.kode }, { $set: { rating, ulasan } });
+        res.json({ message: "Rating berhasil disimpan" });
+    } catch (error) { res.status(500).json({ error: "Gagal simpan rating" }); }
+});
+
+app.get('/api/reviews', async (req, res) => {
+    try {
+        const reviews = await Order.find({ rating: { $gt: 0 } }).select('nama rating ulasan merek tipe').limit(15).sort({ _id: -1 });
+        res.json(reviews);
+    } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
+});
+// ---------------------------------------------------
 
 // --- ROUTE FRONTEND (FALLBACK) ---
 app.get('*', (req, res) => {
