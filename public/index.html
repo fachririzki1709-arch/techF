@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servis HP Online</title>
+    <title>Servis HP & Elektronik Online</title>
     <!-- Import Font Premium & Ikon Modern -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,10 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
     
-    <!-- PERBAIKAN: Import SweetAlert2 yang sebelumnya hilang -->
+    <!-- Import SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- TAMBAHAN IMPORT SOCKET.IO UNTUK REAL-TIME NOTIF -->
+    <!-- IMPORT SOCKET.IO UNTUK REAL-TIME NOTIF -->
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     
     <style>
@@ -209,7 +209,7 @@
 <body>
 
 <header>
-    <div class="logo"><i class="bi bi-phone-vibrate"></i> Servis HP Online</div>
+    <div class="logo"><i class="bi bi-phone-vibrate"></i> Servis HP & Elektronik Online</div>
     <nav style="display:flex; align-items:center;">
         <!-- TOMBOL DARK MODE -->
         <button onclick="toggleDarkMode()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
@@ -220,7 +220,7 @@
 
 <!-- TAMBAHAN: HERO LANDING PAGE -->
 <div class="hero-section" id="heroLandingPage">
-    <h1>Servis HP Cepat, Aman & Bergaransi</h1>
+    <h1>Servis HP & Elektronik Bergaransi</h1>
     <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari smartphone Anda.</p>
 </div>
 <!-- ----------------------------- -->
@@ -228,7 +228,7 @@
 <div class="container">
     <div class="progress-container">
         <div class="step-item active" data-step="1"><div class="step-number">1</div><div class="step-text">Layanan</div></div>
-        <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data & HP</div></div>
+        <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data Diri</div></div>
         <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Bayar DP</div></div>
         <div class="step-item" data-step="4"><div class="step-number">4</div><div class="step-text">Jadwal</div></div>
         <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Proses</div></div>
@@ -239,22 +239,31 @@
     <!-- STEP 1: LAYANAN -->
     <div class="content-box active" id="step-1">
         <h2>Selamat Datang</h2>
-        <p>Layanan servis HP panggilan di seluruh wilayah Cianjur dan sekitarnya.</p>
+        <p>Layanan servis panggilan di seluruh wilayah Cianjur dan sekitarnya.</p>
         <div class="info catatan"><i class="bi bi-geo-alt-fill"></i> <span><strong>Wilayah Layanan:</strong> Kota Cianjur & Kabupaten sekitar</span></div>
 
         <h3>Pilih Layanan & Estimasi Harga:</h3>
-        <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()"> Ganti Layar</label><span class="harga">Rp 350rb - 900rb</span></div>
-        <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()"> Ganti Baterai</label><span class="harga">Rp 150rb - 650rb</span></div>
-        <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()"> Perbaikan Sistem</label><span class="harga">Rp 100rb - 300rb</span></div>
-        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()"> Pembersihan Dalam</label><span class="harga">Rp 80rb - 200rb</span></div>
-        <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()"> Flexible dan Charger</label><span class="harga">Rp 80rb - 200rb</span></div>
-        <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Harga final akan ditentukan setelah pengecekan teknisi.</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()"> Servis HP: Ganti Layar</label><span class="harga">Rp 350rb - 900rb</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()"> Servis HP: Ganti Baterai</label><span class="harga">Rp 150rb - 650rb</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()"> Servis HP: Perbaikan Sistem</label><span class="harga">Rp 100rb - 300rb</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()"> Servis HP: Pembersihan Dalam</label><span class="harga">Rp 80rb - 200rb</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()"> Servis HP: Flexible dan Charger</label><span class="harga">Rp 80rb - 200rb</span></div>
+        
+        <!-- TAMBAHAN LAYANAN ALAT ELEKTRONIK -->
+        <h3 style="margin-top: 1.5rem; font-size: 1.1rem; color: #0f172a;">Layanan Elektronik Rumah Tangga:</h3>
+        <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()"> Servis Dispenser</label><span class="harga">Rp 50rb - 150rb</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()"> Servis Blender</label><span class="harga">Rp 40rb - 100rb</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()"> Servis Rice Cooker</label><span class="harga">Rp 50rb - 150rb</span></div>
+        <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()"> Servis Kipas Angin</label><span class="harga">Rp 40rb - 120rb</span></div>
+        <!-- --------------------------------- -->
+
+        <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
         <button class="btn btn-primary" onclick="nextStep()">Lanjutkan <i class="bi bi-arrow-right"></i></button>
     </div>
 
-    <!-- STEP 2: DATA DIRI & HP -->
+    <!-- STEP 2: DATA DIRI & PERANGKAT -->
     <div class="content-box" id="step-2">
-        <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi HP</h3>
+        <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi Perangkat</h3>
         
         <label>Nama Lengkap <span style="color:red;">*</span></label>
         <input type="text" id="nama" placeholder="Contoh: Budi Santoso">
@@ -267,7 +276,7 @@
         <label>Alamat Lengkap</label>
         <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan"></textarea>
         
-        <label>Merek HP <span style="color:red;">*</span></label>
+        <label>Merek Perangkat (HP / Elektronik) <span style="color:red;">*</span></label>
         <select id="merek" onchange="toggleMerekLainnya()">
             <option value="">-- Pilih Merek --</option>
             <option value="Samsung">Samsung</option>
@@ -277,20 +286,24 @@
             <option value="iPhone">iPhone</option>
             <option value="Infinix">Infinix</option>
             <option value="Asus">Asus / ROG</option>
+            <option value="Miyako">Miyako</option>
+            <option value="Cosmos">Cosmos</option>
+            <option value="Maspion">Maspion</option>
+            <option value="Philips">Philips</option>
             <option value="Lainnya">Lainnya</option>
         </select>
         <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;">
-        <div class="error-text" id="errMerek">Pilih salah satu merek HP!</div>
-        <div class="error-text" id="errMerekLainnya">Ketikkan merek HP Anda!</div>
+        <div class="error-text" id="errMerek">Pilih salah satu merek perangkat!</div>
+        <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
         
-        <label>Tipe HP <span style="color:red;">*</span></label>
-        <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Redmi Note 13 Pro / iPhone 11">
-        <div class="error-text" id="errTipe">Tipe HP wajib diisi!</div>
+        <label>Tipe Perangkat <span style="color:red;">*</span></label>
+        <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Rice Cooker CRJ-3301">
+        <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
         
         <label>Kerusakan / Keluhan</label>
         <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi"></textarea>
 
-        <label>Unggah Kondisi HP (Gambar/Video)</label>
+        <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
         <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
         <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file: 5MB</p>
         <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
@@ -349,13 +362,13 @@
         <div class="jadwal-box" id="tampilJadwal" style="display:none;">
             <p><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
             <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
-            <p><strong>Lokasi Perbaikan HP:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
+            <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
             
             <!-- TAMBAHAN: FITUR ETA KEDATANGAN TEKNISI -->
             <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
             <!-- ---------------------------------------- -->
             
-            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan HP siap sedia pada waktu yang tertera.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
         </div>
     </div>
 
@@ -389,7 +402,7 @@
             </div>
 
             <div style="margin-top:1.5rem;">
-                <h4 style="font-size: 1rem;">Kondisi HP Awal:</h4>
+                <h4 style="font-size: 1rem;">Kondisi Perangkat Awal:</h4>
                 <div class="pratinjau data-dinamis" id="tampilKondisiHP">Belum tersedia</div>
             </div>
         </div>
@@ -445,7 +458,7 @@
         </div>
 
         <div class="faktur" id="fakturTampilan">
-            <h4>FAKTUR PEMBAYARAN SERVIS HP</h4>
+            <h4>FAKTUR PEMBAYARAN SERVIS</h4>
             <div class="baris"><span>No. Faktur</span><span id="noFaktur" class="data-dinamis" style="font-weight:600;">-</span></div>
             <div class="baris"><span>Kode Pesanan</span><span id="fakturKode" class="data-dinamis">-</span></div>
             <div class="baris"><span>Nama Pelanggan</span><span id="fakturNama" class="data-dinamis">-</span></div>
@@ -1218,7 +1231,7 @@ function unduhPDF() {
         // 1. HEADER
         doc.setFontSize(22);
         doc.setTextColor(30, 64, 175);
-        doc.text("FAKTUR SERVIS HP", 105, 20, { align: 'center' });
+        doc.text("FAKTUR SERVIS", 105, 20, { align: 'center' });
         
         doc.setFontSize(10);
         doc.setTextColor(100);
