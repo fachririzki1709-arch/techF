@@ -110,9 +110,40 @@
         @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
         /* ------------------------------------- */
 
+        /* FITUR BARU: CSS UNTUK PRINT NOTA (THERMAL FRIENDLY) */
+        @media print {
+            body > *:not(#printArea) { display: none !important; }
+            #printArea { display: block !important; position: static; width: 80mm; margin: 0; padding: 0; color: black; background: white;}
+            #printArea * { font-family: 'Courier New', Courier, monospace; font-size: 12px; }
+            #printArea .flex { display: flex; justify-content: space-between; margin-bottom: 3px; }
+            #printArea .line { border-bottom: 1px dashed black; margin: 8px 0; }
+        }
+        /* --------------------------------------------------- */
+
     </style>
 </head>
 <body>
+
+<!-- FITUR BARU: WADAH CETAK NOTA FISIK (HIDDEN DARI LAYAR BIASA) -->
+<div id="printArea" style="display: none;">
+    <h2 style="text-align:center; font-size:16px; margin:0; font-weight:bold;">SF Tech Service</h2>
+    <p style="text-align:center; font-size:10px; margin:0;">Nota Pembayaran Resmi</p>
+    <div class="line"></div>
+    <div class="flex"><span>No:</span><span id="pKode"></span></div>
+    <div class="flex"><span>Tgl:</span><span id="pTgl"></span></div>
+    <div class="flex"><span>Plg:</span><span id="pNama"></span></div>
+    <div class="flex"><span>Unit:</span><span id="pUnit"></span></div>
+    <div class="line"></div>
+    <div class="flex"><span>Layanan:</span><span id="pLayanan"></span></div>
+    <div class="flex"><span>Sparepart:</span><span id="pSuku"></span></div>
+    <div class="flex"><span>Tambahan:</span><span id="pTambahan"></span></div>
+    <div class="line"></div>
+    <div class="flex" style="font-weight:bold;"><span>TOTAL:</span><span id="pTotal"></span></div>
+    <div class="flex"><span>Metode:</span><span id="pMetode"></span></div>
+    <div class="line"></div>
+    <p style="text-align:center; font-size:10px; margin-top:10px;">Terima Kasih!<br>Garansi Servis 30 Hari</p>
+</div>
+<!-- ------------------------------------------------------------ -->
 
 <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
@@ -133,6 +164,9 @@
     <header>
         <div class="logo">⚙️ Panel Admin Servis</div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- FITUR BARU: TOMBOL EXPORT CSV -->
+            <button class="btn btn-edit" style="background:#10b981; margin-right: 10px;" onclick="exportCSV()"><i class="bi bi-file-earmark-excel"></i> Export CSV</button>
+            
             <!-- TAMBAHAN: TOMBOL DARK MODE -->
             <button onclick="toggleDarkModeAdmin()" class="btn" style="background:rgba(255,255,255,0.2);"><i class="bi bi-moon-fill" id="iconDarkAdmin"></i></button>
             <!-- -------------------------- -->
@@ -141,63 +175,93 @@
         </div>
     </header>
     <div class="container">
-        <h1>Daftar Pesanan Servis</h1>
         
-        <!-- TAMBAHAN: KOTAK GRAFIK STATISTIK (Chart.js) -->
-        <div class="admin-chart-box">
-            <canvas id="grafikAdmin"></canvas>
+        <!-- FITUR BARU: MENU TAB UNTUK DAFTAR PESANAN DAN LAPORAN -->
+        <div class="tab-menu-admin" style="margin-bottom: 2rem;">
+            <button class="tab-btn-admin aktif" onclick="pindahTabUtamaAdmin('tabDaftarPesananUtama')">Daftar Pesanan</button>
+            <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabLaporanEkstra')">Laporan Keuangan & Analitik</button>
         </div>
-        <!-- ------------------------------------------- -->
+        
+        <!-- WRAPPER UNTUK KONTEN DAFTAR PESANAN ASLI -->
+        <div id="tabDaftarPesananUtama" class="modal-view aktif">
+            <h1>Daftar Pesanan Servis</h1>
+            
+            <!-- TAMBAHAN: KOTAK GRAFIK STATISTIK (Chart.js) -->
+            <div class="admin-chart-box">
+                <canvas id="grafikAdmin"></canvas>
+            </div>
+            <!-- ------------------------------------------- -->
 
-        <div class="ringkasan">
-            <div class="kartu"><h3>Pesanan Baru</h3><div class="angka" id="jmlBaru">0</div></div>
-            <div class="kartu" style="border-left-color: #f59e0b;"><h3>Dijadwalkan</h3><div class="angka" id="jmlJadwal">0</div></div>
-            <div class="kartu" style="border-left-color: #10b981;"><h3>Diproses</h3><div class="angka" id="jmlProses">0</div></div>
-            <div class="kartu" style="border-left-color: #a855f7;"><h3>Perlu Validasi</h3><div class="angka" id="jmlValidasi">0</div></div>
+            <div class="ringkasan">
+                <div class="kartu"><h3>Pesanan Baru</h3><div class="angka" id="jmlBaru">0</div></div>
+                <div class="kartu" style="border-left-color: #f59e0b;"><h3>Dijadwalkan</h3><div class="angka" id="jmlJadwal">0</div></div>
+                <div class="kartu" style="border-left-color: #10b981;"><h3>Diproses</h3><div class="angka" id="jmlProses">0</div></div>
+                <div class="kartu" style="border-left-color: #a855f7;"><h3>Perlu Validasi</h3><div class="angka" id="jmlValidasi">0</div></div>
+            </div>
+
+            <div class="kontrol-fitur">
+                <!-- Fitur Pencarian Realtime Baru -->
+                <div class="filter-grup">
+                    <label for="cariKode"><i class="bi bi-search"></i> Cari:</label>
+                    <input type="text" id="cariKode" placeholder="Kode atau Nama..." oninput="muatData()" style="width: 180px; cursor: text;">
+                </div>
+                <div class="filter-grup">
+                    <label for="filterTanggalKalender"><i class="bi bi-calendar-check"></i> Filter Hari Kerja:</label>
+                    <input type="date" id="filterTanggalKalender" onchange="muatData()">
+                    <button class="btn btn-secondary" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset</button>
+                </div>
+                <div class="filter-grup">
+                    <label for="urutTanggal">Urutan Agenda:</label>
+                    <select id="urutTanggal" onchange="muatData()" style="width: 150px;">
+                        <option value="terbaru">Terbaru</option>
+                        <option value="terlama">Terlama</option>
+                    </select>
+                </div>
+            </div>
+
+            <table id="tabelPesanan">
+                <thead>
+                    <tr>
+                        <th>Kode</th>
+                        <th>Nama</th>
+                        <th>Perangkat</th>
+                        <th>Status DP</th>
+                        <th>Tanggal Jadwal</th>
+                        <th>Status Kerja</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
 
-        <div class="kontrol-fitur">
-            <!-- Fitur Pencarian Realtime Baru -->
-            <div class="filter-grup">
-                <label for="cariKode"><i class="bi bi-search"></i> Cari:</label>
-                <input type="text" id="cariKode" placeholder="Kode atau Nama..." oninput="muatData()" style="width: 180px; cursor: text;">
-            </div>
-            <div class="filter-grup">
-                <label for="filterTanggalKalender"><i class="bi bi-calendar-check"></i> Filter Hari Kerja:</label>
-                <input type="date" id="filterTanggalKalender" onchange="muatData()">
-                <button class="btn btn-secondary" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset</button>
-            </div>
-            <div class="filter-grup">
-                <label for="urutTanggal">Urutan Agenda:</label>
-                <select id="urutTanggal" onchange="muatData()" style="width: 150px;">
-                    <option value="terbaru">Terbaru</option>
-                    <option value="terlama">Terlama</option>
-                </select>
+        <!-- FITUR BARU: WRAPPER UNTUK LAPORAN EKSTRA & ANALITIK -->
+        <div id="tabLaporanEkstra" class="modal-view">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.6rem; font-weight: 700;">Laporan Analitik Tambahan</h2>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                <div class="admin-chart-box" style="flex: 1; min-width: 300px; height: 350px;">
+                    <h4 style="margin-bottom: 1rem; text-align: center;"><i class="bi bi-pie-chart-fill" style="color:#0ea5e9;"></i> Top 5 Jenis Kerusakan</h4>
+                    <canvas id="grafikKerusakan"></canvas>
+                </div>
+                <div class="admin-chart-box" style="flex: 1; min-width: 300px; height: 350px;">
+                    <h4 style="margin-bottom: 1rem; text-align: center;"><i class="bi bi-bar-chart-fill" style="color:#10b981;"></i> Pendapatan per Teknisi (Rp)</h4>
+                    <canvas id="grafikTeknisi"></canvas>
+                </div>
             </div>
         </div>
 
-        <table id="tabelPesanan">
-            <thead>
-                <tr>
-                    <th>Kode</th>
-                    <th>Nama</th>
-                    <th>Perangkat</th>
-                    <th>Status DP</th>
-                    <th>Tanggal Jadwal</th>
-                    <th>Status Kerja</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
     </div>
 
     <div class="modal" id="modalKelola">
         <div class="modal-konten">
             <span class="tutup" onclick="tutupModal()">&times;</span>
-            <h3 style="font-size:1.3rem; font-weight:700;">Kelola Order (<span id="txtKodeHeader">-</span>)</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="font-size:1.3rem; font-weight:700;">Kelola Order (<span id="txtKodeHeader">-</span>)</h3>
+                <!-- FITUR BARU: TOMBOL CETAK NOTA DI DALAM MODAL -->
+                <button class="btn" style="background:#0f172a; color:white;" onclick="cetakNotaFisik()"><i class="bi bi-printer"></i> Cetak Nota Fisik</button>
+            </div>
+            
             <input type="hidden" id="kodePesanan">
-
 
             <!-- TAMBAHAN: TAB MENU NAVIGASI (Tanpa Merusak Grid Asli) -->
             <div class="tab-menu-admin">
@@ -320,20 +384,34 @@ const API_URL = window.location.origin + "/api";
 let aktifMembukaKode = "";
 let cacheStringData = "";
 let intervalAdmin = null;
-let chartInstance = null; // Tambahan state Chart.js
+let chartInstance = null; 
+window.semuaPesananGlobal = {}; // Untuk menyimpan data master keperluan export/print
 
 // --- INISIALISASI WEBSOCKET ADMIN ---
 const socket = io(window.location.origin);
 
-// PERBAIKAN: Mengubah "socketAdmin" menjadi "socket" agar sesuai dengan inisialisasi di atas
 socket.on("updateDashboardAdmin", () => {
-    muatData(); // Update data instan tanpa delay 4 detik
+    muatData(); 
 });
 
 socket.on("chatBaruDiterima", (kodeChat) => {
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
 });
-// ------------------------------------
+
+// FITUR BARU: FUNGSI PINDAH TAB UTAMA DI ADMIN
+function pindahTabUtamaAdmin(tabIdTarget) {
+    document.querySelectorAll(".tab-menu-admin")[0].querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
+    event.currentTarget.classList.add("aktif");
+
+    document.getElementById("tabDaftarPesananUtama").classList.remove("aktif");
+    document.getElementById("tabLaporanEkstra").classList.remove("aktif");
+    
+    document.getElementById(tabIdTarget).classList.add("aktif");
+    
+    if(tabIdTarget === 'tabLaporanEkstra') {
+        renderGrafikEkstra();
+    }
+}
 
 // --- FITUR DARK MODE ADMIN ---
 function toggleDarkModeAdmin() {
@@ -349,25 +427,26 @@ function toggleDarkModeAdmin() {
         if(chartInstance) Chart.defaults.color = '#1e293b';
     }
     if(chartInstance) chartInstance.update();
+    if(window.chartKerusakan) window.chartKerusakan.update();
+    if(window.chartTeknisi) window.chartTeknisi.update();
 }
 if(localStorage.getItem('adminTema') === 'gelap') toggleDarkModeAdmin();
 // -----------------------------
 
 // --- FITUR TAB MODAL UI ADMIN ---
 function pindahTabAdmin(tabIdTarget) {
-    // Navigasi tombol
-    document.querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
+    // Navigasi tombol di dalam Modal
+    document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
     event.currentTarget.classList.add("aktif");
 
     if (tabIdTarget === 'tabGridAsli') {
-        // Tampilkan 2 kolom grid sekaligus seperti script asli Anda
         document.getElementById("wrapperGridUtama").style.display = "grid";
         document.getElementById("tabKiriLengkap").classList.add("aktif");
         document.getElementById("tabKananLengkap").classList.add("aktif");
     } else {
-        // Mode Tab Tunggal (Ringkas)
         document.getElementById("wrapperGridUtama").style.display = "block";
-        document.querySelectorAll(".modal-view").forEach(v => v.classList.remove("aktif"));
+        document.getElementById("tabKiriLengkap").classList.remove("aktif");
+        document.getElementById("tabKananLengkap").classList.remove("aktif");
         document.getElementById(tabIdTarget).classList.add("aktif");
     }
 }
@@ -421,7 +500,6 @@ function tampilkanDashboardUtama() {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("mainPanelWrapper").style.display = "block";
     muatData();
-    // Interval Polling tidak dibutuhkan lagi karena sudah Real-time, namun dibiarkan sbg Fallback.
     intervalAdmin = setInterval(muatData, 4000); 
 }
 
@@ -441,13 +519,14 @@ function muatData() {
     fetch(`${API_URL}/orders`, { headers: getAuthHeader() })
     .then(handleApiError)
     .then(semua => {
+        window.semuaPesananGlobal = semua; // Simpan ke global untuk fitur Export/Print
+        
         const currentDataString = JSON.stringify(semua);
         if (currentDataString === cacheStringData && !document.getElementById("cariKode").value) return; 
 
         const tbody = document.querySelector("#tabelPesanan tbody");
         const filterTanggal = document.getElementById("filterTanggalKalender").value; 
         
-        // Fitur Pencarian Realtime
         const filterCari = document.getElementById("cariKode") ? document.getElementById("cariKode").value.toLowerCase() : "";
 
         tbody.innerHTML = "";
@@ -461,7 +540,6 @@ function muatData() {
         urutanKunci.forEach(kode => {
             const d = semua[kode];
             
-            // Validasi filter pencarian
             if (filterCari && !kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
             if (filterTanggal && d.tanggalInput !== filterTanggal) return;
 
@@ -504,16 +582,15 @@ function muatData() {
         document.getElementById("jmlProses").textContent = proses;
         document.getElementById("jmlValidasi").textContent = validasi;
         
-        // --- TAMBAHAN UPDATE CHART STATISTIK ---
         renderGrafikAdmin(baru, jadwal, proses, validasi);
-        // ---------------------------------------
+        renderGrafikEkstra(); // Update chart laporan tambahan juga
 
         if(!filterCari) cacheStringData = currentDataString; 
     })
     .catch(err => console.warn("Koneksi admin ke server bermasalah.", err));
 }
 
-// --- FUNGSI RENDER GRAFIK CHART.JS ---
+// --- FUNGSI RENDER GRAFIK CHART.JS (UTAMA) ---
 function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
     const ctx = document.getElementById('grafikAdmin').getContext('2d');
     if(chartInstance) chartInstance.destroy();
@@ -538,6 +615,80 @@ function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
     });
 }
 // -------------------------------------
+
+// FITUR BARU: RENDER CHART ANALITIK TAMBAHAN
+function renderGrafikEkstra() {
+    let kerusakanCount = {}; let teknisiRev = {};
+    
+    Object.values(window.semuaPesananGlobal).forEach(d => {
+        if(d.layanan) {
+            d.layanan.split(', ').forEach(l => {
+                if(l !== "Belum dipilih" && l.trim() !== "") kerusakanCount[l] = (kerusakanCount[l] || 0) + 1;
+            });
+        }
+        if(d.status === "selesai_servis" || d.status === "selesai" || d.pembayaranValid) {
+            const tName = d.teknisi || "Tanpa Teknisi";
+            teknisiRev[tName] = (teknisiRev[tName] || 0) + (d.biayaSuku || 0) + (d.biayaJasa || 0);
+        }
+    });
+
+    const sortedKerusakan = Object.entries(kerusakanCount).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    
+    const ctxK = document.getElementById('grafikKerusakan').getContext('2d');
+    if(window.chartKerusakan) window.chartKerusakan.destroy();
+    window.chartKerusakan = new Chart(ctxK, {
+        type: 'doughnut',
+        data: { labels: sortedKerusakan.map(k => k[0]), datasets: [{ data: sortedKerusakan.map(k => k[1]), backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7', '#ef4444'] }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    const ctxT = document.getElementById('grafikTeknisi').getContext('2d');
+    if(window.chartTeknisi) window.chartTeknisi.destroy();
+    window.chartTeknisi = new Chart(ctxT, {
+        type: 'bar',
+        data: { labels: Object.keys(teknisiRev), datasets: [{ label: 'Pendapatan (Rp)', data: Object.values(teknisiRev), backgroundColor: '#10b981', borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+// ------------------------------------------
+
+// FITUR BARU: EXPORT LAPORAN CSV (EXCEL)
+function exportCSV() {
+    let csvContent = "data:text/csv;charset=utf-8,Kode,Tanggal Input,Nama,WA,Merek,Tipe,Layanan,Teknisi,Biaya Jasa,Biaya Sparepart,Total Biaya,Status\n";
+    Object.values(window.semuaPesananGlobal).forEach(d => {
+        const total = (d.biayaSuku||0) + (d.biayaJasa||0);
+        csvContent += `${d.kode},${d.tanggalInput},"${d.nama}","${d.wa}",${d.merek},${d.tipe},"${d.layanan || '-'}",${d.teknisi||'-'},${d.biayaJasa||0},${d.biayaSuku||0},${total},${d.status}\n`;
+    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Laporan_Servis_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+}
+
+// FITUR BARU: CETAK NOTA FISIK (THERMAL PRINT)
+function cetakNotaFisik() {
+    const kode = document.getElementById("kodePesanan").value;
+    const d = window.semuaPesananGlobal[kode];
+    
+    if(!d) return Swal.fire('Error', 'Pilih pesanan terlebih dahulu', 'error');
+
+    document.getElementById("pKode").textContent = kode;
+    document.getElementById("pTgl").textContent = new Date().toLocaleDateString('id-ID');
+    document.getElementById("pNama").textContent = d.nama;
+    document.getElementById("pUnit").textContent = `${d.merek} ${d.tipe}`;
+    document.getElementById("pLayanan").textContent = "Rp " + (d.biayaJasa || 0).toLocaleString("id-ID");
+    document.getElementById("pSuku").textContent = "Rp " + (d.biayaSuku || 0).toLocaleString("id-ID");
+    
+    let tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
+    document.getElementById("pTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
+    
+    document.getElementById("pTotal").textContent = "Rp " + ((d.biayaJasa||0) + (d.biayaSuku||0) + tamb).toLocaleString("id-ID");
+    document.getElementById("pMetode").textContent = d.metodePembayaran || "Tunai";
+
+    window.print();
+}
 
 function resetFilterKalender() {
     document.getElementById("filterTanggalKalender").value = "";
@@ -569,7 +720,6 @@ function bukaModal(kode) {
         document.getElementById("teknisi").value = d.teknisi || "";
         document.getElementById("jadwal").value = d.jadwal || "";
         
-        // --- Perbaikan Tampilan Bukti Transfer (Menghapus Kode Ganda/Tumpang Tindih) ---
         document.getElementById("displayBuktiDP").innerHTML = d.buktiDP 
             ? `<img src="${d.buktiDP}" style="max-height:150px; cursor:pointer;" onclick="window.open('${d.buktiDP}')">` 
             : "Belum ada bukti";
@@ -578,7 +728,6 @@ function bukaModal(kode) {
             ? `<img src="${d.buktiPelunasan}" style="max-height:150px; cursor:pointer;" onclick="window.open('${d.buktiPelunasan}')">` 
             : "Belum ada bukti";
         
-        // --- BINDING DATA ETA ---
         document.getElementById("etaUpdate").value = d.etaTeknisi || "";
         
         document.getElementById("biayaSuku").value = d.biayaSuku || 0;
@@ -614,10 +763,7 @@ function bukaModal(kode) {
         hitungTotal(); 
         document.getElementById("btnValidasi").disabled = !d.pembayaranDikonfirmasi || d.pembayaranValid;
         
-        // Panggil tombol tab pertama agar Layout rapi saat dibuka
-        document.querySelector(".tab-btn-admin.aktif").click();
-
-        // Tampilkan Modal setelah semua dirender
+        document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin")[0].click();
         document.getElementById("modalKelola").style.display = "block";
         muatLogPesanAdmin(); 
     });
@@ -652,7 +798,7 @@ function simpanPerubahan() {
         teknisi: document.getElementById("teknisi").value,
         jadwal: document.getElementById("jadwal").value,
         lokasiServis: document.getElementById("lokasiServis").value,
-        etaTeknisi: document.getElementById("etaUpdate").value.trim(), // --- TAMBAHAN PAYLOAD ETA ---
+        etaTeknisi: document.getElementById("etaUpdate").value.trim(), 
         adaKerusakanTambahan: checkedTambahan,
         infoKerusakanTambahan: document.getElementById("infoTambahan").value.trim(),
         biayaSukuTambahan: parseInt(document.getElementById("biayaTambahan").value) || 0,
