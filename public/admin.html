@@ -3,1019 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin - Home Service</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
-    <!-- Import SweetAlert2 untuk Admin -->
+    <title>Dashboard Admin - Dispatcher</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- TAMBAHAN IMPORT CHART.JS & SOCKET.IO -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-    <!-- ----------------------------------- -->
-    
     <style>
-        /* TAMBAHAN FITUR DARK MODE CSS */
-        :root { --bg-utama: #f1f5f9; --teks-utama: #1e293b; --bg-kartu: white; --border-line: #e2e8f0; --head-bg: #0f172a; }
-        body.dark-mode { --bg-utama: #0f172a; --teks-utama: #f8fafc; --bg-kartu: #1e293b; --border-line: #334155; --head-bg: #020617; }
-        /* ---------------------------- */
-        
         * {margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif;}
-        body {background:var(--bg-utama); color:var(--teks-utama); transition: background 0.3s;}
+        body {background:#f1f5f9; color:#1e293b; padding:2rem;}
+        .card {background:white; padding:2rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); margin-bottom:1.5rem;}
+        table {width:100%; border-collapse:collapse;} th, td {padding:1rem; text-align:left; border-bottom:1px solid #e2e8f0;}
+        th {background:#f8fafc;}
+        input, select {padding:0.6rem; border:1px solid #cbd5e1; border-radius:6px; width:100%; margin-bottom:10px;}
+        .btn {padding:0.6rem 1rem; border:none; border-radius:6px; cursor:pointer; font-weight:bold; background:#10b981; color:white;}
         
-        header {
-            background:var(--head-bg); color:white; padding:1.2rem 5%; 
-            display:flex; justify-content:space-between; align-items:center;
-            border-bottom: 3px solid #10b981; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-        .logo {font-size:1.4rem; font-weight:700;}
-        .container {max-width:1200px; margin:2.5rem auto; padding:0 5%;}
-        h1 {margin-bottom:1.5rem; font-size:1.6rem; font-weight: 700; color:var(--teks-utama);}
-
-        .ringkasan {display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.2rem; margin-bottom:2.5rem;}
-        .kartu {background:var(--bg-kartu); padding:1.5rem; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.02); border-left:5px solid #0ea5e9; transition: transform 0.2s;}
-        .kartu:hover {transform: translateY(-2px);}
-        .kartu h3 {font-size:0.88rem; font-weight:600; color:#64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:0.5rem;}
-        .kartu .angka {font-size:2.2rem; font-weight:700; color: var(--teks-utama);}
-
-        /* CSS FITUR BARU: KARTU KEUANGAN */
-        .kartu-keuangan { border-left-width: 6px !important; }
-        .kartu-pendapatan { border-left-color: #10b981 !important; background: rgba(16, 185, 129, 0.05) !important; }
-        .kartu-piutang { border-left-color: #ef4444 !important; background: rgba(239, 68, 68, 0.05) !important; }
-        body.dark-mode .kartu-pendapatan, body.dark-mode .kartu-piutang { background: var(--bg-kartu) !important; }
-        /* ------------------------------ */
-
-        .kontrol-fitur {display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; background: var(--bg-kartu); padding: 1.2rem; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 1rem;}
-        .filter-grup {display:flex; align-items:center; gap:0.6rem;}
-        .filter-grup label {font-size:0.9rem; font-weight:600;}
-        .filter-grup select, .filter-grup input[type="date"], .filter-grup input[type="text"] {padding:0.5rem 1rem; border:2px solid var(--border-line); border-radius:6px; font-size:0.88rem; background: var(--bg-utama); color: var(--teks-utama); outline:none;}
-        .filter-grup select:focus, .filter-grup input[type="date"]:focus, .filter-grup input[type="text"]:focus {border-color:#0ea5e9;}
-
-        table {width:100%; border-collapse:collapse; background:var(--bg-kartu); border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.03);}
-        th,td {padding:1rem 1.2rem; text-align:left; border-bottom:1px solid var(--border-line); font-size:0.92rem;}
-        th {background:rgba(14, 165, 233, 0.1); font-weight:600; color:var(--teks-utama); text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.05em;}
-        tr:hover {background-color: var(--border-line);}
-        
-        .status {padding:0.3rem 0.75rem; border-radius:30px; font-size:0.78rem; font-weight:700; text-transform: uppercase;}
-        .baru {background:#e0f2fe; color:#0369a1;}
-        .dijadwalkan {background:#fef3c7; color:#d97706;}
-        .diproses {background:#ecfccb; color:#4d7c0f;}
-        .selesai_servis {background:#dbeafe; color:#2563eb;}
-        .menunggu_validasi {background:#f3e8ff; color:#7e22ce;}
-        .selesai {background:#dcfce7; color:#15803d;}
-        .belum_dp {background:#fee2e2; color:#b91c1c;}
-        .batal {background:#fef2f2; color:#ef4444; border:1px solid #fee2e2;}
-
-        .btn {padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600; margin-right:0.3rem; transition: all 0.2s;}
-        .btn:hover {transform: translateY(-1px);}
-        .btn-edit {background:#0ea5e9; color:white;}
-        .btn-validasi {background:#10b981; color:white;}
-        .btn-hapus {background:#ef4444; color:white;}
-        .btn-locked {background:#94a3b8 !important; cursor:not-allowed !important; transform:none !important;}
-
-        .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:1000; overflow:auto; backdrop-filter: blur(4px);}
-        .modal-konten {background:var(--bg-kartu); width:92%; max-width:980px; margin:3% auto; padding:2.2rem; border-radius:12px; position:relative; box-shadow: 0 20px 40px rgba(0,0,0,0.1);}
-        .tutup {position:absolute; right:1.2rem; top:1.2rem; font-size:1.6rem; cursor:pointer; color:#94a3b8; transition:color 0.2s;}
-        .tutup:hover {color:#64748b;}
-        
-        input, select, textarea {width:100%; padding:0.7rem 1rem; margin:0.5rem 0 1.2rem; border:2px solid var(--border-line); background:var(--bg-utama); color:var(--teks-utama); border-radius:6px; outline:none; font-size:0.95rem; transition:0.3s;}
-        input:focus, select:focus, textarea:focus {border-color:#0ea5e9;}
-        input:disabled, select:disabled, textarea:disabled {background:#cbd5e1; color:#475569; border-color:#cbd5e1; cursor:not-allowed;}
-        body.dark-mode input:disabled, body.dark-mode select:disabled, body.dark-mode textarea:disabled {background:#334155; color:#94a3b8; border-color:#334155;}
-        
-        .pratinjau {margin:1rem 0; padding:1rem; border:2px dashed var(--border-line); border-radius:8px; text-align:center; background:var(--bg-utama);}
-        .pratinjau img, .pratinjau video {max-width:100%; max-height:280px; border-radius:6px;}
-        .box-dp {background:rgba(245, 158, 11, 0.1); padding:1.2rem; border-radius:8px; border:1px solid #ffedd5; margin-bottom:1.2rem;}
-        .box-tambahan-admin {background:rgba(22, 101, 52, 0.1); border:1px solid #bbf7d0; padding:1.2rem; border-radius:8px; margin:1.2rem 0;}
-
-        .chat-admin-container {border: 2px solid var(--border-line); border-radius: 8px; background: var(--bg-utama); display: flex; flex-direction: column; height: 350px; margin-top: 1rem; overflow:hidden;}
-        .chat-admin-msg-box {flex: 1; overflow-y: auto; padding: 1rem; display:flex; flex-direction:column; gap:0.6rem;}
-        .chat-admin-input-row {display: flex; border-top: 2px solid var(--border-line); background: var(--bg-kartu);}
-        .chat-admin-input-row input {border: none !important; padding: 0.8rem; margin: 0; flex: 1; background:var(--bg-kartu); color:var(--teks-utama);}
-        .chat-admin-input-row button {background: #10b981; color: white; border: none; padding: 0 1.5rem; cursor: pointer; font-weight: 600;}
-        
-        .msg-bubble {max-width: 82%; padding: 0.6rem 0.9rem; border-radius: 12px; font-size: 0.88rem; box-shadow:0 2px 4px rgba(0,0,0,0.02);}
-        .msg-admin {background: #10b981; color: white; align-self: flex-end; border-bottom-right-radius: 2px;}
-        .msg-user {background: var(--bg-kartu); color: var(--teks-utama); align-self: flex-start; border-bottom-left-radius: 2px; border:1px solid var(--border-line);}
-
-        .login-overlay {position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:flex; justify-content:center; align-items:center; z-index:9999;}
-        .login-box {background:white; padding:2.5rem; border-radius:12px; width:100%; max-width:400px; box-shadow:0 20px 40px rgba(0,0,0,0.3); text-align:center;}
-        .login-box h2 {margin-bottom:0.5rem; color:#0f172a; font-size:1.6rem; font-weight:700;}
-        .login-box p {color:#64748b; font-size:0.9rem; margin-bottom:1.8rem;}
-        .login-box .btn-login {width:100%; padding:0.8rem; background:linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color:white; border:none; border-radius:6px; font-weight:700; font-size:1rem; cursor:pointer; margin-top:0.5rem; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);}
-        .btn-logout {background:#ef4444; color:white; font-size:0.85rem; padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-left: 10px;}
-        #mainPanelWrapper {display:none;}
-        
-        /* TAMBAHAN CSS TAB MODAL & CHART GRAFIK */
-        .admin-chart-box { background: var(--bg-kartu); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 280px;}
-        .tab-menu-admin { display:flex; gap:10px; border-bottom:2px solid var(--border-line); margin-bottom: 1.5rem; }
-        .tab-btn-admin { padding: 0.8rem 1.5rem; background:none; border:none; color: var(--teks-utama); font-weight:600; cursor:pointer; opacity: 0.6; transition: 0.3s;}
-        .tab-btn-admin.aktif { opacity: 1; border-bottom: 3px solid #0ea5e9; color: #0ea5e9;}
-        .modal-view { display: none; }
-        .modal-view.aktif { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
-        /* ------------------------------------- */
-
-        /* FITUR BARU: CSS UNTUK PRINT NOTA (THERMAL FRIENDLY) */
-        @media print {
-            body > *:not(#printArea) { display: none !important; }
-            #printArea { display: block !important; position: static; width: 80mm; margin: 0; padding: 0; color: black; background: white;}
-            #printArea * { font-family: 'Courier New', Courier, monospace; font-size: 12px; }
-            #printArea .flex { display: flex; justify-content: space-between; margin-bottom: 3px; }
-            #printArea .line { border-bottom: 1px dashed black; margin: 8px 0; }
-        }
-        /* --------------------------------------------------- */
-
+        #modalAdmin {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:100;}
+        .modal-content {background:white; width:90%; max-width:600px; margin:2% auto; padding:2rem; border-radius:12px; max-height:90vh; overflow-y:auto;}
+        .read-only-box {background:#f1f5f9; border:1px dashed #94a3b8; padding:1rem; border-radius:6px; margin:1rem 0;}
     </style>
 </head>
 <body>
 
-<!-- WADAH CETAK NOTA FISIK (HIDDEN DARI LAYAR BIASA) -->
-<div id="printArea" style="display: none;">
-    <h2 style="text-align:center; font-size:16px; margin:0; font-weight:bold;">SF Tech Service</h2>
-    <p style="text-align:center; font-size:10px; margin:0;">Nota Pembayaran Resmi</p>
-    <div class="line"></div>
-    <div class="flex"><span>No:</span><span id="pKode"></span></div>
-    <div class="flex"><span>Tgl:</span><span id="pTgl"></span></div>
-    <div class="flex"><span>Plg:</span><span id="pNama"></span></div>
-    <div class="flex"><span>Unit:</span><span id="pUnit"></span></div>
-    <div class="line"></div>
-    <div class="flex"><span>Layanan:</span><span id="pLayanan"></span></div>
-    <div class="flex"><span>Sparepart:</span><span id="pSuku"></span></div>
-    <div class="flex"><span>Tambahan:</span><span id="pTambahan"></span></div>
-    <div class="line"></div>
-    <div class="flex" style="font-weight:bold;"><span>TOTAL:</span><span id="pTotal"></span></div>
-    <div class="flex"><span>Metode:</span><span id="pMetode"></span></div>
-    <div class="line"></div>
-    <p style="text-align:center; font-size:10px; margin-top:10px;">Terima Kasih!<br>Garansi Servis 30 Hari</p>
+<div class="card">
+    <div style="display:flex; justify-content:space-between;">
+        <h2>Pusat Kendali Admin (Dispatcher & Finance)</h2>
+        <button class="btn" style="background:#ef4444;" onclick="logout()">Logout</button>
+    </div>
+    
+    <table style="margin-top:2rem;">
+        <thead><tr><th>Kode</th><th>Pelanggan</th><th>Perangkat</th><th>Status Real-Time</th><th>Aksi Admin</th></tr></thead>
+        <tbody id="tabelData"></tbody>
+    </table>
 </div>
 
-<div class="login-overlay" id="loginOverlay">
-    <div class="login-box">
-        <h2>🔒 Login Admin</h2>
-        <p>Silakan masukkan kredensial panel kendali</p>
+<!-- Modal Kelola Oleh Admin -->
+<div id="modalAdmin">
+    <div class="modal-content">
+        <h3 style="margin-bottom:1rem; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">Atur Order: <span id="mKode"></span></h3>
         
-        <label style="text-align:left; display:block; font-size:0.85rem; font-weight:600; color:#475569;">ID Admin</label>
-        <input type="text" id="adminId" placeholder="Masukkan ID Admin" onkeypress="aksiEnterLogin(event)">
-        
-        <label style="text-align:left; display:block; font-size:0.85rem; font-weight:600; color:#475569;">Password</label>
-        <input type="password" id="adminPassword" placeholder="Masukkan Password" onkeypress="aksiEnterLogin(event)">
-        
-        <button class="btn-login" onclick="prosesLogin()">Masuk Ke Panel</button>
-    </div>
-</div>
+        <!-- HANYA ADMIN YANG BISA SET JADWAL & TEKNISI -->
+        <label>Pilih Teknisi Penanggung Jawab:</label>
+        <select id="mTeknisi">
+            <option value="">-- Belum Ditentukan --</option>
+            <option value="Teknisi Andi">Teknisi Andi</option>
+            <option value="Teknisi Budi">Teknisi Budi</option>
+        </select>
 
-<div id="mainPanelWrapper">
-    <header>
-        <div class="logo">⚙️ Panel Admin Servis</div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- FITUR EXPORT CSV PINTAR (Mengikuti Filter) -->
-            <button class="btn btn-edit" style="background:#10b981; margin-right: 10px;" onclick="exportCSV()"><i class="bi bi-file-earmark-excel"></i> Export CSV Filter</button>
-            
-            <!-- TOMBOL DARK MODE -->
-            <button onclick="toggleDarkModeAdmin()" class="btn" style="background:rgba(255,255,255,0.2);"><i class="bi bi-moon-fill" id="iconDarkAdmin"></i></button>
-            <div style="font-size:0.82rem; background:#1e293b; padding:0.5rem 0.8rem; border-radius:6px; color:#10b981; font-weight:700; display:flex; align-items:center; gap:5px;"><span style="width:7px; height:7px; background:#10b981; border-radius:50%; display:inline-block;"></span> Socket Live</div>
-            <button class="btn-logout" onclick="prosesLogout()">Keluar 🚪</button>
-        </div>
-    </header>
-    <div class="container">
-        
-        <div class="tab-menu-admin" style="margin-bottom: 2rem;">
-            <button class="tab-btn-admin aktif" onclick="pindahTabUtamaAdmin('tabDaftarPesananUtama')">Daftar Pesanan</button>
-            <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabLaporanEkstra')">Laporan Keuangan & Analitik</button>
-        </div>
-        
-        <div id="tabDaftarPesananUtama" class="modal-view aktif">
-            <h1>Daftar Pesanan Servis</h1>
-            
-            <div class="admin-chart-box">
-                <canvas id="grafikAdmin"></canvas>
-            </div>
+        <label>Biaya Jasa Admin/Toko (Rp):</label>
+        <input type="number" id="mJasa" placeholder="0">
 
-            <!-- FITUR BARU: METRIK KEUANGAN PROFESIONAL (Di atas Ringkasan Status) -->
-            <div class="ringkasan" style="margin-bottom: 1rem; border-bottom: 2px dashed var(--border-line); padding-bottom: 1rem;">
-                <div class="kartu kartu-keuangan kartu-pendapatan">
-                    <h3 style="color:#10b981;"><i class="bi bi-wallet-fill"></i> Total Pendapatan (Lunas)</h3>
-                    <div class="angka" id="lblTotalPendapatan">Rp 0</div>
-                </div>
-                <div class="kartu kartu-keuangan kartu-piutang">
-                    <h3 style="color:#ef4444;"><i class="bi bi-exclamation-triangle-fill"></i> Total Piutang (Tagihan Berjalan)</h3>
-                    <div class="angka" id="lblTotalPiutang">Rp 0</div>
-                </div>
-            </div>
-
-            <div class="ringkasan">
-                <div class="kartu"><h3>Pesanan Baru</h3><div class="angka" id="jmlBaru">0</div></div>
-                <div class="kartu" style="border-left-color: #f59e0b;"><h3>Dijadwalkan</h3><div class="angka" id="jmlJadwal">0</div></div>
-                <div class="kartu" style="border-left-color: #10b981;"><h3>Diproses</h3><div class="angka" id="jmlProses">0</div></div>
-                <div class="kartu" style="border-left-color: #a855f7;"><h3>Perlu Validasi</h3><div class="angka" id="jmlValidasi">0</div></div>
-            </div>
-
-            <div class="kontrol-fitur">
-                <div class="filter-grup">
-                    <label for="cariKode"><i class="bi bi-search"></i> Cari:</label>
-                    <input type="text" id="cariKode" placeholder="Kode atau Nama..." oninput="muatData()" style="width: 180px; cursor: text;">
-                </div>
-                <!-- FITUR BARU: FILTER DATE RANGE PINTAR -->
-                <div class="filter-grup">
-                    <label><i class="bi bi-calendar-range"></i> Dari:</label>
-                    <input type="date" id="filterTglMulai" onchange="muatData()">
-                    <label>Hingga:</label>
-                    <input type="date" id="filterTglAkhir" onchange="muatData()">
-                    <button class="btn btn-secondary" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset Data</button>
-                </div>
-                <div class="filter-grup">
-                    <label for="urutTanggal">Urutan:</label>
-                    <select id="urutTanggal" onchange="muatData()" style="width: 130px;">
-                        <option value="terbaru">Terbaru</option>
-                        <option value="terlama">Terlama</option>
-                    </select>
-                </div>
-            </div>
-
-            <table id="tabelPesanan">
-                <thead>
-                    <tr>
-                        <th>Kode</th>
-                        <th>Nama</th>
-                        <th>Perangkat</th>
-                        <th>Status DP</th>
-                        <th>Tanggal Masuk</th>
-                        <th>Status Kerja</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <!-- ADMIN HANYA BISA MELIHAT LAPORAN TEKNISI, TIDAK BISA MENGINPUT -->
+        <div class="read-only-box">
+            <h4 style="color:#d97706; margin-bottom:10px;">Laporan Lapangan dari Teknisi (READ ONLY)</h4>
+            <p style="font-size:0.9rem;">Status Lapangan: <strong id="mStatusTech">-</strong></p>
+            <p style="font-size:0.9rem;">Biaya Part (Awal): Rp <strong id="mPart">-</strong></p>
+            <p style="font-size:0.9rem; color:#ef4444;">Part Tambahan: Rp <strong id="mTambahan">-</strong> <br> <small>(Info: <span id="mInfoTambahan"></span>)</small></p>
         </div>
 
-        <div id="tabLaporanEkstra" class="modal-view">
-            <h2 style="margin-bottom: 1.5rem; font-size: 1.6rem; font-weight: 700;">Laporan Analitik Tambahan</h2>
-            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                <div class="admin-chart-box" style="flex: 1; min-width: 300px; height: 350px;">
-                    <h4 style="margin-bottom: 1rem; text-align: center;"><i class="bi bi-pie-chart-fill" style="color:#0ea5e9;"></i> Top 5 Jenis Kerusakan</h4>
-                    <canvas id="grafikKerusakan"></canvas>
-                </div>
-                <div class="admin-chart-box" style="flex: 1; min-width: 300px; height: 350px;">
-                    <h4 style="margin-bottom: 1rem; text-align: center;"><i class="bi bi-bar-chart-fill" style="color:#10b981;"></i> Pendapatan per Teknisi (Rp)</h4>
-                    <canvas id="grafikTeknisi"></canvas>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="modal" id="modalKelola">
-        <div class="modal-konten">
-            <span class="tutup" onclick="tutupModal()">&times;</span>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="font-size:1.3rem; font-weight:700;">Kelola Order (<span id="txtKodeHeader">-</span>)</h3>
-                <button class="btn" style="background:#0f172a; color:white;" onclick="cetakNotaFisik()"><i class="bi bi-printer"></i> Cetak Nota Fisik</button>
-            </div>
-            
-            <input type="hidden" id="kodePesanan">
-
-            <div class="tab-menu-admin">
-                <button class="tab-btn-admin aktif" onclick="pindahTabAdmin('tabKiriLengkap')">Penjadwalan & Keuangan</button>
-                <button class="tab-btn-admin" onclick="pindahTabAdmin('tabKananLengkap')">Media Dokumen & Live Chat</button>
-                <button class="tab-btn-admin" onclick="pindahTabAdmin('tabGridAsli')">Tampilan Grid (Semua)</button>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.8rem; margin-top:1.2rem;" id="wrapperGridUtama">
-                <div id="tabKiriLengkap" class="modal-view aktif">
-                    
-                    <!-- FITUR BARU: BANNER PENGUNCIAN DATA READ-ONLY -->
-                    <div id="bannerTerkunci" style="display:none; background:#fef2f2; color:#991b1b; padding:1.2rem; border-left:5px solid #ef4444; margin-bottom:1.5rem; border-radius:8px; font-weight:600; box-shadow:0 4px 10px rgba(239, 68, 68, 0.1);">
-                        <i class="bi bi-lock-fill" style="font-size:1.2rem; margin-right:5px;"></i> 
-                        INVOICE TERKUNCI (READ-ONLY). Pesanan ini telah Lunas & Selesai. Pengeditan otomatis dinonaktifkan untuk menjaga integritas pelaporan keuangan.
-                    </div>
-                    <!-- ----------------------------------------------- -->
-
-                    <div class="box-dp">
-                        <h4 style="font-size:0.95rem; font-weight:700; color:#c2410c; margin-bottom:5px;">🔒 Langkah 1: Validasi Uang Muka (DP)</h4>
-                        <p style="font-size:0.85rem; margin-bottom:0.8rem;">Metode Transfer DP: <strong id="txtMetodeDP">-</strong></p>
-                        <button class="btn btn-validasi" id="btnApproveDP" onclick="validasiDP(true)">Setujui DP Lunas</button>
-                        <button class="btn btn-hapus" id="btnTolakDP" onclick="validasiDP(false)">Tolak DP</button>
-                        <label>Bukti Transfer DP:</label>
-                        <div id="displayBuktiDP" class="pratinjau">Belum ada bukti</div>
-                    </div>
-
-                    <div id="wrapperPenjadwalan">
-                        <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">📅 Langkah 2: Atur Penjadwalan Teknisi</h4>
-                        <label>Lokasi Perbaikan:</label>
-                        <select id="lokasiServis" class="kunci-target">
-                            <option value="home_service">Service di Rumah Pelanggan (On-Site)</option>
-                            <option value="workshop">Barang Dibawa oleh Teknisi (Ke Workshop)</option>
-                        </select>
-
-                        <label>Status Progres Kerja</label>
-                        <select id="statusPesanan" class="kunci-target">
-                            <option value="baru">Menunggu Verifikasi Jadwal</option>
-                            <option value="dijadwalkan">Sudah Dijadwalkan</option>
-                            <option value="diproses">Sedang Diperbaiki</option>
-                            <option value="selesai_servis">Perbaikan Selesai (Menunggu Pelunasan)</option>
-                            <option value="ditolak_pelanggan">Dibatalkan (Pelanggan Tolak Biaya Tambahan)</option>
-                            <option value="selesai">Lunas & Selesai Sepenuhnya</option>
-                        </select>
-
-                        <label>Teknisi</label>
-                        <select id="teknisi" class="kunci-target">
-                            <option value="">-- Pilih --</option>
-                            <option value="Andi S.">Andi S.</option>
-                            <option value="Bambang K.">Bambang K.</option>
-                            <option value="Dian R.">Dian R.</option>
-                        </select>
-
-                        <label>Tanggal & Waktu Servis</label>
-                        <input type="datetime-local" id="jadwal" class="kunci-target">
-
-                        <label style="color:#0ea5e9;">Live Update ETA Kedatangan Teknisi</label>
-                        <input type="text" id="etaUpdate" class="kunci-target" placeholder="Contoh: Teknisi dalam perjalanan (15 Menit lagi)">
-
-                        <div class="box-tambahan-admin" id="boxInputTambahan">
-                            <h4 style="font-size:0.95rem; font-weight:700; color:#15803d; margin-bottom:3px;">🔧 Laporkan Temuan Rusak Tambahan</h4>
-                            <p style="font-size:0.8rem; color:#475569; margin-bottom:0.6rem;">Aktifkan jika teknisi butuh tambahan part di lapangan.</p>
-                            
-                            <label style="font-weight:600;"><input type="checkbox" id="chkAdaTambahan" class="kunci-target" onchange="toggleFormTambahan()" style="width:auto; margin-right:5px;"> Aktifkan Komponen Tambahan</label>
-                            
-                            <div id="subFormTambahan" style="display:none; margin-top:0.5rem;">
-                                <label>Komponen / Kendala Baru</label>
-                                <input type="text" id="infoTambahan" class="kunci-target" placeholder="Contoh: IC Power Lemah / Motor Kipas Mati">
-                                <label>Harga Tambahan Part/Jasa (Rp)</label>
-                                <input type="number" id="biayaTambahan" class="kunci-target" placeholder="0" oninput="hitungTotal()">
-                                <p style="font-size:0.85rem; margin-top:0.3rem;">Status Persetujuan User: <strong id="txtResponPelanggan" style="color:#2563eb;">PENDING</strong></p>
-                            </div>
-                        </div>
-
-                        <hr style="margin:1rem 0; border-color:#e2e8f0;">
-                        <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">💰 Langkah 3: Hitung Rincian Nota Pokok</h4>
-                        <label>Biaya Suku Cadang Pokok (Rp)</label>
-                        <input type="number" id="biayaSuku" class="kunci-target" placeholder="0" oninput="hitungTotal()">
-                        <label>Biaya Jasa Servis Pokok (Rp)</label>
-                        <input type="number" id="biayaJasa" class="kunci-target" placeholder="0" oninput="hitungTotal()">
-                        
-                        <div style="background:rgba(14, 165, 233, 0.05); padding:0.8rem; border-radius:6px; margin-top:0.5rem;">
-                            <p style="font-size:0.88rem; font-weight:600; color:#1e40af;">Subtotal Tagihan Pokok: Rp <span id="totalTampilPokok">0</span></p>
-                            <p style="font-size:0.88rem; font-weight:600; color:#c2410c;" id="rowTampilTambahanAdmin">Subtotal Tambahan Disetujui: Rp <span id="totalTampilTambahan">0</span></p>
-                            <p style="font-size:0.85rem; color:#16a34a;">Potongan Uang Muka (DP): -Rp 50.000</p>
-                            <hr style="margin:0.4rem 0; border-color:#cbd5e1;">
-                            <p style="font-size:1.05rem; font-weight:700;">Sisa Bersih Pelunasan: Rp <span id="totalTampil">0</span></p>
-                        </div>
-
-                        <hr style="margin:1rem 0; border-color:#e2e8f0;">
-                        <p style="font-size:0.9rem;"><strong>Metode Transfer Pelunasan:</strong> <span id="metodeBayarTampil" style="font-weight:600;">-</span></p>
-                        <button class="btn btn-validasi" id="btnValidasi" onclick="validasiPembayaranPelunasan()" style="margin-top:0.8rem; padding:0.6rem 1.2rem; width:100%;">Validasi Lunas Sisa (Tutup Transaksi)</button>
-                        <label>Bukti Transfer Pelunasan:</label>
-                        <div id="displayBuktiPelunasan" class="pratinjau">Belum ada bukti</div>
-                    </div>
-
-                    <div style="margin-top:1.5rem; text-align:right;">
-                        <button class="btn btn-edit" id="btnSimpanPerubahan" style="padding:0.7rem 1.8rem;" onclick="simpanPerubahan()"><i class="bi bi-save"></i> Simpan Semua Data</button>
-                    </div>
-                </div>
-
-                <div id="tabKananLengkap" class="modal-view">
-                    <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">Dokumen Foto Unit Masuk</h4>
-                    <div class="pratinjau" id="tampilKondisiAdmin">Belum ada dokumen</div>
-                    
-                    <p style="font-size:0.85rem;"><strong>Catatan Kerusakan Pelanggan:</strong></p>
-                    <textarea id="keluhanAdmin" rows="2" readonly style="font-size:0.85rem; margin-top:5px; border-color:#e2e8f0;"></textarea>
-
-                    <h4 style="margin-top:1.2rem; border-top:2px dashed #cbd5e1; padding-top:1rem; font-size:0.95rem; font-weight:700;"><i class="bi bi-chat-text-fill" style="color:#10b981;"></i> Jalur Chat Live Pelanggan</h4>
-                    <div class="chat-admin-container">
-                        <div class="chat-admin-msg-box" id="boxPesanAdmin"></div>
-                        <div class="chat-admin-input-row">
-                            <input type="text" id="inputPesanAdmin" placeholder="Ketik balasan pesan..." onkeypress="aksiEnterChatAdmin(event)">
-                            <button onclick="kirimChatAdmin()"><i class="bi bi-send-fill"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <button class="btn" style="background:#0ea5e9; width:100%; margin-bottom:10px;" onclick="simpanJadwalAdmin()">1. Simpan & Tugaskan Ke Teknisi</button>
+        <button class="btn" style="background:#10b981; width:100%; margin-bottom:10px;" onclick="validasiLunasAdmin()">2. Validasi Pembayaran Lunas (Selesai)</button>
+        <button class="btn" style="background:#94a3b8; width:100%;" onclick="tutupModal()">Batal / Tutup</button>
     </div>
 </div>
 
 <script>
-// --- KONFIGURASI GLOBAL & STATE ADMIN ---
-const API_URL = window.location.origin + "/api";
-let aktifMembukaKode = "";
-let cacheStringData = "";
-let intervalAdmin = null;
-let chartInstance = null; 
-window.semuaPesananGlobal = {}; 
-window.dataTampilFilter = []; // FITUR BARU: Variabel menampung data spesifik untuk di export
+    const API_URL = window.location.origin + "/api";
+    let token = sessionStorage.getItem("adminToken");
+    let currentKode = "";
+    const socket = io(window.location.origin);
 
-const socket = io(window.location.origin);
+    if(!token) loginAdmin();
+    else muatData();
 
-socket.on("updateDashboardAdmin", () => {
-    muatData(); 
-});
+    socket.on("updateSistem", () => { if(token) muatData(); });
 
-socket.on("chatBaruDiterima", (kodeChat) => {
-    if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
-});
-
-function pindahTabUtamaAdmin(tabIdTarget) {
-    document.querySelectorAll(".tab-menu-admin")[0].querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
-    event.currentTarget.classList.add("aktif");
-
-    document.getElementById("tabDaftarPesananUtama").classList.remove("aktif");
-    document.getElementById("tabLaporanEkstra").classList.remove("aktif");
-    
-    document.getElementById(tabIdTarget).classList.add("aktif");
-    
-    if(tabIdTarget === 'tabLaporanEkstra') {
-        renderGrafikEkstra();
+    function loginAdmin() {
+        const u = prompt("ID Admin:"); const p = prompt("Password Admin:");
+        fetch(`${API_URL}/admin/login`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username:u, password:p}) })
+        .then(res=>res.json()).then(d => { if(d.token){ sessionStorage.setItem("adminToken", d.token); location.reload(); } else alert("Salah!"); });
     }
-}
+    function logout() { sessionStorage.removeItem("adminToken"); location.reload(); }
 
-function toggleDarkModeAdmin() {
-    document.body.classList.toggle('dark-mode');
-    const icon = document.getElementById('iconDarkAdmin');
-    if (document.body.classList.contains('dark-mode')) {
-        icon.classList.replace('bi-moon-fill', 'bi-sun-fill');
-        localStorage.setItem('adminTema', 'gelap');
-        if(chartInstance) Chart.defaults.color = '#f8fafc';
-    } else {
-        icon.classList.replace('bi-sun-fill', 'bi-moon-fill');
-        localStorage.setItem('adminTema', 'terang');
-        if(chartInstance) Chart.defaults.color = '#1e293b';
-    }
-    if(chartInstance) chartInstance.update();
-    if(window.chartKerusakan) window.chartKerusakan.update();
-    if(window.chartTeknisi) window.chartTeknisi.update();
-}
-if(localStorage.getItem('adminTema') === 'gelap') toggleDarkModeAdmin();
+    function getAuth() { return { "Authorization": `Bearer ${token}` }; }
 
-function pindahTabAdmin(tabIdTarget) {
-    document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
-    event.currentTarget.classList.add("aktif");
-
-    if (tabIdTarget === 'tabGridAsli') {
-        document.getElementById("wrapperGridUtama").style.display = "grid";
-        document.getElementById("tabKiriLengkap").classList.add("aktif");
-        document.getElementById("tabKananLengkap").classList.add("aktif");
-    } else {
-        document.getElementById("wrapperGridUtama").style.display = "block";
-        document.getElementById("tabKiriLengkap").classList.remove("aktif");
-        document.getElementById("tabKananLengkap").classList.remove("aktif");
-        document.getElementById(tabIdTarget).classList.add("aktif");
-    }
-}
-
-function getAuthHeader() {
-    const token = sessionStorage.getItem("adminToken");
-    return token ? { "Authorization": `Bearer ${token}` } : {};
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    if (sessionStorage.getItem("adminToken")) {
-        tampilkanDashboardUtama();
-    }
-});
-
-function prosesLogin() {
-    const username = document.getElementById("adminId").value.trim();
-    const password = document.getElementById("adminPassword").value;
-
-    fetch(`${API_URL}/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("ID atau Password salah!");
-        return res.json();
-    })
-    .then(data => {
-        sessionStorage.setItem("adminToken", data.token);
-        Swal.fire({ icon: 'success', title: 'Login Berhasil', showConfirmButton: false, timer: 1500 });
-        tampilkanDashboardUtama();
-    })
-    .catch(err => {
-        Swal.fire('Gagal!', err.message, 'error');
-    });
-}
-
-function prosesLogout() {
-    sessionStorage.removeItem("adminToken");
-    if(intervalAdmin) clearInterval(intervalAdmin);
-    location.reload();
-}
-
-function aksiEnterLogin(event) {
-    if (event.key === "Enter") prosesLogin();
-}
-
-function tampilkanDashboardUtama() {
-    document.getElementById("loginOverlay").style.display = "none";
-    document.getElementById("mainPanelWrapper").style.display = "block";
-    muatData();
-    intervalAdmin = setInterval(muatData, 4000); 
-}
-
-function handleApiError(res) {
-    if (res.status === 401 || res.status === 403) {
-        Swal.fire('Sesi Habis', 'Sesi login Anda tidak valid atau telah habis. Silakan login kembali.', 'warning').then(() => {
-            prosesLogout();
-        });
-        throw new Error("Sesi tidak valid");
-    }
-    return res.json();
-}
-
-function muatData() {
-    if (!sessionStorage.getItem("adminToken")) return;
-
-    fetch(`${API_URL}/orders`, { headers: getAuthHeader() })
-    .then(handleApiError)
-    .then(semua => {
-        window.semuaPesananGlobal = semua; 
-        
-        const currentDataString = JSON.stringify(semua);
-        if (currentDataString === cacheStringData && !document.getElementById("cariKode").value) return; 
-
-        const tbody = document.querySelector("#tabelPesanan tbody");
-        
-        // AMBIL NILAI FILTER DATE RANGE
-        const tglMulai = document.getElementById("filterTglMulai").value; 
-        const tglAkhir = document.getElementById("filterTglAkhir").value; 
-        const filterCari = document.getElementById("cariKode") ? document.getElementById("cariKode").value.toLowerCase() : "";
-
-        tbody.innerHTML = "";
-        window.dataTampilFilter = []; // Reset penampung data filter export
-
-        let baru = 0, jadwal = 0, proses = 0, validasi = 0;
-        let pendapatanMurni = 0, piutangBerjalan = 0;
-
-        let urutanKunci = Object.keys(semua);
-        const tipeUrutan = document.getElementById("urutTanggal").value;
-        if(tipeUrutan === "terbaru") urutanKunci.sort((a, b) => b.localeCompare(a));
-        else urutanKunci.sort((a, b) => a.localeCompare(b));
-
-        urutanKunci.forEach(kode => {
-            const d = semua[kode];
-            
-            // LOGIKA FILTER PENCARIAN & RENTANG TANGGAL PINTAR
-            if (filterCari && !kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
-            if (tglMulai && d.tanggalInput < tglMulai) return;
-            if (tglAkhir && d.tanggalInput > tglAkhir) return;
-
-            window.dataTampilFilter.push(d); // Masukkan ke wadah export CSV
-
-            // LOGIKA PENGHITUNGAN KEUANGAN
-            let totalSub = (d.biayaSuku || 0) + (d.biayaJasa || 0);
-            let totalTamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
-            let grandTotal = totalSub + totalTamb;
-
-            if (d.pembayaranValid || d.status === 'selesai') {
-                pendapatanMurni += grandTotal;
-            } else if (d.status !== 'batal' && d.status !== 'ditolak_pelanggan') {
-                let sisaTagihan = grandTotal - (d.dpValid ? 50000 : 0);
-                if(sisaTagihan > 0 && d.status !== 'baru') {
-                    piutangBerjalan += sisaTagihan;
-                }
-            }
-
-            if(d.status === "baru") baru++;
-            else if(d.status === "dijadwalkan") jadwal++;
-            else if(d.status === "diproses" || d.status === "selesai_servis") proses++;
-            if(d.pembayaranDikonfirmasi && !d.pembayaranValid) validasi++;
-
-            let teksDP = "BELUM BAYAR"; let kelasDP = "belum_dp";
-            if (d.dpValid) { teksDP = "DP LUNAS ✅"; kelasDP = "selesai"; }
-            else if (d.dpTerbayar) { teksDP = "PERLU CEK ⏳"; kelasDP = "menunggu_validasi"; }
-
-            let kelasStatus = d.pembayaranValid || d.status === "selesai" ? "selesai" : d.status === "ditolak_pelanggan" ? "batal" : d.pembayaranDikonfirmasi ? "menunggu_validasi" : d.status;
-            let tombolAksi = "";
-            if (d.status === "baru" && d.dpValid) {
-                tombolAksi = `<button class="btn btn-validasi" onclick="updateStatusCepat('${kode}', 'dijadwalkan')" title="Jadwalkan">📅</button>`;
-            } else if (d.status === "dijadwalkan") {
-                tombolAksi = `<button class="btn btn-edit" onclick="updateStatusCepat('${kode}', 'diproses')" title="Proses">⚙️</button>`;
-            }
-            
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><strong>${kode}</strong></td>
-                <td>${d.nama}</td>
-                <td>${d.merek ? d.merek.toUpperCase() : ''} ${d.tipe || ''}</td>
-                <td><span class="status ${kelasDP}">${teksDP}</span></td>
-                <td>${d.tanggalInput}</td>
-                <td><span class="status ${kelasStatus}">${ubahNamaStatus(d)}</span></td>
-                <td>${tombolAksi}</td>
-                <td>
-                    <button class="btn btn-edit" onclick="bukaModal('${kode}')"><i class="bi bi-gear"></i> Kelola</button>
-                    <button class="btn btn-hapus" onclick="hapusPesanan('${kode}')"><i class="bi bi-trash"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        // UPDATE UI DASHBOARD
-        document.getElementById("jmlBaru").textContent = baru;
-        document.getElementById("jmlJadwal").textContent = jadwal;
-        document.getElementById("jmlProses").textContent = proses;
-        document.getElementById("jmlValidasi").textContent = validasi;
-        
-        document.getElementById("lblTotalPendapatan").textContent = "Rp " + pendapatanMurni.toLocaleString("id-ID");
-        document.getElementById("lblTotalPiutang").textContent = "Rp " + piutangBerjalan.toLocaleString("id-ID");
-        
-        renderGrafikAdmin(baru, jadwal, proses, validasi);
-        renderGrafikEkstra(); 
-
-        if(!filterCari) cacheStringData = currentDataString; 
-    })
-    .catch(err => console.warn("Koneksi admin ke server bermasalah.", err));
-}
-
-function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
-    const ctx = document.getElementById('grafikAdmin').getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    
-    chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Baru', 'Dijadwalkan', 'Diproses', 'Perlu Validasi Lunas'],
-            datasets: [{
-                label: 'Jumlah Transaksi',
-                data: [cBaru, cJadwal, cProses, cValidasi],
-                backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7'],
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
-    });
-}
-
-function renderGrafikEkstra() {
-    let kerusakanCount = {}; let teknisiRev = {};
-    
-    window.dataTampilFilter.forEach(d => {
-        if(d.layanan) {
-            d.layanan.split(', ').forEach(l => {
-                if(l !== "Belum dipilih" && l.trim() !== "") kerusakanCount[l] = (kerusakanCount[l] || 0) + 1;
+    function muatData() {
+        fetch(`${API_URL}/orders`, {headers: getAuth()}).then(res=>res.json()).then(data => {
+            const tbody = document.getElementById("tabelData"); tbody.innerHTML = "";
+            Object.values(data).forEach(d => {
+                tbody.innerHTML += `<tr>
+                    <td><strong>${d.kode}</strong></td> <td>${d.nama}</td> <td>${d.merek}</td>
+                    <td><span style="background:#fef3c7; color:#d97706; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.8rem;">${d.status.toUpperCase()}</span></td>
+                    <td><button class="btn" onclick="bukaModal('${d.kode}')">Kelola Order</button></td>
+                </tr>`;
             });
-        }
-        if(d.status === "selesai_servis" || d.status === "selesai" || d.pembayaranValid) {
-            const tName = d.teknisi || "Tanpa Teknisi";
-            teknisiRev[tName] = (teknisiRev[tName] || 0) + (d.biayaSuku || 0) + (d.biayaJasa || 0);
-        }
-    });
+        });
+    }
 
-    const sortedKerusakan = Object.entries(kerusakanCount).sort((a,b) => b[1] - a[1]).slice(0, 5);
-    
-    const ctxK = document.getElementById('grafikKerusakan').getContext('2d');
-    if(window.chartKerusakan) window.chartKerusakan.destroy();
-    window.chartKerusakan = new Chart(ctxK, {
-        type: 'doughnut',
-        data: { labels: sortedKerusakan.map(k => k[0]), datasets: [{ data: sortedKerusakan.map(k => k[1]), backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7', '#ef4444'] }] },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-
-    const ctxT = document.getElementById('grafikTeknisi').getContext('2d');
-    if(window.chartTeknisi) window.chartTeknisi.destroy();
-    window.chartTeknisi = new Chart(ctxT, {
-        type: 'bar',
-        data: { labels: Object.keys(teknisiRev), datasets: [{ label: 'Pendapatan (Rp)', data: Object.values(teknisiRev), backgroundColor: '#10b981', borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
-
-// UPDATE LOGIKA EXPORT CSV: HANYA EXPORT DATA YANG SEDANG DI FILTER!
-function exportCSV() {
-    if(window.dataTampilFilter.length === 0) return Swal.fire('Kosong', 'Tidak ada data untuk di-export pada rentang ini.', 'info');
-    let csvContent = "data:text/csv;charset=utf-8,Kode,Tanggal Input,Nama,WA,Merek,Tipe,Layanan,Teknisi,Biaya Jasa,Biaya Sparepart,Tambahan,Total Biaya,Status,Pembayaran\n";
-    
-    window.dataTampilFilter.forEach(d => {
-        const jasa = d.biayaJasa || 0;
-        const suku = d.biayaSuku || 0;
-        const tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
-        const total = jasa + suku + tamb;
-        const statLunas = (d.pembayaranValid || d.status === 'selesai') ? 'LUNAS' : 'BELUM LUNAS';
-        csvContent += `${d.kode},${d.tanggalInput},"${d.nama}","${d.wa}",${d.merek},${d.tipe},"${d.layanan || '-'}",${d.teknisi||'-'},${jasa},${suku},${tamb},${total},${d.status},${statLunas}\n`;
-    });
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Laporan_Servis_Filtered_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-}
-
-function cetakNotaFisik() {
-    const kode = document.getElementById("kodePesanan").value;
-    const d = window.semuaPesananGlobal[kode];
-    
-    if(!d) return Swal.fire('Error', 'Pilih pesanan terlebih dahulu', 'error');
-
-    document.getElementById("pKode").textContent = kode;
-    document.getElementById("pTgl").textContent = new Date().toLocaleDateString('id-ID');
-    document.getElementById("pNama").textContent = d.nama;
-    document.getElementById("pUnit").textContent = `${d.merek} ${d.tipe}`;
-    document.getElementById("pLayanan").textContent = "Rp " + (d.biayaJasa || 0).toLocaleString("id-ID");
-    document.getElementById("pSuku").textContent = "Rp " + (d.biayaSuku || 0).toLocaleString("id-ID");
-    
-    let tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
-    document.getElementById("pTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
-    
-    document.getElementById("pTotal").textContent = "Rp " + ((d.biayaJasa||0) + (d.biayaSuku||0) + tamb).toLocaleString("id-ID");
-    document.getElementById("pMetode").textContent = d.metodePembayaran || "Tunai";
-
-    window.print();
-}
-
-function resetFilterKalender() {
-    document.getElementById("filterTglMulai").value = "";
-    document.getElementById("filterTglAkhir").value = "";
-    document.getElementById("cariKode").value = "";
-    muatData();
-}
-
-function ubahNamaStatus(d) {
-    if(d.pembayaranValid || d.status === "selesai") return "LUNAS & SELESAI";
-    if(d.status === "ditolak_pelanggan") return "DITOLAK PELANGGAN";
-    if(d.pembayaranDikonfirmasi) return "VALIDASI PELUNASAN";
-    if(d.status === "baru") return "BARU MASUK";
-    if(d.status === "dijadwalkan") return "DIJADWALKAN";
-    if(d.status === "diproses") return "PROSES PERBAIKAN";
-    if(d.status === "selesai_servis") return "SELESAI SERVIS (TAGIHAN)";
-    return d.status ? d.status.toUpperCase() : "BARU";
-}
-
-function bukaModal(kode) {
-    if (!sessionStorage.getItem("adminToken")) return;
-    aktifMembukaKode = kode;
-
-    fetch(`${API_URL}/orders/${kode}`, { headers: getAuthHeader() })
-    .then(handleApiError)
-    .then(d => {
-        document.getElementById("kodePesanan").value = kode;
-        document.getElementById("txtKodeHeader").textContent = kode;
-        document.getElementById("statusPesanan").value = d.status || "baru";
-        document.getElementById("teknisi").value = d.teknisi || "";
-        document.getElementById("jadwal").value = d.jadwal || "";
-        
-        document.getElementById("displayBuktiDP").innerHTML = d.buktiDP 
-            ? `<img src="${d.buktiDP}" style="max-height:150px; cursor:pointer;" onclick="window.open('${d.buktiDP}')">` 
-            : "Belum ada bukti";
+    function bukaModal(kode) {
+        currentKode = kode;
+        fetch(`${API_URL}/orders/${kode}`, {headers: getAuth()}).then(res=>res.json()).then(d => {
+            document.getElementById("mKode").textContent = kode;
+            document.getElementById("mTeknisi").value = d.teknisi || "";
+            document.getElementById("mJasa").value = d.biayaJasa || 0;
             
-        document.getElementById("displayBuktiPelunasan").innerHTML = d.buktiPelunasan 
-            ? `<img src="${d.buktiPelunasan}" style="max-height:150px; cursor:pointer;" onclick="window.open('${d.buktiPelunasan}')">` 
-            : "Belum ada bukti";
-        
-        document.getElementById("etaUpdate").value = d.etaTeknisi || "";
-        
-        document.getElementById("biayaSuku").value = d.biayaSuku || 0;
-        document.getElementById("biayaJasa").value = d.biayaJasa || 0;
-        document.getElementById("metodeBayarTampil").textContent = d.metodePembayaran || "-";
-        document.getElementById("keluhanAdmin").value = d.kerusakan || "-";
-        document.getElementById("txtMetodeDP").textContent = d.metodeDP || "Belum Memilih";
-        document.getElementById("lokasiServis").value = d.lokasiServis || "home_service";
-
-        document.getElementById("chkAdaTambahan").checked = d.adaKerusakanTambahan || false;
-        document.getElementById("infoTambahan").value = d.infoKerusakanTambahan || "";
-        document.getElementById("biayaTambahan").value = d.biayaSukuTambahan || 0;
-        
-        document.getElementById("txtResponPelanggan").textContent = (d.statusPersetujuanTambahan || "pending").toUpperCase();
-        toggleFormTambahan();
-
-        const tampilKondisi = document.getElementById("tampilKondisiAdmin");
-        if(tampilKondisi) {
-            tampilKondisi.innerHTML = d.kondisiHP 
-                ? (d.tipeKondisi && d.tipeKondisi.startsWith("video/") ? `<video src="${d.kondisiHP}" controls style="max-width:100%"></video>` : `<img src="${d.kondisiHP}" style="max-width:100%; border-radius:5px;">`) 
-                : "<em>Tidak ada lampiran berkas</em>";
-        }
-
-        const wrapperJadwal = document.getElementById("wrapperPenjadwalan");
-        if (d.dpValid) {
-            if(wrapperJadwal) { wrapperJadwal.style.opacity = "1"; wrapperJadwal.style.pointerEvents = "auto"; }
-            document.getElementById("btnApproveDP").disabled = true; document.getElementById("btnTolakDP").disabled = true;
-        } else {
-            if(wrapperJadwal) { wrapperJadwal.style.opacity = "0.3"; wrapperJadwal.style.pointerEvents = "none"; }
-            document.getElementById("btnApproveDP").disabled = !d.dpTerbayar; document.getElementById("btnTolakDP").disabled = !d.dpTerbayar;
-        }
-
-        hitungTotal(); 
-        
-        // --- LOGIKA BARU: PENGUNCIAN DATA JIKA STATUS LUNAS/SELESAI ---
-        const isLocked = d.pembayaranValid || d.status === "selesai";
-        const lockBanner = document.getElementById("bannerTerkunci");
-        const btnSimpan = document.getElementById("btnSimpanPerubahan");
-        const formInputs = document.querySelectorAll(".kunci-target");
-        
-        if (isLocked) {
-            if(lockBanner) lockBanner.style.display = "block";
-            if(btnSimpan) btnSimpan.style.display = "none";
-            formInputs.forEach(inp => inp.disabled = true);
-            document.getElementById("btnValidasi").disabled = true;
-            document.getElementById("btnApproveDP").disabled = true;
-            document.getElementById("btnTolakDP").disabled = true;
-            document.getElementById("btnValidasi").classList.add("btn-locked");
-        } else {
-            if(lockBanner) lockBanner.style.display = "none";
-            if(btnSimpan) btnSimpan.style.display = "inline-block";
-            formInputs.forEach(inp => inp.disabled = false);
-            document.getElementById("btnValidasi").disabled = !d.pembayaranDikonfirmasi || d.pembayaranValid;
-            document.getElementById("btnValidasi").classList.remove("btn-locked");
-        }
-        // -------------------------------------------------------------
-
-        document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin")[0].click();
-        document.getElementById("modalKelola").style.display = "block";
-        muatLogPesanAdmin(); 
-    });
-}
-
-function validasiDP(isApproved) {
-    const kode = document.getElementById("kodePesanan").value;
-    let payload = isApproved ? { dpValid: true } : { dpTerbayar: false, dpValid: false, metodeDP: "" };
-
-    fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT",
-        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    })
-    .then(handleApiError)
-    .then(() => {
-        Swal.fire(
-            isApproved ? 'DP Valid!' : 'Ditolak', 
-            isApproved ? 'Akses Penjadwalan Dibuka.' : 'Pengajuan DP Ditolak.', 
-            isApproved ? 'success' : 'info'
-        );
-        bukaModal(kode); 
-    });
-}
-
-function simpanPerubahan() {
-    const kode = document.getElementById("kodePesanan").value;
-    const checkedTambahan = document.getElementById("chkAdaTambahan").checked;
-
-    const payload = {
-        status: document.getElementById("statusPesanan").value,
-        teknisi: document.getElementById("teknisi").value,
-        jadwal: document.getElementById("jadwal").value,
-        lokasiServis: document.getElementById("lokasiServis").value,
-        etaTeknisi: document.getElementById("etaUpdate").value.trim(), 
-        adaKerusakanTambahan: checkedTambahan,
-        infoKerusakanTambahan: document.getElementById("infoTambahan").value.trim(),
-        biayaSukuTambahan: parseInt(document.getElementById("biayaTambahan").value) || 0,
-        biayaSuku: parseInt(document.getElementById("biayaSuku").value) || 0,
-        biayaJasa: parseInt(document.getElementById("biayaJasa").value) || 0
-    };
-
-    fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT",
-        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    })
-    .then(handleApiError)
-    .then(() => { 
-        Swal.fire('Tersimpan!', 'Perubahan Berhasil Disimpan.', 'success');
-        tutupModal(); 
-    });
-}
-
-function validasiPembayaranPelunasan() {
-    const kode = document.getElementById("kodePesanan").value;
-    Swal.fire({
-        title: 'Validasi Pelunasan & Tutup Invoice?',
-        text: "Setelah ini data akan terkunci (Read-Only) dan masuk ke pencatatan Laba Bersih.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        cancelButtonColor: '#94a3b8',
-        confirmButtonText: 'Ya, Validasi & Tutup!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`${API_URL}/orders/${kode}`, {
-                method: "PUT",
-                headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-                body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
-            })
-            .then(handleApiError)
-            .then(() => { 
-                Swal.fire('Invoice Tertutup!', 'Pembayaran telah tervalidasi.', 'success'); 
-                tutupModal(); 
-            });
-        }
-    });
-}
-
-function hapusPesanan(kode) {
-    Swal.fire({
-        title: 'Hapus Pesanan?',
-        text: `Apakah Anda yakin menghapus pesanan ${kode} secara permanen?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#94a3b8',
-        confirmButtonText: 'Ya, Hapus!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`${API_URL}/orders/${kode}`, { 
-                method: "DELETE",
-                headers: getAuthHeader()
-            })
-            .then(handleApiError)
-            .then(() => {
-                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-            });
-        }
-    });
-}
-
-function hitungTotal() {
-    const suku = parseInt(document.getElementById("biayaSuku").value) || 0;
-    const jasa = parseInt(document.getElementById("biayaJasa").value) || 0;
-    const tamb = document.getElementById("chkAdaTambahan").checked ? (parseInt(document.getElementById("biayaTambahan").value) || 0) : 0;
-    
-    document.getElementById("totalTampilPokok").textContent = (suku + jasa).toLocaleString("id-ID");
-    document.getElementById("totalTampilTambahan").textContent = tamb.toLocaleString("id-ID");
-    
-    const sisaBersih = (suku + jasa + tamb) - 50000;
-    document.getElementById("totalTampil").textContent = sisaBersih < 0 ? 0 : sisaBersih.toLocaleString("id-ID");
-}
-
-function toggleFormTambahan() {
-    const chk = document.getElementById("chkAdaTambahan").checked;
-    document.getElementById("subFormTambahan").style.display = chk ? "block" : "none";
-    hitungTotal();
-}
-
-function tutupModal() {
-    document.getElementById("modalKelola").style.display = "none";
-    aktifMembukaKode = "";
-}
-
-function aksiEnterChatAdmin(event) {
-    if (event.key === "Enter") kirimChatAdmin();
-}
-
-function kirimChatAdmin() {
-    const inp = document.getElementById("inputPesanAdmin");
-    const teks = inp.value.trim();
-    if(!teks || !aktifMembukaKode) return;
-
-    const payload = { 
-        kode: aktifMembukaKode, pengirim: 'admin', teks: teks, 
-        waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) 
-    };
-
-    fetch(`${API_URL}/chats`, {
-        method: "POST",
-        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    })
-    .then(handleApiError)
-    .then(() => { inp.value = ""; });
-}
-
-function muatLogPesanAdmin() {
-    if(!aktifMembukaKode) return;
-    const box = document.getElementById("boxPesanAdmin");
-    if(!box) return;
-    
-    fetch(`${API_URL}/chats/${aktifMembukaKode}`, { headers: getAuthHeader() })
-    .then(handleApiError)
-    .then(chatData => {
-        let htmlStr = "";
-        chatData.forEach(msg => {
-            let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
-            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda (Admin)' : '📱 Pelanggan';
-            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
+            // Read Only Data dari Teknisi
+            document.getElementById("mStatusTech").textContent = d.status.toUpperCase();
+            document.getElementById("mPart").textContent = d.biayaSuku.toLocaleString('id-ID');
+            document.getElementById("mTambahan").textContent = d.biayaSukuTambahan.toLocaleString('id-ID');
+            document.getElementById("mInfoTambahan").textContent = d.infoKerusakanTambahan || "Tidak ada temuan";
+            
+            document.getElementById("modalAdmin").style.display = "block";
         });
-        if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
-    });
-}
+    }
+    function tutupModal() { document.getElementById("modalAdmin").style.display = "none"; }
 
-function updateStatusCepat(kode, statusBaru) {
-    fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT",
-        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ status: statusBaru })
-    })
-    .then(handleApiError)
-    .then(() => {
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: `Status ${kode} diubah ke ${statusBaru}`,
-            showConfirmButton: false,
-            timer: 2000
-        });
-    })
-    .catch(err => Swal.fire('Error', 'Gagal memperbarui status.', 'error'));
-}
+    function simpanJadwalAdmin() {
+        const dataAdmin = {
+            teknisi: document.getElementById("mTeknisi").value,
+            biayaJasa: parseInt(document.getElementById("mJasa").value) || 0,
+            status: "dijadwalkan" // Mengirim order ke dashboard teknisi
+        };
+        fetch(`${API_URL}/orders/${currentKode}`, { method: "PUT", headers: {...getAuth(), "Content-Type":"application/json"}, body: JSON.stringify(dataAdmin) })
+        .then(() => { Swal.fire('Disimpan', 'Tugas berhasil dilempar ke teknisi', 'success'); tutupModal(); });
+    }
 
+    function validasiLunasAdmin() {
+        fetch(`${API_URL}/orders/${currentKode}`, { method: "PUT", headers: {...getAuth(), "Content-Type":"application/json"}, body: JSON.stringify({status: "selesai", pembayaranValid: true}) })
+        .then(() => { Swal.fire('Tervalidasi', 'Transaksi Lunas & Selesai', 'success'); tutupModal(); });
+    }
 </script>
 </body>
 </html>
