@@ -20,7 +20,8 @@
     
     <style>
         * {margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans', sans-serif;}
-        body {background:#f8fafc; color:#1e293b; line-height:1.6;}
+        /* Menggunakan flex-direction column agar footer selalu di bawah */
+        body {background:#f8fafc; color:#1e293b; line-height:1.6; display: flex; flex-direction: column; min-height: 100vh;}
         
         /* Header Premium dengan Gradasi */
         header {
@@ -34,11 +35,12 @@
             box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
             border-bottom: 2px solid #0ea5e9;
         }
-        .logo {font-size:1.4rem; font-weight:700; display: flex; align-items: center; gap: 0.5rem;}
+        .logo {font-size:1.4rem; font-weight:700; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;}
         .logo i {color: #38bdf8;}
-        nav a {color:white; text-decoration:none; margin-left:1.5rem; font-weight: 500; transition: all 0.3s;}
+        nav a {color:white; text-decoration:none; margin-left:1.5rem; font-weight: 500; transition: all 0.3s; cursor: pointer;}
         nav a:hover {color:#38bdf8; transform: translateY(-1px);}
         
+        .main-content {flex: 1;}
         .container {max-width:900px; margin:2.5rem auto; padding:0 5%;}
 
         /* Progress Bar Kustom & Interaktif */
@@ -174,26 +176,25 @@
             position: fixed; bottom: 25px; right: 25px; width: 340px; max-width: calc(100vw - 50px);
             background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
             z-index: 9999; border: 1px solid #e2e8f0; overflow: hidden; display: none;
-            flex-direction: column; /* FIX BUG TAMPILAN MESSENGER */
+            flex-direction: column; 
             animation: chatSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             transition: all 0.3s ease;
         }
         @keyframes chatSlide { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        /* FITUR BARU: BENTUK MINIMIZE MENJADI ICON BULAT SEPERTI WIDGET PROFESIONAL */
+        /* BENTUK MINIMIZE MENJADI ICON BULAT */
         .chat-widget.minimized {
             width: 65px; height: 65px; border-radius: 50%; border: none; cursor: pointer;
             background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
             box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
             display: flex; align-items: center; justify-content: center;
-            flex-direction: row; /* FIX BUG TAMPILAN BULAT */
+            flex-direction: row; 
         }
         .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; }
         .chat-widget.minimized .chat-header-left span, .chat-widget.minimized .chat-toggle-btn { display: none; }
         .chat-widget.minimized .chat-header-left i { font-size: 2rem; margin: 0; color: white; display: flex; align-items: center; justify-content: center; width:100%; height:100%; }
         .chat-widget.minimized .chat-messages,
         .chat-widget.minimized .chat-input-row {display: none !important;}
-        /* ------------------------------------------------------------------------- */
 
         .chat-header {background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; cursor:pointer;}
         .chat-header-left { display: flex; align-items: center; gap: 0.5rem; width:100%; }
@@ -221,9 +222,11 @@
         body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
         body.dark-mode optgroup { background: #0f172a; color: #0ea5e9;}
         body.dark-mode .review-card { background: #1e293b; color: #f8fafc; border-color: #334155; }
-        body.dark-mode .swal2-popup { background: #1e293b !important; color: #ffffff !important; }
-        body.dark-mode .swal2-title, body.dark-mode .swal2-html-container { color: #ffffff !important; }
-        body.dark-mode .swal2-input { background: #0f172a !important; color: #ffffff !important; border: 1px solid #334155 !important; }
+        
+        /* FIX DARK MODE SWEETALERT */
+        body.dark-mode .swal2-popup { background: #1e293b !important; color: #f8fafc !important; }
+        body.dark-mode .swal2-title, body.dark-mode .swal2-html-container { color: #f8fafc !important; }
+        body.dark-mode .swal2-input { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
         
         .hero-section { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 4rem 2rem; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); margin-bottom: 2rem;}
         .hero-section h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;}
@@ -237,381 +240,435 @@
         .rating-stars i { color: #cbd5e1; transition: 0.2s; }
         .rating-stars i:hover, .rating-stars i.active { color: #f59e0b; }
 
-        /* FITUR BARU: CSS UNTUK KARTU ULASAN PUBLIK */
+        /* KARTU ULASAN PUBLIK */
         .reviews-container { display:flex; gap:1.2rem; overflow-x:auto; padding:1rem 0; scroll-snap-type: x mandatory; scrollbar-width: none;}
         .review-card { min-width:280px; background:white; padding:1.2rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.04); scroll-snap-align: start; border: 1px solid #e2e8f0;}
-        /* ------------------------------------------- */
-        /* Footer Styling */
-        .footer-section { background: #0f172a; color: #94a3b8; padding: 3rem 5%; margin-top: 4rem; text-align: center; }
-        .page-content { display: none; padding: 2rem 5%; }
+        
+        /* MULTIPAGE NAV & FOOTER */
+        .page-content { display: none; animation: fadeIn 0.4s; }
         .page-content.active { display: block; }
-        .alur-service { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-        .alur-box { background: #f1f5f9; padding: 1.5rem; border-radius: 10px; width: 200px; text-align: center; }
+        .footer-section { background: #0f172a; color: #94a3b8; padding: 2.5rem 5%; text-align: center; margin-top: auto; border-top: 2px solid #38bdf8;}
+        .alur-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .alur-item { background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
+        .alur-item i { font-size: 2rem; color: #0ea5e9; margin-bottom: 1rem; display: block;}
+        body.dark-mode .alur-item { background: #1e293b; border-color: #334155; }
+        .foto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .foto-item { background: #e2e8f0; height: 200px; border-radius: 12px; display: flex; flex-direction:column; align-items: center; justify-content: center; color: #64748b; font-weight: bold; border: 2px dashed #cbd5e1; }
+        body.dark-mode .foto-item { background: #334155; border-color: #475569; color: #94a3b8;}
     </style>
 </head>
 <body>
-<div class="main-wrapper">
+
 <header>
-    <div class="logo"><i class="bi bi-phone-vibrate"></i> Servis HP & Elektronik Online</div>
-   <nav style="display:flex; justify-content:space-between; padding:1rem 5%; background:#1e293b; color:white;">
-        <div onclick="showPage('home')" style="cursor:pointer; font-weight:bold;">SF TECH</div>
-        <div>
-            <a onclick="showPage('home')" style="cursor:pointer; margin-right:15px;">Home</a>
-            <a onclick="showPage('about')" style="cursor:pointer; margin-right:15px;">About Us</a>
-            <a onclick="showPage('profile')" style="cursor:pointer; margin-right:15px;">Profile</a>
-            <a onclick="tanyaKodeLacak()" style="cursor:pointer; color:#38bdf8;">Lacak Pesanan</a>
-        </div>
+    <div class="logo" onclick="tampilHalaman('home')"><i class="bi bi-phone-vibrate"></i> SF Tech Service</div>
+    <nav style="display:flex; align-items:center;">
+        <button onclick="toggleDarkMode()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
+        <a onclick="tampilHalaman('home')"><i class="bi bi-house"></i> Home</a>
+        <a onclick="tampilHalaman('about')"><i class="bi bi-info-circle"></i> About Us</a>
+        <a onclick="tampilHalaman('profile')"><i class="bi bi-images"></i> Profile</a>
+        <a onclick="tanyaKodeLacak()"><i class="bi bi-search"></i> Lacak Pesanan</a>
     </nav>
 </header>
-<div id="page-home" class="page-content active">
-             <div class="container"><h1>Selamat Datang</h1></div>
-        </div>
-    <div id="page-about" class="page-content">
-             <h2>About Us</h2>
-             <p>SF Tech adalah jasa servis terpercaya.</p>
-             <h3>Alur Service</h3>
-             <div class="alur-service">
-                 <div class="alur-box">1. Input Data Online</div>
-                 <div class="alur-box">2. Pembayaran DP</div>
-                 <div class="alur-box">3. Teknisi Datang</div>
-             </div>
-        </div>
-        
-        <div id="page-profile" class="page-content">
-             <h2>Bukti Foto Service</h2>
-             <div id="gallery">Bukti foto akan ditampilkan di sini</div>
-        </div>
-        
-        <div class="container" id="ulasan-section">
-             <h3>Ulasan Pelanggan</h3>
-             <!-- Review list anda -->
-        </div>
-</div>
-<div class="hero-section" id="heroLandingPage">
-    <h1>Servis HP & Elektronik Bergaransi</h1>
-    <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari smartphone Anda.</p>
-</div>
 
-<!-- FITUR BARU: BAGIAN TAMPILAN ULASAN PUBLIK (Di bawah Hero Section) -->
-<div class="container" id="publicReviewsSection" style="margin-top:-1rem; margin-bottom:2.5rem; display:none;">
-    <h3 style="text-align:center; font-size:1.2rem; margin-bottom:0;"><i class="bi bi-chat-heart-fill" style="color:#ef4444;"></i> Ulasan Pelanggan Kami</h3>
-    <div class="reviews-container" id="reviewList"></div>
-</div>
-<!-- ----------------------------------------------------------------- -->
+<div class="main-content">
+    
+    <!-- HALAMAN HOME UTAMA -->
+    <div id="page-home" class="page-content active">
+        <div class="hero-section" id="heroLandingPage">
+            <h1>Servis HP & Elektronik Bergaransi</h1>
+            <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari smartphone Anda.</p>
+        </div>
 
-<div class="container">
-    <div class="progress-container">
-        <div class="step-item active" data-step="1"><div class="step-number">1</div><div class="step-text">Layanan</div></div>
-        <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data Diri</div></div>
-        <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Bayar DP</div></div>
-        <div class="step-item" data-step="4"><div class="step-number">4</div><div class="step-text">Jadwal</div></div>
-        <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Proses</div></div>
-        <div class="step-item" data-step="6"><div class="step-number">6</div><div class="step-text">Bayar Sisa</div></div>
-        <div class="step-item" data-step="7"><div class="step-number">7</div><div class="step-text">Selesai</div></div>
-    </div>
-
-    <!-- STEP 1: LAYANAN -->
-    <div class="content-box active" id="step-1">
-        <h2>Pilih Kategori Perbaikan</h2>
-        <p style="margin-bottom: 1rem; color: #475569;">Pilih jenis layanan yang Anda butuhkan di bawah ini.</p>
-        
-        <!-- IMPLEMENTASI UI KARTU TERPISAH -->
-        <div class="kategori-wrapper">
-            <!-- KARTU SMARTPHONE -->
-            <div class="kategori-card hp">
-                <h4><i class="bi bi-phone-vibrate"></i> Layanan Smartphone</h4>
-                <!-- FITUR BARU: Tambahkan onchange="updateBrandOptions()" dan simpanDraft() -->
-                <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan Dalam (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
+        <div class="container" id="mainOrderContainer">
+            <div class="progress-container">
+                <div class="step-item active" data-step="1"><div class="step-number">1</div><div class="step-text">Layanan</div></div>
+                <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data Diri</div></div>
+                <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Bayar DP</div></div>
+                <div class="step-item" data-step="4"><div class="step-number">4</div><div class="step-text">Jadwal</div></div>
+                <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Proses</div></div>
+                <div class="step-item" data-step="6"><div class="step-number">6</div><div class="step-text">Bayar Sisa</div></div>
+                <div class="step-item" data-step="7"><div class="step-number">7</div><div class="step-text">Selesai</div></div>
             </div>
+
+            <!-- STEP 1: LAYANAN -->
+            <div class="content-box active" id="step-1">
+                <h2>Pilih Kategori Perbaikan</h2>
+                <p style="margin-bottom: 1rem; color: #475569;">Pilih jenis layanan yang Anda butuhkan di bawah ini.</p>
+                
+                <div class="kategori-wrapper">
+                    <!-- KARTU SMARTPHONE -->
+                    <div class="kategori-card hp">
+                        <h4><i class="bi bi-phone-vibrate"></i> Layanan Smartphone</h4>
+                        <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan Dalam (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
+                    </div>
+                    
+                    <!-- KARTU ELEKTRONIK -->
+                    <div class="kategori-card elektronik">
+                        <h4><i class="bi bi-plug"></i> Elektronik Rumah Tangga</h4>
+                        <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker / Magic Com</label><span class="harga">Mulai Rp 50rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
+                    </div>
+                </div>
+
+                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
+                <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan ke Data Diri <i class="bi bi-arrow-right"></i></button>
+            </div>
+
+            <!-- STEP 2: DATA DIRI & PERANGKAT -->
+            <div class="content-box" id="step-2">
+                <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi Perangkat</h3>
+                
+                <label>Nama Lengkap <span style="color:red;">*</span></label>
+                <input type="text" id="nama" placeholder="Contoh: Budi Santoso" oninput="simpanDraft()">
+                <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
+                
+                <label>Nomor WhatsApp <span style="color:red;">*</span></label>
+                <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
+                <div class="error-text" id="errWa">Nomor WhatsApp wajib diisi!</div>
+                
+                <label>Alamat Lengkap</label>
+                <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
+
+                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi / Google Maps (Opsional)</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;">
+                    <input type="url" id="shareloc" placeholder="Link Google Maps atau klik tombol di samping ->" oninput="simpanDraft()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+                    <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin: 0; white-space: nowrap;"><i class="bi bi-crosshair"></i> Lokasi Saat Ini</button>
+                </div>
+                
+                <label>Merek Perangkat <span style="color:red;">*</span></label>
+                <select id="merek" onchange="toggleMerekLainnya()">
+                    <option value="">-- Silakan Pilih Kategori Merek --</option>
+                    <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
+                        <option value="Samsung">Samsung</option>
+                        <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
+                        <option value="OPPO">OPPO / Realme</option>
+                        <option value="Vivo">Vivo</option>
+                        <option value="iPhone">Apple / iPhone</option>
+                        <option value="Infinix">Infinix / Tecno</option>
+                        <option value="Asus">Asus / ROG</option>
+                    </optgroup>
+                    <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
+                        <option value="Miyako">Miyako</option>
+                        <option value="Cosmos">Cosmos</option>
+                        <option value="Maspion">Maspion</option>
+                        <option value="Philips">Philips</option>
+                        <option value="Panasonic">Panasonic</option>
+                        <option value="Sharp">Sharp</option>
+                        <option value="Yong Ma">Yong Ma</option>
+                        <option value="Sekai">Sekai</option>
+                    </optgroup>
+                    <optgroup label="Lainnya">
+                        <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
+                    </optgroup>
+                </select>
+                <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
+                <div class="error-text" id="errMerek">Pilih salah satu merek perangkat!</div>
+                <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
+                
+                <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
+                <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Rice Cooker CRJ-3301" oninput="simpanDraft()">
+                <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
+                
+                <label>Kerusakan / Keluhan</label>
+                <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
+
+                <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
+                <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
+                <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file: 5MB</p>
+                <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
+
+                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between;">
+                    <button class="btn btn-secondary" onclick="prevStep()"><i class="bi bi-arrow-left"></i> Kembali</button>
+                    <button class="btn btn-primary" id="btnKirimPesanan" onclick="kirimPesanan()"><i class="bi bi-send-check"></i> Kirim Pesanan</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: BAYAR DP -->
+            <div class="content-box" id="step-3">
+                <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP)</h3>
+                <p>Kode Pesanan: <strong id="kodePesananDP">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
+                <p style="margin-top:0.5rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
+                
+                <div class="alert-bahaya">
+                    <strong><i class="bi bi-exclamation-triangle-fill"></i> KEBIJAKAN PEMBATALAN:</strong> Pembayaran Uang Muka (DP) ini bersifat <strong>Non-Refundable (Tidak dapat dikembalikan)</strong> dengan alasan apa pun.
+                </div>
+
+                <p>Pilih bank transfer DP:</p>
+                <div class="metode-bayar">
+                    <div class="metode-item pilihan-dp" id="dp-BCA" onclick="pilihMetodeDP('BCA')">Transfer BCA</div>
+                    <div class="metode-item pilihan-dp" id="dp-Mandiri" onclick="pilihMetodeDP('Mandiri')">Transfer Mandiri</div>
+                    <div class="metode-item pilihan-dp" id="dp-BRI" onclick="pilihMetodeDP('BRI')">Transfer BRI</div>
+                </div>
+
+                <div class="rekening-box" id="infoRekeningDP">
+                    <p><strong>Nomor Rekening:</strong> <span id="noRekDP">-</span></p>
+                    <p><strong>Atas Nama:</strong> SF Tech</p>
+                    <p><strong>Bank:</strong> <span id="namaBankDP">-</span></p>
+                </div>
+
+                <p style="margin: 1rem 0;">Metode DP dipilih: <strong id="metodeDPDipilih">-</strong></p>
+                <button class="btn btn-success" id="btnKonfirmasiDP" onclick="konfirmasiBayarDP()"><i class="bi bi-check-circle"></i> Konfirmasi Bayar DP</button>
+                <label>Upload Bukti Transfer DP:</label>
+                <input type="file" id="fileBuktiDP" accept="image/*" onchange="previewBukti(this, 'pratinjauDP')">
+                <div class="pratinjau" id="pratinjauDP" style="display:none;"></div>
+                <div class="info catatan" id="infoValidasiDP" style="display:none; margin-top:1rem; background: #fff7ed; border-left-color: #d97706; color: #92400e;">
+                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu verifikasi pembayaran DP oleh admin. Penjadwalan teknisi akan dibuka setelah DP valid...</strong></span>
+                </div>
+            </div>
+
+            <!-- STEP 4: JADWAL -->
+            <div class="content-box" id="step-4">
+                <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
+                <p>Kode Pesanan: <strong id="kodePesanan">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
+                <div id="infoJadwal" style="margin-top: 1rem;">
+                    <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
+                </div>
+                <div class="jadwal-box" id="tampilJadwal" style="display:none;">
+                    <p><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
+                    <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
+                    <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
+                    <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
+                </div>
+            </div>
+
+            <!-- STEP 5: PROSES -->
+            <div class="content-box" id="step-5">
+                <h3><i class="bi bi-tools"></i> Proses Perbaikan</h3>
+                
+                <div id="boxKerusakanTambahan" class="alert-warning-box" style="display:none;">
+                    <h4><i class="bi bi-exclamation-diamond-fill"></i> Temuan Kerusakan Tambahan oleh Teknisi!</h4>
+                    <p style="margin-top: 0.5rem;">Teknisi kami menemukan kendala baru saat membongkar perangkat Anda:</p>
+                    <p style="background: white; padding: 0.7rem; border-radius: 6px; margin: 0.5rem 0; font-weight: bold; border-left: 4px solid #f97316;" id="txtKerusakanTambahan" class="data-dinamis">-</p>
+                    <p>Ada penambahan biaya pengerjaan sebesar: <strong style="color:#c2410c; font-size:1.1rem;">Rp <span id="txtBiayaTambahan" class="data-dinamis">0</span></strong></p>
+                    
+                    <div class="alert-bahaya" style="font-size:0.85rem; margin:0.8rem 0; border-radius: 6px;">
+                        Jika Anda <strong>MENOLAK</strong> pengerjaan tambahan ini, proses servis dihentikan dan <strong>Uang DP Anda hangus</strong>.
+                    </div>
+                    
+                    <div style="margin-top:1rem;" id="aksiTambahan">
+                        <button class="btn btn-success" onclick="responsTambahan(true)"><i class="bi bi-hand-thumbs-up"></i> Setuju & Lanjutkan</button>
+                        <button class="btn btn-danger" onclick="responsTambahan(false)"><i class="bi bi-x-circle"></i> Tolak (Batalkan Servis)</button>
+                    </div>
+                </div>
+
+                <div class="lacak-box" id="mainLacakBox">
+                    <p><strong>Status:</strong> <span id="statusSaatIni" class="data-dinamis">Menunggu Konfirmasi</span></p>
+                    <div class="status-bar">
+                        <div><div class="status-dot selesai" id="s1"><i class="bi bi-check"></i></div><div style="font-size:0.75rem; font-weight:500;">Diterima</div></div>
+                        <div><div class="status-dot" id="s2"><i class="bi bi-calendar-event"></i></div><div style="font-size:0.75rem; font-weight:500;">Jadwal</div></div>
+                        <div><div class="status-dot" id="s3"><i class="bi bi-wrench-adjustable"></i></div><div style="font-size:0.75rem; font-weight:500;">Diperbaiki</div></div>
+                        <div><div class="status-dot" id="s4"><i class="bi bi-phone"></i></div><div style="font-size:0.75rem; font-weight:500;">Selesai</div></div>
+                    </div>
+
+                    <div style="margin-top:1.5rem;">
+                        <h4 style="font-size: 1rem;">Kondisi Perangkat Awal:</h4>
+                        <div class="pratinjau data-dinamis" id="tampilKondisiHP">Belum tersedia</div>
+                    </div>
+                </div>
+                <div class="harga-final" id="tampilHarga" style="display:block;">
+                    <h4 style="font-size: 1.1rem; color:#1e40af;"><i class="bi bi-receipt-cutoff"></i> Rincian Biaya</h4>
+                    <p>Biaya Suku Cadang: Rp <span id="lblBiayaSuku" class="data-dinamis">0</span></p>
+                    <p>Biaya Jasa Servis: Rp <span id="lblBiayaJasa" class="data-dinamis">0</span></p>
+                    <div id="rowBiayaTambahanFaktur" style="display:block; color: #c2410c;">
+                        <p>Biaya Kerusakan Tambahan: +Rp <span id="lblBiayaTambahanFaktur" class="data-dinamis">0</span></p>
+                    </div>
+                    <p style="color: #15803d; font-weight: 500;">Uang Muka (DP): -Rp 50.000 (Sudah dibayar)</p>
+                    <hr style="margin:0.8rem 0; border-color: #cbd5e1;">
+                    <p style="font-size:1.3rem; font-weight:700; color: #1e3a8a;">Sisa yang Harus Dibayar: Rp <span id="lblTotalBiaya" class="data-dinamis">0</span></p>
+                </div>
+            </div>
+
+            <!-- STEP 6: PELUNASAN -->
+            <div class="content-box" id="step-6">
+                <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran Sisa</h3>
+                <p>Sisa Pelunasan: <strong style="font-size:1.2rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">0</span></strong></p>
+                <p style="margin-top:0.5rem;">Pilih metode pembayaran:</p>
+
+                <div class="metode-bayar">
+                    <div class="metode-item pilihan-bayar" id="bayar-Tunai" onclick="pilihMetodeBayar('Tunai')">Tunai / Cash</div>
+                    <div class="metode-item pilihan-bayar" id="bayar-BCA" onclick="pilihMetodeBayar('BCA')">Transfer BCA</div>
+                    <div class="metode-item pilihan-bayar" id="bayar-Mandiri" onclick="pilihMetodeBayar('Mandiri')">Transfer Mandiri</div>
+                    <div class="metode-item pilihan-bayar" id="bayar-BRI" onclick="pilihMetodeBayar('BRI')">Transfer BRI</div>
+                </div>
+
+                <div class="rekening-box" id="infoRekening">
+                    <p><strong>Nomor Rekening:</strong> <span id="noRek">-</span></p>
+                    <p><strong>Atas Nama:</strong> SF Tech</p>
+                    <p><strong>Bank:</strong> <span id="namaBank">-</span></p>
+                </div>
+                <label>Upload Bukti Transfer Pelunasan:</label>
+                <input type="file" id="fileBuktiPelunasan" accept="image/*" onchange="previewBukti(this, 'pratinjauPelunasan')">
+                <div class="pratinjau" id="pratinjauPelunasan" style="display:none;"></div>
+                
+                <p style="margin:1rem 0;">Metode dipilih: <strong id="metodeDipilih">-</strong></p>
+                <button class="btn btn-success" id="btnKonfirmasi" onclick="konfirmasiBayar()"><i class="bi bi-cloud-arrow-up"></i> Konfirmasi Pembayaran</button>
+
+                <div class="info catatan" id="infoValidasi" style="display:none; margin-top:1rem;">
+                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu validasi sisa pembayaran dari admin...</strong></span>
+                </div>
+            </div>
+
+            <!-- STEP 7: SELESAI -->
+            <div class="content-box" id="step-7">
+                <h3><i class="bi bi-patch-check-fill" style="color:#10b981;"></i> Pesanan Selesai</h3>
+                <p id="txtKeteranganSelesai">Pembayaran Anda telah divalidasi secara penuh. Terima kasih telah menggunakan layanan kami!</p>
+                <div class="info info-success" id="txtGaransiLabel" style="background: #f0fdf4; color: #166534; border-left: 4px solid #10b981; padding:0.8rem; margin:0.8rem 0; border-radius:6px; font-weight:600;">
+                    <i class="bi bi-shield-check"></i> Garansi servis berlaku selama 30 hari.
+                </div>
+
+                <div class="faktur" id="fakturTampilan">
+                    <h4>FAKTUR PEMBAYARAN SERVIS</h4>
+                    <div class="baris"><span>No. Faktur</span><span id="noFaktur" class="data-dinamis" style="font-weight:600;">-</span></div>
+                    <div class="baris"><span>Kode Pesanan</span><span id="fakturKode" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Nama Pelanggan</span><span id="fakturNama" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Merek & Tipe</span><span id="fakturMerekTipe" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Kerusakan</span><span id="fakturKerusakan" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Teknisi</span><span id="fakturTeknisi" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Tanggal & Waktu</span><span id="fakturTanggal" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Jenis Layanan</span><span id="fakturLayanan" class="data-dinamis" style="max-width: 60%; text-align:right;">-</span></div>
+                    <div class="baris"><span>Biaya Suku Cadang</span><span id="fakturSuku" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Biaya Jasa</span><span id="fakturJasa" class="data-dinamis">-</span></div>
+                    <div class="baris" id="fakturRowTambahan" style="display:block; color:#c2410c;"><span>Biaya Kerusakan Tambahan</span><span id="fakturTambahan" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>DP yang Dibayar</span><span>Rp 50.000</span></div>
+                    <div class="baris"><span>Metode Pelunasan</span><span id="fakturMetode" class="data-dinamis" style="font-weight:600;">-</span></div>
+                    <div class="baris total"><span>TOTAL KESELURUHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
+                    <div class="catatan" id="txtFakturNote">Terima kasih atas kepercayaan Anda kepada kami</div>
+                </div>
+
+                <div id="boxBeriRating" style="margin-top:2rem; padding:1.5rem; text-align:center; background:#f1f5f9; border-radius:10px;">
+                    <h4>Beri Penilaian Pelayanan Kami</h4>
+                    <div class="rating-stars" id="starContainer">
+                        <i class="bi bi-star" data-val="1"></i>
+                        <i class="bi bi-star" data-val="2"></i>
+                        <i class="bi bi-star" data-val="3"></i>
+                        <i class="bi bi-star" data-val="4"></i>
+                        <i class="bi bi-star" data-val="5"></i>
+                    </div>
+                    <textarea id="ulasanPelanggan" rows="2" placeholder="Tuliskan ulasan Anda mengenai hasil servis..." style="margin-top:10px;"></textarea>
+                    <button class="btn btn-success" onclick="kirimRatingUlasan()">Kirim Ulasan</button>
+                </div>
+
+                <div class="tombol-faktur">
+                    <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
+                    <button class="btn btn-home" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FITUR BARU: BAGIAN ULASAN (Dipindah ke Bawah di atas Footer) -->
+        <div class="container" id="publicReviewsSection" style="margin-top:2rem; margin-bottom:2.5rem; display:none;">
+            <h3 style="text-align:center; font-size:1.2rem; margin-bottom:0;"><i class="bi bi-chat-heart-fill" style="color:#ef4444;"></i> Ulasan Pelanggan Kami</h3>
+            <div class="reviews-container" id="reviewList"></div>
+        </div>
+    </div> <!-- END PAGE HOME -->
+
+    <!-- HALAMAN ABOUT US -->
+    <div id="page-about" class="page-content container">
+        <div class="content-box active" style="display:block; margin-top: 2rem;">
+            <h2>Tentang Kami</h2>
+            <p>SF Tech Service adalah penyedia layanan perbaikan smartphone dan alat elektronik rumah tangga profesional. Kami hadir untuk memberikan solusi cepat, transparan, dan bergaransi kepada seluruh pelanggan kami, baik melalui kunjungan ke rumah (Home Service) maupun pengerjaan di workshop kami.</p>
             
-            <!-- KARTU ELEKTRONIK -->
-            <div class="kategori-card elektronik">
-                <h4><i class="bi bi-plug"></i> Elektronik Rumah Tangga</h4>
-                <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker / Magic Com</label><span class="harga">Mulai Rp 50rb</span></div>
-                <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
+            <h3 style="margin-top:2.5rem; text-align:center;"><i class="bi bi-signpost-split" style="color:#0ea5e9;"></i> Alur Pelayanan Kami</h3>
+            <div class="alur-grid">
+                <div class="alur-item">
+                    <i class="bi bi-laptop"></i>
+                    <h4 style="margin-bottom:0.5rem;">1. Input Data Online</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Pilih jenis layanan, lengkapi data diri, dan jelaskan kendala perangkat Anda melalui website kami.</p>
+                </div>
+                <div class="alur-item">
+                    <i class="bi bi-wallet2"></i>
+                    <h4 style="margin-bottom:0.5rem;">2. Bayar DP & Jadwal</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Lakukan pembayaran uang muka agar sistem kami dapat mencarikan dan menjadwalkan teknisi untuk Anda.</p>
+                </div>
+                <div class="alur-item">
+                    <i class="bi bi-tools"></i>
+                    <h4 style="margin-bottom:0.5rem;">3. Proses Perbaikan</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Teknisi akan memeriksa & memperbaiki unit. Anda bisa melacak status secara real-time di website.</p>
+                </div>
+                <div class="alur-item">
+                    <i class="bi bi-check-circle"></i>
+                    <h4 style="margin-bottom:0.5rem;">4. Selesai & Lunas</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Setelah selesai, lunasi sisa tagihan, terima nota digital garansi 30 hari, dan nikmati kembali perangkat Anda.</p>
+                </div>
             </div>
         </div>
-
-        <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
-        <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan ke Data Diri <i class="bi bi-arrow-right"></i></button>
     </div>
 
-    <!-- STEP 2: DATA DIRI & PERANGKAT -->
-    <div class="content-box" id="step-2">
-        <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi Perangkat</h3>
-        
-        <!-- FITUR BARU: Tambahkan oninput="simpanDraft()" ke setiap input -->
-        <label>Nama Lengkap <span style="color:red;">*</span></label>
-        <input type="text" id="nama" placeholder="Contoh: Budi Santoso" oninput="simpanDraft()">
-        <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
-        
-        <label>Nomor WhatsApp <span style="color:red;">*</span></label>
-        <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
-        <div class="error-text" id="errWa">Nomor WhatsApp wajib diisi!</div>
-        
-        <label>Alamat Lengkap</label>
-        <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
-
-        <!-- FITUR GEOLOKASI SHARELOC (Sesuai Permintaan Anda) -->
-        <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi / Google Maps (Opsional)</label>
-        <div style="display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;">
-            <input type="url" id="shareloc" placeholder="Link Google Maps atau klik tombol di samping ->" oninput="simpanDraft()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-            <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin: 0; white-space: nowrap;"><i class="bi bi-crosshair"></i> Lokasi Saat Ini</button>
-        </div>
-        <!-- -------------------------------------------------- -->
-        
-        <label>Merek Perangkat <span style="color:red;">*</span></label>
-        <!-- IMPLEMENTASI UI OPTGROUP UNTUK MEREK DENGAN ID UNTUK FILTER DINAMIS -->
-        <select id="merek" onchange="toggleMerekLainnya()">
-            <option value="">-- Silakan Pilih Kategori Merek --</option>
-            <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
-                <option value="Samsung">Samsung</option>
-                <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
-                <option value="OPPO">OPPO / Realme</option>
-                <option value="Vivo">Vivo</option>
-                <option value="iPhone">Apple / iPhone</option>
-                <option value="Infinix">Infinix / Tecno</option>
-                <option value="Asus">Asus / ROG</option>
-            </optgroup>
-            <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
-                <option value="Miyako">Miyako</option>
-                <option value="Cosmos">Cosmos</option>
-                <option value="Maspion">Maspion</option>
-                <option value="Philips">Philips</option>
-                <option value="Panasonic">Panasonic</option>
-                <option value="Sharp">Sharp</option>
-                <option value="Yong Ma">Yong Ma</option>
-                <option value="Sekai">Sekai</option>
-            </optgroup>
-            <optgroup label="Lainnya">
-                <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
-            </optgroup>
-        </select>
-        <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
-        <div class="error-text" id="errMerek">Pilih salah satu merek perangkat!</div>
-        <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
-        
-        <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-        <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Rice Cooker CRJ-3301" oninput="simpanDraft()">
-        <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
-        
-        <label>Kerusakan / Keluhan</label>
-        <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
-
-        <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
-        <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
-        <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file: 5MB</p>
-        <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
-
-        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between;">
-            <button class="btn btn-secondary" onclick="prevStep()"><i class="bi bi-arrow-left"></i> Kembali</button>
-            <button class="btn btn-primary" id="btnKirimPesanan" onclick="kirimPesanan()"><i class="bi bi-send-check"></i> Kirim Pesanan</button>
-        </div>
-    </div>
-
-    <!-- STEP 3: BAYAR DP -->
-    <div class="content-box" id="step-3">
-        <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP)</h3>
-        <p>Kode Pesanan: <strong id="kodePesananDP">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
-        <p style="margin-top:0.5rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
-        
-        <div class="alert-bahaya">
-            <strong><i class="bi bi-exclamation-triangle-fill"></i> KEBIJAKAN PEMBATALAN:</strong> Pembayaran Uang Muka (DP) ini bersifat <strong>Non-Refundable (Tidak dapat dikembalikan)</strong> dengan alasan apa pun.
-        </div>
-
-        <p>Pilih bank transfer DP:</p>
-        <div class="metode-bayar">
-            <div class="metode-item pilihan-dp" id="dp-BCA" onclick="pilihMetodeDP('BCA')">Transfer BCA</div>
-            <div class="metode-item pilihan-dp" id="dp-Mandiri" onclick="pilihMetodeDP('Mandiri')">Transfer Mandiri</div>
-            <div class="metode-item pilihan-dp" id="dp-BRI" onclick="pilihMetodeDP('BRI')">Transfer BRI</div>
-        </div>
-
-        <div class="rekening-box" id="infoRekeningDP">
-            <p><strong>Nomor Rekening:</strong> <span id="noRekDP">-</span></p>
-            <p><strong>Atas Nama:</strong> SF Tech</p>
-            <p><strong>Bank:</strong> <span id="namaBankDP">-</span></p>
-        </div>
-
-        <p style="margin: 1rem 0;">Metode DP dipilih: <strong id="metodeDPDipilih">-</strong></p>
-        <button class="btn btn-success" id="btnKonfirmasiDP" onclick="konfirmasiBayarDP()"><i class="bi bi-check-circle"></i> Konfirmasi Bayar DP</button>
-        <label>Upload Bukti Transfer DP:</label>
-        <input type="file" id="fileBuktiDP" accept="image/*" onchange="previewBukti(this, 'pratinjauDP')">
-        <div class="pratinjau" id="pratinjauDP" style="display:none;"></div>
-        <div class="info catatan" id="infoValidasiDP" style="display:none; margin-top:1rem; background: #fff7ed; border-left-color: #d97706; color: #92400e;">
-            <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu verifikasi pembayaran DP oleh admin. Penjadwalan teknisi akan dibuka setelah DP valid...</strong></span>
-        </div>
-        
-        <!-- Karena sudah pakai Real-Time Websocket, tombol refresh manual disembunyikan/opsional -->
-        <button class="btn btn-primary" style="margin-top:1rem; display:none;" onclick="cekStatus()"><i class="bi bi-arrow-clockwise"></i> Perbarui Status</button>
-    </div>
-
-    <!-- STEP 4: JADWAL -->
-    <div class="content-box" id="step-4">
-        <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
-        <p>Kode Pesanan: <strong id="kodePesanan">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
-        <div id="infoJadwal" style="margin-top: 1rem;">
-            <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
-        </div>
-        <div class="jadwal-box" id="tampilJadwal" style="display:none;">
-            <p><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
-            <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
-            <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
+    <!-- HALAMAN PROFILE & BUKTI FOTO -->
+    <div id="page-profile" class="page-content container">
+        <div class="content-box active" style="display:block; margin-top: 2rem;">
+            <h2>Profil Perusahaan & Galeri Servis</h2>
+            <p>Sejak didirikan, kami telah melayani ratusan pelanggan dan mengembalikan fungsi berbagai jenis perangkat dengan teknisi bersertifikat dan suku cadang berkualitas.</p>
             
-            <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
-            
-            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
+            <h3 style="margin-top:2.5rem;"><i class="bi bi-images" style="color:#10b981;"></i> Bukti Hasil Servis</h3>
+            <div class="foto-grid">
+                <div class="foto-item">
+                    <i class="bi bi-camera" style="font-size:2.5rem; margin-bottom:10px;"></i>
+                    <p>Foto Servis 1 (Placeholder)</p>
+                </div>
+                <div class="foto-item">
+                    <i class="bi bi-phone" style="font-size:2.5rem; margin-bottom:10px;"></i>
+                    <p>Foto Servis 2 (Placeholder)</p>
+                </div>
+                <div class="foto-item">
+                    <i class="bi bi-motherboard" style="font-size:2.5rem; margin-bottom:10px;"></i>
+                    <p>Foto Servis 3 (Placeholder)</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- STEP 5: PROSES -->
-    <div class="content-box" id="step-5">
-        <h3><i class="bi bi-tools"></i> Proses Perbaikan</h3>
-        
-        <div id="boxKerusakanTambahan" class="alert-warning-box" style="display:none;">
-            <h4><i class="bi bi-exclamation-diamond-fill"></i> Temuan Kerusakan Tambahan oleh Teknisi!</h4>
-            <p style="margin-top: 0.5rem;">Teknisi kami menemukan kendala baru saat membongkar perangkat Anda:</p>
-            <p style="background: white; padding: 0.7rem; border-radius: 6px; margin: 0.5rem 0; font-weight: bold; border-left: 4px solid #f97316;" id="txtKerusakanTambahan" class="data-dinamis">-</p>
-            <p>Ada penambahan biaya pengerjaan sebesar: <strong style="color:#c2410c; font-size:1.1rem;">Rp <span id="txtBiayaTambahan" class="data-dinamis">0</span></strong></p>
-            
-            <div class="alert-bahaya" style="font-size:0.85rem; margin:0.8rem 0; border-radius: 6px;">
-                Jika Anda <strong>MENOLAK</strong> pengerjaan tambahan ini, proses servis dihentikan dan <strong>Uang DP Anda hangus</strong>.
-            </div>
-            
-            <div style="margin-top:1rem;" id="aksiTambahan">
-                <button class="btn btn-success" onclick="responsTambahan(true)"><i class="bi bi-hand-thumbs-up"></i> Setuju & Lanjutkan</button>
-                <button class="btn btn-danger" onclick="responsTambahan(false)"><i class="bi bi-x-circle"></i> Tolak (Batalkan Servis)</button>
-            </div>
-        </div>
+</div> <!-- END MAIN CONTENT -->
 
-        <div class="lacak-box" id="mainLacakBox">
-            <p><strong>Status:</strong> <span id="statusSaatIni" class="data-dinamis">Menunggu Konfirmasi</span></p>
-            <div class="status-bar">
-                <div><div class="status-dot selesai" id="s1"><i class="bi bi-check"></i></div><div style="font-size:0.75rem; font-weight:500;">Diterima</div></div>
-                <div><div class="status-dot" id="s2"><i class="bi bi-calendar-event"></i></div><div style="font-size:0.75rem; font-weight:500;">Jadwal</div></div>
-                <div><div class="status-dot" id="s3"><i class="bi bi-wrench-adjustable"></i></div><div style="font-size:0.75rem; font-weight:500;">Diperbaiki</div></div>
-                <div><div class="status-dot" id="s4"><i class="bi bi-phone"></i></div><div style="font-size:0.75rem; font-weight:500;">Selesai</div></div>
-            </div>
-
-            <div style="margin-top:1.5rem;">
-                <h4 style="font-size: 1rem;">Kondisi Perangkat Awal:</h4>
-                <div class="pratinjau data-dinamis" id="tampilKondisiHP">Belum tersedia</div>
-            </div>
-        </div>
-        <div class="harga-final" id="tampilHarga" style="display:block;">
-            <h4 style="font-size: 1.1rem; color:#1e40af;"><i class="bi bi-receipt-cutoff"></i> Rincian Biaya</h4>
-            <p>Biaya Suku Cadang: Rp <span id="lblBiayaSuku" class="data-dinamis">0</span></p>
-            <p>Biaya Jasa Servis: Rp <span id="lblBiayaJasa" class="data-dinamis">0</span></p>
-            <div id="rowBiayaTambahanFaktur" style="display:block; color: #c2410c;">
-                <p>Biaya Kerusakan Tambahan: +Rp <span id="lblBiayaTambahanFaktur" class="data-dinamis">0</span></p>
-            </div>
-            <p style="color: #15803d; font-weight: 500;">Uang Muka (DP): -Rp 50.000 (Sudah dibayar)</p>
-            <hr style="margin:0.8rem 0; border-color: #cbd5e1;">
-            <p style="font-size:1.3rem; font-weight:700; color: #1e3a8a;">Sisa yang Harus Dibayar: Rp <span id="lblTotalBiaya" class="data-dinamis">0</span></p>
-        </div>
+<!-- FOOTER UNTUK USER -->
+<footer class="footer-section">
+    <div style="display:flex; justify-content:center; gap: 15px; margin-bottom:1rem;">
+        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-facebook"></i></a>
+        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-instagram"></i></a>
+        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-whatsapp"></i></a>
     </div>
+    <p>&copy; 2026 SF Tech Service. Semua Hak Dilindungi.</p>
+</footer>
 
-    <!-- STEP 6: PELUNASAN -->
-    <div class="content-box" id="step-6">
-        <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran Sisa</h3>
-        <p>Sisa Pelunasan: <strong style="font-size:1.2rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">0</span></strong></p>
-        <p style="margin-top:0.5rem;">Pilih metode pembayaran:</p>
-
-        <div class="metode-bayar">
-            <div class="metode-item pilihan-bayar" id="bayar-Tunai" onclick="pilihMetodeBayar('Tunai')">Tunai / Cash</div>
-            <div class="metode-item pilihan-bayar" id="bayar-BCA" onclick="pilihMetodeBayar('BCA')">Transfer BCA</div>
-            <div class="metode-item pilihan-bayar" id="bayar-Mandiri" onclick="pilihMetodeBayar('Mandiri')">Transfer Mandiri</div>
-            <div class="metode-item pilihan-bayar" id="bayar-BRI" onclick="pilihMetodeBayar('BRI')">Transfer BRI</div>
+<!-- FLOATING CHAT WIDGET -->
+<div class="chat-widget minimized" id="chatWidgetPelanggan">
+    <div class="chat-header" onclick="toggleChatWidget()">
+        <div class="chat-header-left">
+            <i class="bi bi-chat-dots-fill"></i> 
+            <span>Chat Admin (<span id="txtChatKode">-</span>)</span>
         </div>
-
-        <div class="rekening-box" id="infoRekening">
-            <p><strong>Nomor Rekening:</strong> <span id="noRek">-</span></p>
-            <p><strong>Atas Nama:</strong> SF Tech</p>
-            <p><strong>Bank:</strong> <span id="namaBank">-</span></p>
-        </div>
-        <label>Upload Bukti Transfer Pelunasan:</label>
-        <input type="file" id="fileBuktiPelunasan" accept="image/*" onchange="previewBukti(this, 'pratinjauPelunasan')">
-        <div class="pratinjau" id="pratinjauPelunasan" style="display:none;"></div>
-        
-        <p style="margin:1rem 0;">Metode dipilih: <strong id="metodeDipilih">-</strong></p>
-        <button class="btn btn-success" id="btnKonfirmasi" onclick="konfirmasiBayar()"><i class="bi bi-cloud-arrow-up"></i> Konfirmasi Pembayaran</button>
-
-        <div class="info catatan" id="infoValidasi" style="display:none; margin-top:1rem;">
-            <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu validasi sisa pembayaran dari admin...</strong></span>
-        </div>
+        <button class="chat-toggle-btn" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
+            <i class="bi bi-dash-lg"></i>
+        </button>
     </div>
-
-    <!-- STEP 7: SELESAI -->
-    <div class="content-box" id="step-7">
-        <h3><i class="bi bi-patch-check-fill" style="color:#10b981;"></i> Pesanan Selesai</h3>
-        <p id="txtKeteranganSelesai">Pembayaran Anda telah divalidasi secara penuh. Terima kasih telah menggunakan layanan kami!</p>
-        <div class="info info-success" id="txtGaransiLabel" style="background: #f0fdf4; color: #166534; border-left: 4px solid #10b981; padding:0.8rem; margin:0.8rem 0; border-radius:6px; font-weight:600;">
-            <i class="bi bi-shield-check"></i> Garansi servis berlaku selama 30 hari.
-        </div>
-
-        <div class="faktur" id="fakturTampilan">
-            <h4>FAKTUR PEMBAYARAN SERVIS</h4>
-            <div class="baris"><span>No. Faktur</span><span id="noFaktur" class="data-dinamis" style="font-weight:600;">-</span></div>
-            <div class="baris"><span>Kode Pesanan</span><span id="fakturKode" class="data-dinamis">-</span></div>
-            <div class="baris"><span>Nama Pelanggan</span><span id="fakturNama" class="data-dinamis">-</span></div>
-            <div class="baris"><span>Merek & Tipe</span><span id="fakturMerekTipe" class="data-dinamis">-</span></div>
-            <div class="baris"><span>Kerusakan</span><span id="fakturKerusakan" class="data-dinamis">-</span></div>
-            <div class="baris"><span>Teknisi</span><span id="fakturTeknisi" class="data-dinamis">-</span></div>
-            <div class="baris"><span>Tanggal & Waktu</span><span id="fakturTanggal" class="data-dinamis">-</span></div>
-            <div class="baris"><span>Jenis Layanan</span><span id="fakturLayanan" class="data-dinamis" style="max-width: 60%; text-align:right;">-</span></div>
-            <div class="baris"><span>Biaya Suku Cadang</span><span id="fakturSuku" class="data-dinamis">-</span></div>
-            <div class="baris"><span>Biaya Jasa</span><span id="fakturJasa" class="data-dinamis">-</span></div>
-            <div class="baris" id="fakturRowTambahan" style="display:block; color:#c2410c;"><span>Biaya Kerusakan Tambahan</span><span id="fakturTambahan" class="data-dinamis">-</span></div>
-            <div class="baris"><span>DP yang Dibayar</span><span>Rp 50.000</span></div>
-            <div class="baris"><span>Metode Pelunasan</span><span id="fakturMetode" class="data-dinamis" style="font-weight:600;">-</span></div>
-            <div class="baris total"><span>TOTAL KESELURUHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
-            <div class="catatan" id="txtFakturNote">Terima kasih atas kepercayaan Anda kepada kami</div>
-        </div>
-
-        <div id="boxBeriRating" style="margin-top:2rem; padding:1.5rem; text-align:center; background:#f1f5f9; border-radius:10px;">
-            <h4>Beri Penilaian Pelayanan Kami</h4>
-            <div class="rating-stars" id="starContainer">
-                <i class="bi bi-star" data-val="1"></i>
-                <i class="bi bi-star" data-val="2"></i>
-                <i class="bi bi-star" data-val="3"></i>
-                <i class="bi bi-star" data-val="4"></i>
-                <i class="bi bi-star" data-val="5"></i>
-            </div>
-            <textarea id="ulasanPelanggan" rows="2" placeholder="Tuliskan ulasan Anda mengenai hasil servis..." style="margin-top:10px;"></textarea>
-            <button class="btn btn-success" onclick="kirimRatingUlasan()">Kirim Ulasan</button>
-        </div>
-
-        <div class="tombol-faktur">
-            <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
-            <button class="btn btn-home" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
-        </div>
-    </div>
-
-    <!-- FLOATING CHAT WIDGET DENGAN TAMPILAN PREMIUM (DIUBAH MENJADI ICON BULAT KETIKA MINIMIZED) -->
-    <div class="chat-widget minimized" id="chatWidgetPelanggan">
-        <div class="chat-header" onclick="toggleChatWidget()">
-            <div class="chat-header-left">
-                <i class="bi bi-chat-dots-fill"></i> 
-                <span>Chat Admin (<span id="txtChatKode">-</span>)</span>
-            </div>
-            <button class="chat-toggle-btn" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
-                <i class="bi bi-dash-lg"></i>
-            </button>
-        </div>
-        <div class="chat-messages" id="boxPesanPelanggan"></div>
-        <div class="chat-input-row">
-            <input type="text" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()">
-            <button onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
-        </div>
+    <div class="chat-messages" id="boxPesanPelanggan"></div>
+    <div class="chat-input-row">
+        <input type="text" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()">
+        <button onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
     </div>
 </div>
 
 <script>
+// --- LOGIKA MULTIPAGE NAVIGASI ---
+function tampilHalaman(id) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    
+    // Tampilkan ulasan HANYA jika berada di halaman home
+    if(id === 'home') {
+        muatUlasanPublik();
+    } else {
+        document.getElementById("publicReviewsSection").style.display = "none";
+    }
+}
+
 window.buktiDPBase64 = "";
 window.buktiPelunasanBase64 = "";
 
@@ -651,15 +708,14 @@ socket.on("chatBaruDiterima", (kodeChat) => {
     if(kodeChat === kodeSaya) muatLogPesan();
 });
 
-// FITUR BARU: AUTO SAVE & RESTORE DRAFT
 function simpanDraft() {
-    if(currentStep > 2 || kodeSaya) return; // Hanya simpan saat mengisi form awal
+    if(currentStep > 2 || kodeSaya) return; 
     const layananChecked = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.id);
     const draft = {
         step: currentStep, layanan: layananChecked,
         nama: document.getElementById("nama").value, wa: document.getElementById("wa").value,
         alamat: document.getElementById("alamat").value, 
-        shareloc: document.getElementById("shareloc").value, // FITUR GEOLOKASI
+        shareloc: document.getElementById("shareloc").value,
         merek: document.getElementById("merek").value,
         merekLainnya: document.getElementById("merekLainnya").value,
         tipe: document.getElementById("tipe").value, kerusakan: document.getElementById("kerusakan").value
@@ -676,7 +732,7 @@ function restoreDraft() {
             document.getElementById("nama").value = data.nama || "";
             document.getElementById("wa").value = data.wa || "";
             document.getElementById("alamat").value = data.alamat || "";
-            document.getElementById("shareloc").value = data.shareloc || ""; // FITUR GEOLOKASI
+            document.getElementById("shareloc").value = data.shareloc || ""; 
             document.getElementById("merek").value = data.merek || "";
             document.getElementById("merekLainnya").value = data.merekLainnya || "";
             document.getElementById("tipe").value = data.tipe || "";
@@ -689,7 +745,6 @@ function restoreDraft() {
     }
 }
 
-// FITUR GEOLOKASI OTOMATIS (GPS)
 function dapatkanLokasiOtomatis() {
     const btn = document.getElementById("btnLokasiGPS");
     const inputShareloc = document.getElementById("shareloc");
@@ -705,31 +760,23 @@ function dapatkanLokasiOtomatis() {
         (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            
             inputShareloc.value = `https://maps.google.com/?q=${lat},${lng}`;
             simpanDraft();
-            
             btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Berhasil';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini';
-                btn.disabled = false;
-            }, 3000);
+            setTimeout(() => { btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini'; btn.disabled = false; }, 3000);
         },
         (error) => {
             console.error(error);
             btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini';
             btn.disabled = false;
-            
             let pesanError = 'Tidak dapat mengambil lokasi.';
             if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda. Mohon izinkan pada browser.';
-            
             Swal.fire('Gagal', pesanError, 'error');
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
-// FITUR BARU: FILTER MEREK DINAMIS BERDASARKAN KATEGORI LAYANAN (FIX BUG)
 let originalOptHP = null;
 let originalOptElek = null;
 let originalOptLainnya = null;
@@ -743,37 +790,22 @@ function inisialisasiOpsiMerek() {
 }
 
 function updateBrandOptions() {
-    inisialisasiOpsiMerek(); // Pastikan opsi master tersimpan terlebih dahulu
-
+    inisialisasiOpsiMerek(); 
     const isHP = Array.from(document.querySelectorAll('.kategori-card.hp input[type="checkbox"]')).some(cb => cb.checked);
     const isElek = Array.from(document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]')).some(cb => cb.checked);
-    
     const merekSelect = document.getElementById("merek");
     const currentValue = merekSelect.value;
     
-    // Hapus seluruh pilihan terlebih dahulu secara bersih
     merekSelect.innerHTML = '<option value="">-- Silakan Pilih Kategori Merek --</option>';
-    
-    // Append hanya optgroup yang dibutuhkan, jika Pilih Elektronik maka Merek HP benar-benar terhapus dari opsi
-    if (isHP || (!isHP && !isElek)) {
-        merekSelect.appendChild(originalOptHP.cloneNode(true));
-    }
-    if (isElek || (!isHP && !isElek)) {
-        merekSelect.appendChild(originalOptElek.cloneNode(true));
-    }
+    if (isHP || (!isHP && !isElek)) merekSelect.appendChild(originalOptHP.cloneNode(true));
+    if (isElek || (!isHP && !isElek)) merekSelect.appendChild(originalOptElek.cloneNode(true));
     merekSelect.appendChild(originalOptLainnya.cloneNode(true));
     
-    // Coba kembalikan pilihan sebelumnya jika opsinya masih tersedia
-    if (Array.from(merekSelect.options).some(opt => opt.value === currentValue)) {
-        merekSelect.value = currentValue;
-    } else {
-        merekSelect.value = "";
-    }
-    
+    if (Array.from(merekSelect.options).some(opt => opt.value === currentValue)) merekSelect.value = currentValue;
+    else merekSelect.value = "";
     toggleMerekLainnya();
 }
 
-// FITUR BARU: MUAT ULASAN PUBLIK
 function muatUlasanPublik() {
     fetch(`${API_URL}/reviews`)
     .then(res => res.json())
@@ -808,15 +840,11 @@ function toggleDarkMode() {
 }
 if(localStorage.getItem('tema') === 'gelap') { toggleDarkMode(); }
 
-function tampilkanSkeleton() {
-    document.querySelectorAll(".data-dinamis").forEach(el => el.classList.add("skeleton"));
-}
-function hilangkanSkeleton() {
-    document.querySelectorAll(".data-dinamis").forEach(el => el.classList.remove("skeleton"));
-}
+function tampilkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.add("skeleton")); }
+function hilangkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.remove("skeleton")); }
 
 document.addEventListener("DOMContentLoaded", () => {
-    inisialisasiOpsiMerek(); // Inisialisasi awal saat halaman terbuka
+    inisialisasiOpsiMerek(); 
     kodeSaya = localStorage.getItem("kodeAktifPelanggan") || "";
     if(kodeSaya) {
         document.getElementById("heroLandingPage").style.display = "none";
@@ -847,62 +875,37 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function nextStep() {
-    if (currentStep === 2) { 
-        kirimPesanan(); 
-    } else {
-        if (currentStep < 7) {
-            currentStep++;
-            simpanDraft();
-            updateProgress();
-            showContent();
-        }
+    if (currentStep === 2) { kirimPesanan(); } else {
+        if (currentStep < 7) { currentStep++; simpanDraft(); updateProgress(); showContent(); }
     }
 }
-
 function prevStep() {
-    if (currentStep > 1) {
-        currentStep--;
-        simpanDraft();
-        updateProgress();
-        showContent();
-    }
+    if (currentStep > 1) { currentStep--; simpanDraft(); updateProgress(); showContent(); }
 }
 
 function toggleMerekLainnya() {
     const select = document.getElementById("merek");
     const inputLainnya = document.getElementById("merekLainnya");
-    if(select.value === "Lainnya") {
-        inputLainnya.style.display = "block";
-    } else {
-        inputLainnya.style.display = "none";
-        inputLainnya.value = ""; 
-        validasiInputRealTime(inputLainnya, 'errMerekLainnya'); 
+    if(select.value === "Lainnya") { inputLainnya.style.display = "block"; } else {
+        inputLainnya.style.display = "none"; inputLainnya.value = ""; validasiInputRealTime(inputLainnya, 'errMerekLainnya'); 
     }
-    validasiInputRealTime(select, 'errMerek');
-    simpanDraft();
+    validasiInputRealTime(select, 'errMerek'); simpanDraft();
 }
 
 function validasiInputRealTime(element, errId) {
     const errSpan = document.getElementById(errId);
     if (!element.value.trim()) {
-        element.classList.add('input-error');
-        if(errSpan) errSpan.style.display = 'block';
-        return false;
+        element.classList.add('input-error'); if(errSpan) errSpan.style.display = 'block'; return false;
     } else {
-        element.classList.remove('input-error');
-        if(errSpan) errSpan.style.display = 'none';
-        return true;
+        element.classList.remove('input-error'); if(errSpan) errSpan.style.display = 'none'; return true;
     }
 }
 
 function pasangListenerValidasiRealTime() {
     document.getElementById('nama').addEventListener('input', function() { validasiInputRealTime(this, 'errNama'); simpanDraft(); });
     document.getElementById('wa').addEventListener('input', function() { 
-        if(this.value.startsWith('0')) {
-            this.value = '62' + this.value.substring(1);
-        }
-        validasiInputRealTime(this, 'errWa'); 
-        simpanDraft();
+        if(this.value.startsWith('0')) this.value = '62' + this.value.substring(1);
+        validasiInputRealTime(this, 'errWa'); simpanDraft();
     });
     document.getElementById('merek').addEventListener('change', function() { validasiInputRealTime(this, 'errMerek'); });
     document.getElementById('tipe').addEventListener('input', function() { validasiInputRealTime(this, 'errTipe'); simpanDraft();});
@@ -912,31 +915,18 @@ function pasangListenerValidasiRealTime() {
 function tampilPratinjau() {
     const fileKondisi = document.getElementById("fileKondisi");
     const pratinjau = document.getElementById("pratinjauFile");
-    
     if(fileKondisi && fileKondisi.files[0]) {
         const file = fileKondisi.files[0];
         if(file.size > 5 * 1024 * 1024) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Ukuran Terlalu Besar!',
-                text: 'Maksimal ukuran file foto/video adalah 5MB. Silakan pilih file yang lebih kecil.',
-                confirmButtonColor: '#0ea5e9'
-            });
-            fileKondisi.value = "";
-            fileDataURL = "";
-            pratinjau.innerHTML = "Belum ada file dipilih";
-            return;
+            Swal.fire({ icon: 'error', title: 'Ukuran Terlalu Besar!', text: 'Maksimal ukuran file 5MB.', confirmButtonColor: '#0ea5e9' });
+            fileKondisi.value = ""; fileDataURL = ""; pratinjau.innerHTML = "Belum ada file dipilih"; return;
         }
-
         tipeFile = file.type;
         const reader = new FileReader();
         reader.onload = (e) => {
             fileDataURL = e.target.result;
-            if(file.type.startsWith("image/")) {
-                pratinjau.innerHTML = `<img src="${fileDataURL}" style="max-width:100%; max-height:200px;">`;
-            } else if(file.type.startsWith("video/")) {
-                pratinjau.innerHTML = `<video src="${fileDataURL}" controls style="max-width:100%; max-height:200px;"></video>`;
-            }
+            if(file.type.startsWith("image/")) pratinjau.innerHTML = `<img src="${fileDataURL}" style="max-width:100%; max-height:200px;">`;
+            else if(file.type.startsWith("video/")) pratinjau.innerHTML = `<video src="${fileDataURL}" controls style="max-width:100%; max-height:200px;"></video>`;
         }
         reader.readAsDataURL(file);
     }
@@ -947,7 +937,6 @@ function kirimPesanan() {
     const isWaValid = validasiInputRealTime(document.getElementById("wa"), 'errWa');
     const isMerekValid = validasiInputRealTime(document.getElementById("merek"), 'errMerek');
     const isTipeValid = validasiInputRealTime(document.getElementById("tipe"), 'errTipe');
-    
     let isMerekLainnyaValid = true;
     let merekFinal = document.getElementById("merek").value;
     if (merekFinal === "Lainnya") {
@@ -956,163 +945,84 @@ function kirimPesanan() {
     }
 
     if (!isNamaValid || !isWaValid || !isMerekValid || !isTipeValid || !isMerekLainnyaValid) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Data Belum Lengkap',
-            text: 'Mohon periksa kembali kolom isian yang berwarna merah.',
-            confirmButtonColor: '#0ea5e9'
-        });
+        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Mohon periksa kolom isian merah.', confirmButtonColor: '#0ea5e9' });
         return;
     }
 
     const btnKirim = document.getElementById("btnKirimPesanan");
-    btnKirim.disabled = true;
-    btnKirim.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim...';
+    btnKirim.disabled = true; btnKirim.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim...';
 
-    const layananTerpilih = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
-                              .map(cb => cb.parentElement.textContent.trim())
-                              .join(", ");
-
+    const layananTerpilih = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.parentElement.textContent.trim()).join(", ");
     kodeSaya = "HS-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.floor(Math.random()*900+100);
 
     const data = {
-        kode: kodeSaya,
-        nama: document.getElementById("nama").value.trim(),
-        wa: document.getElementById("wa").value.trim(),
-        alamat: document.getElementById("alamat").value.trim(),
-        shareloc: document.getElementById("shareloc").value.trim(), // TERHUBUNG KE PAYLOAD
-        merek: merekFinal,
-        tipe: document.getElementById("tipe").value.trim(),
-        kerusakan: document.getElementById("kerusakan").value.trim(),
-        layanan: layananTerpilih || "Belum dipilih",
-        status: "baru", teknisi: "", jadwal: "", biayaSuku: 0, biayaJasa: 0, totalHarga: 0,
-        metodePembayaran: "", pembayaranDikonfirmasi: false, pembayaranValid: false,
-        kondisiHP: fileDataURL || "", tipeKondisi: tipeFile || "", dpTerbayar: false, dpValid: false,
-        metodeDP: "", lokasiServis: "", adaKerusakanTambahan: false, infoKerusakanTambahan: "",
-        biayaSukuTambahan: 0, statusPersetujuanTambahan: "pending",
-        tanggalInput: new Date().toISOString().split('T')[0]
+        kode: kodeSaya, nama: document.getElementById("nama").value.trim(), wa: document.getElementById("wa").value.trim(),
+        alamat: document.getElementById("alamat").value.trim(), shareloc: document.getElementById("shareloc").value.trim(),
+        merek: merekFinal, tipe: document.getElementById("tipe").value.trim(), kerusakan: document.getElementById("kerusakan").value.trim(),
+        layanan: layananTerpilih || "Belum dipilih", status: "baru", teknisi: "", jadwal: "", biayaSuku: 0, biayaJasa: 0, totalHarga: 0,
+        metodePembayaran: "", pembayaranDikonfirmasi: false, pembayaranValid: false, kondisiHP: fileDataURL || "", tipeKondisi: tipeFile || "",
+        dpTerbayar: false, dpValid: false, metodeDP: "", lokasiServis: "", adaKerusakanTambahan: false, infoKerusakanTambahan: "",
+        biayaSukuTambahan: 0, statusPersetujuanTambahan: "pending", tanggalInput: new Date().toISOString().split('T')[0]
     };
 
-    fetch(`${API_URL}/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Gagal mendaftarkan data ke server.");
-        return res.json();
-    })
+    fetch(`${API_URL}/orders`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+    .then(res => { if (!res.ok) throw new Error("Gagal mendaftarkan data"); return res.json(); })
     .then(() => {
         localStorage.setItem("kodeAktifPelanggan", kodeSaya);
-        localStorage.removeItem("draftFormServis"); // Hapus draft karena pesanan sudah sukses
+        localStorage.removeItem("draftFormServis");
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
         document.getElementById("kodePesananDP").textContent = kodeSaya;
         document.getElementById("kodePesanan").textContent = kodeSaya;
         document.getElementById("txtChatKode").textContent = kodeSaya;
         
-        btnKirim.disabled = false;
-        btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
-
-        currentStep = 3; 
-        updateProgress();
-        showContent();
-        
-        aktifkanSistemChat();
-        
-        Swal.fire({
-            icon: 'success',
-            title: 'Pesanan Terkirim!',
-            text: 'Data Anda telah tersimpan. Silakan lanjut ke langkah Pembayaran DP.',
-            confirmButtonColor: '#10b981'
-        });
-        
+        btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
+        currentStep = 3; updateProgress(); showContent(); aktifkanSistemChat();
+        Swal.fire({ icon: 'success', title: 'Pesanan Terkirim!', text: 'Silakan lanjut ke Pembayaran DP.', confirmButtonColor: '#10b981' });
         cekStatus();
     })
     .catch(err => {
         console.error(err);
-        btnKirim.disabled = false;
-        btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Sistem Sibuk',
-            text: 'Gagal memproses pesanan. Pastikan server backend Node.js (http://localhost:5000) sudah aktif.',
-            confirmButtonColor: '#ef4444'
-        });
+        btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
+        Swal.fire({ icon: 'error', title: 'Sistem Sibuk', text: 'Gagal memproses pesanan. Pastikan server aktif.', confirmButtonColor: '#ef4444' });
     });
 }
 
 function salinKode() {
     let kode = kodeSaya || localStorage.getItem("kodeAktifPelanggan");
     if (!kode) return;
-    
     navigator.clipboard.writeText(kode).then(() => {
-        Swal.fire({
-            icon: 'success', 
-            title: 'Tersalin!', 
-            text: 'Kode pesanan ' + kode + ' berhasil disalin.', 
-            timer: 1500, 
-            showConfirmButton: false
-        });
+        Swal.fire({ icon: 'success', title: 'Tersalin!', text: 'Kode ' + kode + ' disalin.', timer: 1500, showConfirmButton: false });
     });
 }
 
 function pilihMetodeDP(metode) {
     metodeDP = metode;
     document.querySelectorAll(".pilihan-dp").forEach(el => el.classList.remove("aktif"));
-    const target = document.getElementById(`dp-${metode}`);
-    if(target) target.classList.add("aktif");
+    document.getElementById(`dp-${metode}`).classList.add("aktif");
     
-    const infoBox = document.getElementById("infoRekeningDP");
-    const noRek = document.getElementById("noRekDP");
-    const namaBank = document.getElementById("namaBankDP");
-    
-    if(infoBox && noRek && namaBank) {
-        infoBox.style.display = "block";
-        namaBank.textContent = metode;
-        if(metode === "BCA") noRek.textContent = "023-4567-890";
-        else if(metode === "Mandiri") noRek.textContent = "123-00-456789-0";
-        else noRek.textContent = "0012-01-004567-53-0";
-    }
+    document.getElementById("infoRekeningDP").style.display = "block";
+    document.getElementById("namaBankDP").textContent = metode;
+    document.getElementById("noRekDP").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
     document.getElementById("metodeDPDipilih").textContent = "Transfer " + metode;
 }
 
 function konfirmasiBayarDP() {
-    if(!metodeDP) {
-        return Swal.fire({
-            icon: 'warning',
-            title: 'Perhatian',
-            text: 'Silakan pilih metode transfer DP terlebih dahulu!',
-            confirmButtonColor: '#0ea5e9'
-        });
-    }
+    if(!metodeDP) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih metode transfer DP!', confirmButtonColor: '#0ea5e9' });
 
     fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            metodeDP: metodeDP, 
-            dpTerbayar: true,
-            buktiDP: window.buktiDPBase64
-        })
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ metodeDP: metodeDP, dpTerbayar: true, buktiDP: window.buktiDPBase64 })
     })
     .then(res => res.json())
     .then(() => {
-        Swal.fire({
-            icon: 'success',
-            title: 'Konfirmasi Terkirim',
-            text: 'Bukti konfirmasi DP tersimpan. Silakan tunggu verifikasi admin untuk penjadwalan teknisi.',
-            confirmButtonColor: '#10b981'
-        });
+        Swal.fire({ icon: 'success', title: 'Terkirim', text: 'Bukti DP tersimpan. Tunggu verifikasi.', confirmButtonColor: '#10b981' });
         cekStatus();
-    })
-    .catch(err => {
-        Swal.fire('Gagal!', 'Gagal mengirim konfirmasi DP.', 'error');
-    });
+    }).catch(err => Swal.fire('Gagal!', 'Gagal konfirmasi DP.', 'error'));
 }
 
 function tanyaKodeLacak() {
+    tampilHalaman('home');
     Swal.fire({
         title: 'Lacak Pesanan',
         input: 'text',
@@ -1126,10 +1036,7 @@ function tanyaKodeLacak() {
         if (result.isConfirmed && result.value) {
             const kode = result.value.trim();
             fetch(`${API_URL}/orders/${kode}`)
-            .then(res => {
-                if(!res.ok) throw new Error();
-                return res.json();
-            })
+            .then(res => { if(!res.ok) throw new Error(); return res.json(); })
             .then(data => {
                 kodeSaya = data.kode;
                 localStorage.setItem("kodeAktifPelanggan", kodeSaya);
@@ -1138,37 +1045,18 @@ function tanyaKodeLacak() {
                 document.getElementById("kodePesananDP").textContent = kodeSaya;
                 document.getElementById("kodePesanan").textContent = kodeSaya;
                 document.getElementById("txtChatKode").textContent = kodeSaya;
-                aktifkanSistemChat();
-                cekStatus();
+                aktifkanSistemChat(); cekStatus();
             })
-            .catch(() => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Tidak Ditemukan',
-                    text: 'Kode pesanan tidak terdaftar di database kami!',
-                    confirmButtonColor: '#ef4444'
-                });
-            });
+            .catch(() => Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar!', confirmButtonColor: '#ef4444' }));
         }
     });
 }
 
 function responsTambahan(setuju) {
-    let payload = setuju 
-        ? { statusPersetujuanTambahan: "disetujui" }
-        : { statusPersetujuanTambahan: "ditolak", status: "ditolak_pelanggan" };
-
-    fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    })
+    let payload = setuju ? { statusPersetujuanTambahan: "disetujui" } : { statusPersetujuanTambahan: "ditolak", status: "ditolak_pelanggan" };
+    fetch(`${API_URL}/orders/${kodeSaya}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
     .then(() => {
-        if(setuju){
-            Swal.fire('Disetujui!', 'Anda menyetujui pengerjaan komponen tambahan.', 'success');
-        } else {
-            Swal.fire('Ditolak!', 'Anda menolak komponen tambahan. Servis dibatalkan.', 'error');
-        }
+        Swal.fire(setuju ? 'Disetujui!' : 'Ditolak!', setuju ? 'Tambahan disetujui.' : 'Servis dibatalkan.', setuju ? 'success' : 'error');
         cekStatus();
     });
 }
@@ -1176,55 +1064,33 @@ function responsTambahan(setuju) {
 function pilihMetodeBayar(metode) {
     metodeBayar = metode;
     document.querySelectorAll(".pilihan-bayar").forEach(el => el.classList.remove("aktif"));
-    const target = document.getElementById(`bayar-${metode}`);
-    if(target) target.classList.add("aktif");
+    document.getElementById(`bayar-${metode}`).classList.add("aktif");
     
     const infoBox = document.getElementById("infoRekening");
-    const noRek = document.getElementById("noRek");
-    const namaBank = document.getElementById("namaBank");
-    
     if(metode === "Tunai") {
-        if(infoBox) infoBox.style.display = "none";
-        document.getElementById("metodeDipilih").textContent = "Tunai / Cash";
+        infoBox.style.display = "none"; document.getElementById("metodeDipilih").textContent = "Tunai / Cash";
     } else {
-        if(infoBox && noRek && namaBank) {
-            infoBox.style.display = "block";
-            namaBank.textContent = metode;
-            if(metode === "BCA") noRek.textContent = "023-4567-890";
-            else if(metode === "Mandiri") noRek.textContent = "123-00-456789-0";
-            else noRek.textContent = "0012-01-004567-53-0";
-        }
+        infoBox.style.display = "block";
+        document.getElementById("namaBank").textContent = metode;
+        document.getElementById("noRek").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
         document.getElementById("metodeDipilih").textContent = "Transfer " + metode;
     }
 }
 
 function konfirmasiBayar() {
     if(!metodeBayar) return Swal.fire('Perhatian', 'Pilih metode!', 'warning');
-    
     fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            metodePembayaran: metodeBayar, 
-            pembayaranDikonfirmasi: true,
-            buktiPelunasan: window.buktiPelunasanBase64 
-        })
-    }).then(res => res.json()).then(() => {
-        Swal.fire('Berhasil', 'Pelunasan & bukti terkirim.', 'success');
-        cekStatus();
-    });
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ metodePembayaran: metodeBayar, pembayaranDikonfirmasi: true, buktiPelunasan: window.buktiPelunasanBase64 })
+    }).then(res => res.json()).then(() => { Swal.fire('Berhasil', 'Pelunasan & bukti terkirim.', 'success'); cekStatus(); });
 }
 
 function kirimRatingUlasan() {
     if(nilaiRating === 0) return Swal.fire('Oops', 'Mohon klik bintang penilaian terlebih dahulu.', 'warning');
-    
-    const ulasanText = document.getElementById("ulasanPelanggan").value.trim();
     fetch(`${API_URL}/orders/${kodeSaya}/rating`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: nilaiRating, ulasan: ulasanText })
-    })
-    .then(() => {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: nilaiRating, ulasan: document.getElementById("ulasanPelanggan").value.trim() })
+    }).then(() => {
         Swal.fire('Terima Kasih', 'Ulasan & Rating Anda telah kami terima!', 'success');
         document.getElementById("boxBeriRating").style.display = "none";
     });
@@ -1232,43 +1098,28 @@ function kirimRatingUlasan() {
 
 function cekStatus() {
     if(!kodeSaya) return; 
-    
-    fetch(`${API_URL}/orders/${kodeSaya}`)
-    .then(res => res.json())
-    .then(data => {
+    fetch(`${API_URL}/orders/${kodeSaya}`).then(res => res.json()).then(data => {
         if(!data) { kembaliKeAwal(); return; }
-
         hilangkanSkeleton();
-
-        const boxTambahan = document.getElementById("boxKerusakanTambahan");
-        const aksiTambahan = document.getElementById("aksiTambahan");
-        if(boxTambahan && aksiTambahan) {
+        if(document.getElementById("boxKerusakanTambahan")) {
             if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "pending" && data.status !== "ditolak_pelanggan") {
-                boxTambahan.style.display = "block";
+                document.getElementById("boxKerusakanTambahan").style.display = "block";
                 document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
                 document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
             } else if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "disetujui") {
-                boxTambahan.style.display = "block";
+                document.getElementById("boxKerusakanTambahan").style.display = "block";
                 document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
                 document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
-                aksiTambahan.innerHTML = "<p style='color:#16a34a; font-weight:bold;'><i class='bi bi-check-circle-fill'></i> Anda telah menyetujui pengerjaan tambahan ini.</p>";
-            } else {
-                boxTambahan.style.display = "none";
-            }
+                document.getElementById("aksiTambahan").innerHTML = "<p style='color:#16a34a; font-weight:bold;'><i class='bi bi-check-circle-fill'></i> Disetujui.</p>";
+            } else document.getElementById("boxKerusakanTambahan").style.display = "none";
         }
 
-        const tampilKondisi = document.getElementById("tampilKondisiHP");
-        if(tampilKondisi && data.kondisiHP && data.tipeKondisi) {
-            if(data.tipeKondisi.startsWith("image/")) {
-                tampilKondisi.innerHTML = `<img src="${data.kondisiHP}" style="max-width:100%; border-radius:8px;">`;
-            } else if(data.tipeKondisi.startsWith("video/")) {
-                tampilKondisi.innerHTML = `<video src="${data.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>`;
-            }
+        if(document.getElementById("tampilKondisiHP") && data.kondisiHP) {
+            document.getElementById("tampilKondisiHP").innerHTML = data.tipeKondisi.startsWith("video/") 
+                ? `<video src="${data.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>` 
+                : `<img src="${data.kondisiHP}" style="max-width:100%; border-radius:8px;">`;
         }
-
-        if(data.rating && data.rating > 0) {
-            document.getElementById("boxBeriRating").style.display = "none";
-        }
+        if(data.rating > 0) document.getElementById("boxBeriRating").style.display = "none";
 
         let targetStep = currentStep;
         if (currentStep === 7) { isiDataFaktur(data); return; }
@@ -1277,63 +1128,45 @@ function cekStatus() {
         if (!data.dpValid) {
             targetStep = 3;
             if (data.dpTerbayar) {
-                const infoValDP = document.getElementById("infoValidasiDP");
-                if(infoValDP) infoValDP.style.display = "flex";
-                const btnDP = document.getElementById("btnKonfirmasiDP");
-                if(btnDP) { btnDP.disabled = true; btnDP.innerText = "Menunggu Validasi Pembayaran Admin"; }
+                document.getElementById("infoValidasiDP").style.display = "flex";
+                document.getElementById("btnKonfirmasiDP").disabled = true; document.getElementById("btnKonfirmasiDP").innerText = "Menunggu Validasi Admin";
             }
         } 
         else if (data.dpValid && data.status === "baru") {
             targetStep = 4;
-            document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> DP Terverifikasi! Menunggu Admin mengatur jadwal teknisi...</p>";
+            document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> DP Terverifikasi! Menunggu Jadwal...</p>";
             document.getElementById("tampilJadwal").style.display = "none";
         }
         else if (data.status === "dijadwalkan") {
             targetStep = 4;
             document.getElementById("teknisi").textContent = data.teknisi;
             document.getElementById("jadwal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : "-";
-            document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "Servis di Tempat Pelanggan (On-Site)" : "Bawa Ke Workshop Utama";
-            document.getElementById("lblETA").textContent = data.etaTeknisi ? data.etaTeknisi : "Belum diupdate admin";
-            document.getElementById("tampilJadwal").style.display = "block";
-            document.getElementById("infoJadwal").style.display = "none";
+            document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Ke Workshop";
+            document.getElementById("lblETA").textContent = data.etaTeknisi || "Belum diupdate admin";
+            document.getElementById("tampilJadwal").style.display = "block"; document.getElementById("infoJadwal").style.display = "none";
         }
         else if (data.status === "diproses") {
             targetStep = 5;
-            document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan Oleh Teknisi";
-            document.getElementById("s2").className = "status-dot selesai";
-            document.getElementById("s3").className = "status-dot aktif";
+            document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
+            document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
             sinkronBiayaTampil(data);
         }
-        else if (data.status === "selesai_servis") {
-            targetStep = 6;
-            sinkronBiayaTampil(data);
-        }
+        else if (data.status === "selesai_servis") { targetStep = 6; sinkronBiayaTampil(data); }
         else if (data.status === "selesai" || data.pembayaranValid === true) {
             targetStep = 6;
-            const infoValidasi = document.getElementById("infoValidasi");
-            if(infoValidasi) {
-                infoValidasi.style.display = "block";
-                infoValidasi.innerHTML = `<strong>🎉 Pelunasan Valid!</strong><br><button class="btn btn-success" style="margin-top:10px" onclick="bukaHalamanFaktur()"><i class="bi bi-file-text"></i> Cetak / Lihat Nota Resmi</button>`;
-            }
-            const btnKonf = document.getElementById("btnKonfirmasi");
-            if(btnKonf) btnKonf.disabled = true;
+            document.getElementById("infoValidasi").style.display = "block";
+            document.getElementById("infoValidasi").innerHTML = `<strong>🎉 Pelunasan Valid!</strong><br><button class="btn btn-success" style="margin-top:10px" onclick="bukaHalamanFaktur()"><i class="bi bi-file-text"></i> Lihat Nota</button>`;
+            document.getElementById("btnKonfirmasi").disabled = true;
             sinkronBiayaTampil(data);
         }
 
-        if(targetStep !== currentStep) { 
-            currentStep = targetStep; 
-            updateProgress(); 
-            showContent(); 
-        }
+        if(targetStep !== currentStep) { currentStep = targetStep; updateProgress(); showContent(); }
         muatLogPesan(); 
-    })
-    .catch(() => console.warn("Sinkronisasi tertunda."));
+    }).catch(() => console.warn("Sinkronisasi tertunda."));
 }
 
 function sinkronBiayaTampil(data) {
-    let suku = data.biayaSuku || 0;
-    let jasa = data.biayaJasa || 0;
-    let tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
     document.getElementById("lblBiayaSuku").textContent = suku.toLocaleString("id-ID");
     document.getElementById("lblBiayaJasa").textContent = jasa.toLocaleString("id-ID");
     document.getElementById("lblBiayaTambahanFaktur").textContent = tamb.toLocaleString("id-ID");
@@ -1352,62 +1185,30 @@ function isiDataFaktur(data) {
     document.getElementById("fakturTanggal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : new Date().toLocaleString("id-ID");
     document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
 
-    let suku = data.biayaSuku || 0; let jasa = data.biayaJasa || 0;
-    let tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
-    
+    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
     document.getElementById("fakturSuku").textContent = "Rp " + suku.toLocaleString("id-ID");
     document.getElementById("fakturJasa").textContent = "Rp " + jasa.toLocaleString("id-ID");
     document.getElementById("fakturTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
     document.getElementById("fakturTotal").textContent = "Rp " + (suku + jasa + tamb).toLocaleString("id-ID");
 }
 
-function bukaHalamanFaktur() {
-    currentStep = 7; updateProgress(); showContent(); cekStatus();
-}
-
-function kembaliKeAwal() {
-    localStorage.removeItem("kodeAktifPelanggan");
-    kodeSaya = ""; currentStep = 1;
-    if(intervalChat) clearInterval(intervalChat);
-    location.reload();
-}
-
-function aktifkanSistemChat() {
-    const widget = document.getElementById("chatWidgetPelanggan");
-    if(widget) widget.style.display = "flex"; 
-    muatLogPesan();
-}
-
-function toggleChatWidget() {
-    document.getElementById("chatWidgetPelanggan").classList.toggle("minimized");
-}
+function bukaHalamanFaktur() { currentStep = 7; updateProgress(); showContent(); cekStatus(); }
+function kembaliKeAwal() { localStorage.removeItem("kodeAktifPelanggan"); kodeSaya = ""; currentStep = 1; if(intervalChat) clearInterval(intervalChat); location.reload(); }
+function aktifkanSistemChat() { const w = document.getElementById("chatWidgetPelanggan"); if(w) w.style.display = "flex"; muatLogPesan(); }
+function toggleChatWidget() { document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); }
 
 function kirimChatPelanggan() {
-    const inp = document.getElementById("inputPesanPelanggan");
-    const teks = inp.value.trim();
+    const inp = document.getElementById("inputPesanPelanggan"); const teks = inp.value.trim();
     if(!teks || !kodeSaya) return;
-
-    const payload = { 
-        kode: kodeSaya, pengirim: 'user', teks: teks, 
-        waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) 
-    };
-
-    fetch(`${API_URL}/chats`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    })
-    .then(() => { inp.value = ""; });
+    fetch(`${API_URL}/chats`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode: kodeSaya, pengirim: 'user', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) })
+    .then(() => inp.value = "");
 }
 
 function muatLogPesan() {
     if(!kodeSaya) return;
     const box = document.getElementById("boxPesanPelanggan");
     if(!box) return;
-    
-    fetch(`${API_URL}/chats/${kodeSaya}`)
-    .then(res => res.json())
-    .then(chatData => {
+    fetch(`${API_URL}/chats/${kodeSaya}`).then(res => res.json()).then(chatData => {
         let htmlStr = "";
         chatData.forEach(msg => {
             let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
@@ -1420,13 +1221,8 @@ function muatLogPesan() {
 
 function updateProgress() {
     document.querySelectorAll(".step-item").forEach((node, i) => {
-        if (i < currentStep) {
-            node.classList.add("completed");
-            if(i === (currentStep - 1)) node.classList.add("active");
-            else node.classList.remove("active");
-        } else {
-            node.classList.remove("completed", "active");
-        }
+        if (i < currentStep) { node.classList.add("completed"); if(i === (currentStep - 1)) node.classList.add("active"); else node.classList.remove("active"); } 
+        else { node.classList.remove("completed", "active"); }
     });
 }
 function showContent() {
@@ -1436,59 +1232,26 @@ function showContent() {
 }
 function unduhPDF() {
     try {
-        const { jsPDF } = window.jspdf;
-        if (!jsPDF) {
-            Swal.fire('Error', 'Library PDF belum termuat. Tunggu sebentar lagi.', 'error');
-            return;
-        }
+        const { jsPDF } = window.jspdf; if (!jsPDF) return Swal.fire('Error', 'Library PDF belum termuat.', 'error');
+        const doc = new jsPDF(); const getText = (id) => document.getElementById(id) ? document.getElementById(id).textContent : "-";
 
-        const doc = new jsPDF();
-        
-        const getText = (id) => document.getElementById(id) ? document.getElementById(id).textContent : "-";
-
-        doc.setFontSize(22);
-        doc.setTextColor(30, 64, 175);
-        doc.text("FAKTUR SERVIS", 105, 20, { align: 'center' });
-        
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("SF Tech Service Center", 105, 28, { align: 'center' });
-        doc.setDrawColor(30, 64, 175);
-        doc.line(10, 40, 200, 40);
-
-        doc.setFontSize(11);
-        doc.setTextColor(0);
-        doc.text(`No. Faktur  : ${getText("noFaktur")}`, 15, 50);
-        doc.text(`Tgl Servis  : ${getText("fakturTanggal")}`, 15, 56);
-        doc.text(`Pelanggan   : ${getText("fakturNama")}`, 15, 62);
-        doc.text(`Perangkat   : ${getText("fakturMerekTipe")}`, 15, 68);
+        doc.setFontSize(22); doc.setTextColor(30, 64, 175); doc.text("FAKTUR SERVIS", 105, 20, { align: 'center' });
+        doc.setFontSize(10); doc.setTextColor(100); doc.text("SF Tech Service Center", 105, 28, { align: 'center' });
+        doc.setDrawColor(30, 64, 175); doc.line(10, 40, 200, 40);
+        doc.setFontSize(11); doc.setTextColor(0);
+        doc.text(`No. Faktur  : ${getText("noFaktur")}`, 15, 50); doc.text(`Tgl Servis  : ${getText("fakturTanggal")}`, 15, 56);
+        doc.text(`Pelanggan   : ${getText("fakturNama")}`, 15, 62); doc.text(`Perangkat   : ${getText("fakturMerekTipe")}`, 15, 68);
 
         doc.autoTable({
-            startY: 75,
-            head: [['Keterangan', 'Biaya']],
-            body: [
-                ['Biaya Suku Cadang', getText("fakturSuku")],
-                ['Biaya Jasa Servis', getText("fakturJasa")],
-                ['Biaya Kerusakan Tambahan', getText("fakturTambahan")],
-                ['Potongan DP (Uang Muka)', '- Rp 50.000']
-            ],
-            theme: 'striped',
-            headStyles: { fillColor: [30, 64, 175] }
+            startY: 75, head: [['Keterangan', 'Biaya']],
+            body: [ ['Biaya Suku Cadang', getText("fakturSuku")], ['Biaya Jasa Servis', getText("fakturJasa")], ['Biaya Kerusakan Tambahan', getText("fakturTambahan")], ['Potongan DP (Uang Muka)', '- Rp 50.000'] ],
+            theme: 'striped', headStyles: { fillColor: [30, 64, 175] }
         });
 
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, finalY, { align: 'right' });
-
+        doc.setFont("helvetica", "bold"); doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
         doc.save(`Invoice_${getText("fakturKode")}.pdf`);
-    } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error');
-    }
+    } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
 }
 </script>
-    <footer class="footer-section">
-        <p>&copy; 2026 SF Tech Service</p>
-    </footer>
 </body>
 </html>
