@@ -174,6 +174,7 @@
             position: fixed; bottom: 25px; right: 25px; width: 340px; max-width: calc(100vw - 50px);
             background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
             z-index: 9999; border: 1px solid #e2e8f0; overflow: hidden; display: none;
+            flex-direction: column; /* FIX BUG TAMPILAN MESSENGER */
             animation: chatSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             transition: all 0.3s ease;
         }
@@ -185,6 +186,7 @@
             background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
             box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
             display: flex; align-items: center; justify-content: center;
+            flex-direction: row; /* FIX BUG TAMPILAN BULAT */
         }
         .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; }
         .chat-widget.minimized .chat-header-left span, .chat-widget.minimized .chat-toggle-btn { display: none; }
@@ -640,22 +642,48 @@ function restoreDraft() {
     }
 }
 
-// FITUR BARU: FILTER MEREK DINAMIS BERDASARKAN KATEGORI LAYANAN
+// FITUR BARU: FILTER MEREK DINAMIS BERDASARKAN KATEGORI LAYANAN (FIX BUG)
+let originalOptHP = null;
+let originalOptElek = null;
+let originalOptLainnya = null;
+
+function inisialisasiOpsiMerek() {
+    if(!originalOptHP) {
+        originalOptHP = document.getElementById("optgroup-hp").cloneNode(true);
+        originalOptElek = document.getElementById("optgroup-elektronik").cloneNode(true);
+        originalOptLainnya = document.querySelector('#merek optgroup[label="Lainnya"]').cloneNode(true);
+    }
+}
+
 function updateBrandOptions() {
+    inisialisasiOpsiMerek(); // Pastikan opsi master tersimpan terlebih dahulu
+
     const isHP = Array.from(document.querySelectorAll('.kategori-card.hp input[type="checkbox"]')).some(cb => cb.checked);
     const isElek = Array.from(document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]')).some(cb => cb.checked);
     
-    const optHP = document.getElementById("optgroup-hp");
-    const optElek = document.getElementById("optgroup-elektronik");
     const merekSelect = document.getElementById("merek");
+    const currentValue = merekSelect.value;
     
-    if (optHP) { optHP.style.display = isHP || (!isHP && !isElek) ? "block" : "none"; optHP.disabled = !(isHP || (!isHP && !isElek)); }
-    if (optElek) { optElek.style.display = isElek || (!isHP && !isElek) ? "block" : "none"; optElek.disabled = !(isElek || (!isHP && !isElek)); }
+    // Hapus seluruh pilihan terlebih dahulu secara bersih
+    merekSelect.innerHTML = '<option value="">-- Silakan Pilih Kategori Merek --</option>';
     
-    // Reset selection if the currently selected option becomes disabled
-    if (merekSelect.selectedOptions[0] && merekSelect.selectedOptions[0].parentElement.disabled) {
+    // Append hanya optgroup yang dibutuhkan, jika Pilih Elektronik maka Merek HP benar-benar terhapus dari opsi
+    if (isHP || (!isHP && !isElek)) {
+        merekSelect.appendChild(originalOptHP.cloneNode(true));
+    }
+    if (isElek || (!isHP && !isElek)) {
+        merekSelect.appendChild(originalOptElek.cloneNode(true));
+    }
+    merekSelect.appendChild(originalOptLainnya.cloneNode(true));
+    
+    // Coba kembalikan pilihan sebelumnya jika opsinya masih tersedia
+    if (Array.from(merekSelect.options).some(opt => opt.value === currentValue)) {
+        merekSelect.value = currentValue;
+    } else {
         merekSelect.value = "";
     }
+    
+    toggleMerekLainnya();
 }
 
 // FITUR BARU: MUAT ULASAN PUBLIK
@@ -701,6 +729,7 @@ function hilangkanSkeleton() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    inisialisasiOpsiMerek(); // Inisialisasi awal saat halaman terbuka
     kodeSaya = localStorage.getItem("kodeAktifPelanggan") || "";
     if(kodeSaya) {
         document.getElementById("heroLandingPage").style.display = "none";
@@ -1257,7 +1286,7 @@ function kembaliKeAwal() {
 
 function aktifkanSistemChat() {
     const widget = document.getElementById("chatWidgetPelanggan");
-    if(widget) widget.style.display = "flex";
+    if(widget) widget.style.display = "flex"; // Memanfaatkan pengaturan CSS `flex-direction: column` untuk bentuk normal.
     muatLogPesan();
 }
 
