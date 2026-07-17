@@ -34,6 +34,7 @@ mongoose.connect(MONGO_URI)
 // --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
+    shareloc: { type: String, default: "" }, // <--- FIELD UNTUK LINK GOOGLE MAPS OTOMATIS
     status: { type: String, default: "baru" },
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     teknisi: String, jadwal: String, lokasiServis: String,
