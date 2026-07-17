@@ -311,6 +311,9 @@
                             <option value="workshop">Barang Dibawa oleh Teknisi (Ke Workshop)</option>
                         </select>
 
+                        <!-- FITUR GEOLOKASI (Sesuai Permintaan Anda) -->
+                        <p style="font-size:0.85rem; margin-top:0.5rem; margin-bottom: 1rem;">Link Shareloc / Maps: <span id="linkShareloc">-</span></p>
+
                         <label>Status Progres Kerja</label>
                         <select id="statusPesanan" class="kunci-target">
                             <option value="baru">Menunggu Verifikasi Jadwal</option>
@@ -786,6 +789,16 @@ function bukaModal(kode) {
         
         document.getElementById("txtResponPelanggan").textContent = (d.statusPersetujuanTambahan || "pending").toUpperCase();
         toggleFormTambahan();
+
+        // FITUR BARU: BACA LINK SHARELOC
+        const boxShareloc = document.getElementById("linkShareloc");
+        if(boxShareloc) {
+            if (d.shareloc) {
+                boxShareloc.innerHTML = `<a href="${d.shareloc}" target="_blank" style="color:#0ea5e9; font-weight:bold;"><i class="bi bi-geo-alt-fill"></i> Buka Titik Maps Pelanggan</a>`;
+            } else {
+                boxShareloc.innerHTML = "<em>Tidak ada link lokasi</em>";
+            }
+        }
 
         const tampilKondisi = document.getElementById("tampilKondisiAdmin");
         if(tampilKondisi) {
