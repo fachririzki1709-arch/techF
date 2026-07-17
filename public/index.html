@@ -115,7 +115,7 @@
         .metode-item.terpilih, .metode-item.aktif {border-color:#10b981; background:#f0fdf4; color: #166534; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);}
         
         /* Tombol */
-        .btn { padding:0.8rem 1.6rem; border:none; border-radius:8px; cursor:pointer; font-size:0.95rem; font-weight: 600; margin-right:0.6rem; margin-top:0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease-in-out; }
+        .btn { padding:0.8rem 1.6rem; border:none; border-radius:8px; cursor:pointer; font-size:0.95rem; font-weight: 600; margin-right:0.6rem; margin-top:0.5rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease-in-out; }
         .btn:hover {transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
         .btn:active {transform: translateY(0);}
         .btn-primary {background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color:white;}
@@ -124,6 +124,7 @@
         .btn-danger {background:#ef4444; color:white;}
         .btn-pdf {background:#dc2626; color:white;}
         .btn-home {background:#475569; color:white;}
+        .btn-lokasi {background: #0f172a; color: white;}
         .btn:disabled {background: #94a3b8 !important; cursor: not-allowed; transform: none !important; box-shadow: none !important;}
 
         /* Faktur */
@@ -170,6 +171,7 @@
         body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
         body.dark-mode optgroup { background: #0f172a; color: #0ea5e9;}
         body.dark-mode .review-card { background: #1e293b; color: #f8fafc; border-color: #334155; }
+        body.dark-mode .btn-lokasi {background: #334155; border: 1px solid #475569;}
         
         /* CSS FIX DARK MODE UNTUK SWEETALERT2 */
         body.dark-mode .swal2-popup { background-color: #1e293b !important; color: #f8fafc !important; }
@@ -194,6 +196,11 @@
 
         /* CSS Footer */
         footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 2rem 1rem; margin-top: auto; border-top: 3px solid #0ea5e9; }
+        
+        /* Styling Form Group Flex */
+        .input-group { display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;}
+        .input-group input { margin-bottom: 0; flex: 1; min-width: 200px; }
+        .input-group .btn { margin: 0; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -300,9 +307,12 @@
         <label>Alamat Lengkap</label>
         <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
         
-        <!-- FITUR BARU: SHARELOC / GOOGLE MAPS -->
-        <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Link Google Maps / Shareloc (Opsional)</label>
-        <input type="url" id="shareloc" placeholder="Tempel link Google Maps titik lokasi Anda di sini..." oninput="simpanDraft()">
+        <!-- FITUR GEOLOCATION (MAPS OTOMATIS) -->
+        <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi / Google Maps (Opsional)</label>
+        <div class="input-group">
+            <input type="url" id="shareloc" placeholder="Link Google Maps atau klik tombol di samping ->" oninput="simpanDraft()">
+            <button type="button" class="btn btn-lokasi" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS"><i class="bi bi-crosshair"></i> Lokasi Saat Ini</button>
+        </div>
         
         <label>Merek Perangkat <span style="color:red;">*</span></label>
         <select id="merek" onchange="toggleMerekLainnya()">
@@ -619,6 +629,44 @@ function restoreDraft() {
             toggleMerekLainnya();
         } catch(e){}
     }
+}
+
+// FUNGSI GEOLOCATION OTOMATIS
+function dapatkanLokasiOtomatis() {
+    const btn = document.getElementById("btnLokasiGPS");
+    const inputShareloc = document.getElementById("shareloc");
+    
+    if (!navigator.geolocation) {
+        return Swal.fire('Tidak Mendukung', 'Browser Anda tidak mendukung fitur lokasi.', 'error');
+    }
+    
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Membaca GPS...';
+    btn.disabled = true;
+    
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const gmapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+            inputShareloc.value = gmapsLink;
+            simpanDraft();
+            
+            btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Berhasil';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini';
+                btn.disabled = false;
+            }, 3000);
+        },
+        (error) => {
+            console.error(error);
+            btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini';
+            btn.disabled = false;
+            let pesanError = 'Tidak dapat mengambil lokasi.';
+            if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda.';
+            Swal.fire('Gagal', pesanError, 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
 }
 
 let originalOptHP = null;
