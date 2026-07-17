@@ -221,6 +221,9 @@
         body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
         body.dark-mode optgroup { background: #0f172a; color: #0ea5e9;}
         body.dark-mode .review-card { background: #1e293b; color: #f8fafc; border-color: #334155; }
+        body.dark-mode .swal2-popup { background: #1e293b !important; color: #ffffff !important; }
+        body.dark-mode .swal2-title, body.dark-mode .swal2-html-container { color: #ffffff !important; }
+        body.dark-mode .swal2-input { background: #0f172a !important; color: #ffffff !important; border: 1px solid #334155 !important; }
         
         .hero-section { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 4rem 2rem; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); margin-bottom: 2rem;}
         .hero-section h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;}
@@ -238,16 +241,26 @@
         .reviews-container { display:flex; gap:1.2rem; overflow-x:auto; padding:1rem 0; scroll-snap-type: x mandatory; scrollbar-width: none;}
         .review-card { min-width:280px; background:white; padding:1.2rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.04); scroll-snap-align: start; border: 1px solid #e2e8f0;}
         /* ------------------------------------------- */
+        /* Footer Styling */
+        .footer-section { background: #0f172a; color: #94a3b8; padding: 3rem 5%; margin-top: 4rem; text-align: center; }
+        .page-content { display: none; padding: 2rem 5%; }
+        .page-content.active { display: block; }
+        .alur-service { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .alur-box { background: #f1f5f9; padding: 1.5rem; border-radius: 10px; width: 200px; text-align: center; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo"><i class="bi bi-phone-vibrate"></i> Servis HP & Elektronik Online</div>
-    <nav style="display:flex; align-items:center;">
-        <button onclick="toggleDarkMode()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
-        <a href="#pesan" onclick="kembaliKeAwal()"><i class="bi bi-plus-circle"></i> Pesanan Baru</a>
-        <a href="#lacak" onclick="tanyaKodeLacak()"><i class="bi bi-search"></i> Lacak Pesanan</a>
+   <nav style="display:flex; justify-content:space-between; padding:1rem 5%; background:#1e293b; color:white;">
+        <div onclick="showPage('home')" style="cursor:pointer; font-weight:bold;">SF TECH</div>
+        <div>
+            <a onclick="showPage('home')" style="cursor:pointer; margin-right:15px;">Home</a>
+            <a onclick="showPage('about')" style="cursor:pointer; margin-right:15px;">About Us</a>
+            <a onclick="showPage('profile')" style="cursor:pointer; margin-right:15px;">Profile</a>
+            <a onclick="tanyaKodeLacak()" style="cursor:pointer; color:#38bdf8;">Lacak Pesanan</a>
+        </div>
     </nav>
 </header>
 
