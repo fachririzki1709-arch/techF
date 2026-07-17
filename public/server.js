@@ -33,7 +33,7 @@ mongoose.connect(MONGO_URI)
 
 // --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
-    kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String, // Ditambahkan field layanan
+    kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
     status: { type: String, default: "baru" },
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     teknisi: String, jadwal: String, lokasiServis: String,
@@ -158,7 +158,6 @@ app.get('/api/chats/:kode', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat chat" }); }
 });
 
-// --- FITUR BARU: ROUTE API UNTUK RATING & ULASAN ---
 app.post('/api/orders/:kode/rating', async (req, res) => {
     try {
         const { rating, ulasan } = req.body;
@@ -173,7 +172,6 @@ app.get('/api/reviews', async (req, res) => {
         res.json(reviews);
     } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
 });
-// ---------------------------------------------------
 
 // --- ROUTE FRONTEND (FALLBACK) ---
 app.get('*', (req, res) => {
