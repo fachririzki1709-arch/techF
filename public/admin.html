@@ -41,6 +41,13 @@
         .kartu h3 {font-size:0.88rem; font-weight:600; color:#64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:0.5rem;}
         .kartu .angka {font-size:2.2rem; font-weight:700; color: var(--teks-utama);}
 
+        /* CSS FITUR BARU: KARTU KEUANGAN */
+        .kartu-keuangan { border-left-width: 6px !important; }
+        .kartu-pendapatan { border-left-color: #10b981 !important; background: rgba(16, 185, 129, 0.05) !important; }
+        .kartu-piutang { border-left-color: #ef4444 !important; background: rgba(239, 68, 68, 0.05) !important; }
+        body.dark-mode .kartu-pendapatan, body.dark-mode .kartu-piutang { background: var(--bg-kartu) !important; }
+        /* ------------------------------ */
+
         .kontrol-fitur {display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; background: var(--bg-kartu); padding: 1.2rem; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 1rem;}
         .filter-grup {display:flex; align-items:center; gap:0.6rem;}
         .filter-grup label {font-size:0.9rem; font-weight:600;}
@@ -67,15 +74,17 @@
         .btn-edit {background:#0ea5e9; color:white;}
         .btn-validasi {background:#10b981; color:white;}
         .btn-hapus {background:#ef4444; color:white;}
+        .btn-locked {background:#94a3b8 !important; cursor:not-allowed !important; transform:none !important;}
 
         .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:1000; overflow:auto; backdrop-filter: blur(4px);}
         .modal-konten {background:var(--bg-kartu); width:92%; max-width:980px; margin:3% auto; padding:2.2rem; border-radius:12px; position:relative; box-shadow: 0 20px 40px rgba(0,0,0,0.1);}
         .tutup {position:absolute; right:1.2rem; top:1.2rem; font-size:1.6rem; cursor:pointer; color:#94a3b8; transition:color 0.2s;}
         .tutup:hover {color:#64748b;}
         
-        input, select, textarea {width:100%; padding:0.7rem 1rem; margin:0.5rem 0 1.2rem; border:2px solid var(--border-line); background:var(--bg-utama); color:var(--teks-utama); border-radius:6px; outline:none; font-size:0.95rem;}
+        input, select, textarea {width:100%; padding:0.7rem 1rem; margin:0.5rem 0 1.2rem; border:2px solid var(--border-line); background:var(--bg-utama); color:var(--teks-utama); border-radius:6px; outline:none; font-size:0.95rem; transition:0.3s;}
         input:focus, select:focus, textarea:focus {border-color:#0ea5e9;}
-        input:disabled, select:disabled {background:#cbd5e1; color:#64748b; border-color:#e2e8f0;}
+        input:disabled, select:disabled, textarea:disabled {background:#cbd5e1; color:#475569; border-color:#cbd5e1; cursor:not-allowed;}
+        body.dark-mode input:disabled, body.dark-mode select:disabled, body.dark-mode textarea:disabled {background:#334155; color:#94a3b8; border-color:#334155;}
         
         .pratinjau {margin:1rem 0; padding:1rem; border:2px dashed var(--border-line); border-radius:8px; text-align:center; background:var(--bg-utama);}
         .pratinjau img, .pratinjau video {max-width:100%; max-height:280px; border-radius:6px;}
@@ -124,7 +133,7 @@
 </head>
 <body>
 
-<!-- FITUR BARU: WADAH CETAK NOTA FISIK (HIDDEN DARI LAYAR BIASA) -->
+<!-- WADAH CETAK NOTA FISIK (HIDDEN DARI LAYAR BIASA) -->
 <div id="printArea" style="display: none;">
     <h2 style="text-align:center; font-size:16px; margin:0; font-weight:bold;">SF Tech Service</h2>
     <p style="text-align:center; font-size:10px; margin:0;">Nota Pembayaran Resmi</p>
@@ -143,7 +152,6 @@
     <div class="line"></div>
     <p style="text-align:center; font-size:10px; margin-top:10px;">Terima Kasih!<br>Garansi Servis 30 Hari</p>
 </div>
-<!-- ------------------------------------------------------------ -->
 
 <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
@@ -164,33 +172,40 @@
     <header>
         <div class="logo">⚙️ Panel Admin Servis</div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- FITUR BARU: TOMBOL EXPORT CSV -->
-            <button class="btn btn-edit" style="background:#10b981; margin-right: 10px;" onclick="exportCSV()"><i class="bi bi-file-earmark-excel"></i> Export CSV</button>
+            <!-- FITUR EXPORT CSV PINTAR (Mengikuti Filter) -->
+            <button class="btn btn-edit" style="background:#10b981; margin-right: 10px;" onclick="exportCSV()"><i class="bi bi-file-earmark-excel"></i> Export CSV Filter</button>
             
-            <!-- TAMBAHAN: TOMBOL DARK MODE -->
+            <!-- TOMBOL DARK MODE -->
             <button onclick="toggleDarkModeAdmin()" class="btn" style="background:rgba(255,255,255,0.2);"><i class="bi bi-moon-fill" id="iconDarkAdmin"></i></button>
-            <!-- -------------------------- -->
             <div style="font-size:0.82rem; background:#1e293b; padding:0.5rem 0.8rem; border-radius:6px; color:#10b981; font-weight:700; display:flex; align-items:center; gap:5px;"><span style="width:7px; height:7px; background:#10b981; border-radius:50%; display:inline-block;"></span> Socket Live</div>
             <button class="btn-logout" onclick="prosesLogout()">Keluar 🚪</button>
         </div>
     </header>
     <div class="container">
         
-        <!-- FITUR BARU: MENU TAB UNTUK DAFTAR PESANAN DAN LAPORAN -->
         <div class="tab-menu-admin" style="margin-bottom: 2rem;">
             <button class="tab-btn-admin aktif" onclick="pindahTabUtamaAdmin('tabDaftarPesananUtama')">Daftar Pesanan</button>
             <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabLaporanEkstra')">Laporan Keuangan & Analitik</button>
         </div>
         
-        <!-- WRAPPER UNTUK KONTEN DAFTAR PESANAN ASLI -->
         <div id="tabDaftarPesananUtama" class="modal-view aktif">
             <h1>Daftar Pesanan Servis</h1>
             
-            <!-- TAMBAHAN: KOTAK GRAFIK STATISTIK (Chart.js) -->
             <div class="admin-chart-box">
                 <canvas id="grafikAdmin"></canvas>
             </div>
-            <!-- ------------------------------------------- -->
+
+            <!-- FITUR BARU: METRIK KEUANGAN PROFESIONAL (Di atas Ringkasan Status) -->
+            <div class="ringkasan" style="margin-bottom: 1rem; border-bottom: 2px dashed var(--border-line); padding-bottom: 1rem;">
+                <div class="kartu kartu-keuangan kartu-pendapatan">
+                    <h3 style="color:#10b981;"><i class="bi bi-wallet-fill"></i> Total Pendapatan (Lunas)</h3>
+                    <div class="angka" id="lblTotalPendapatan">Rp 0</div>
+                </div>
+                <div class="kartu kartu-keuangan kartu-piutang">
+                    <h3 style="color:#ef4444;"><i class="bi bi-exclamation-triangle-fill"></i> Total Piutang (Tagihan Berjalan)</h3>
+                    <div class="angka" id="lblTotalPiutang">Rp 0</div>
+                </div>
+            </div>
 
             <div class="ringkasan">
                 <div class="kartu"><h3>Pesanan Baru</h3><div class="angka" id="jmlBaru">0</div></div>
@@ -200,19 +215,21 @@
             </div>
 
             <div class="kontrol-fitur">
-                <!-- Fitur Pencarian Realtime Baru -->
                 <div class="filter-grup">
                     <label for="cariKode"><i class="bi bi-search"></i> Cari:</label>
                     <input type="text" id="cariKode" placeholder="Kode atau Nama..." oninput="muatData()" style="width: 180px; cursor: text;">
                 </div>
+                <!-- FITUR BARU: FILTER DATE RANGE PINTAR -->
                 <div class="filter-grup">
-                    <label for="filterTanggalKalender"><i class="bi bi-calendar-check"></i> Filter Hari Kerja:</label>
-                    <input type="date" id="filterTanggalKalender" onchange="muatData()">
-                    <button class="btn btn-secondary" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset</button>
+                    <label><i class="bi bi-calendar-range"></i> Dari:</label>
+                    <input type="date" id="filterTglMulai" onchange="muatData()">
+                    <label>Hingga:</label>
+                    <input type="date" id="filterTglAkhir" onchange="muatData()">
+                    <button class="btn btn-secondary" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset Data</button>
                 </div>
                 <div class="filter-grup">
-                    <label for="urutTanggal">Urutan Agenda:</label>
-                    <select id="urutTanggal" onchange="muatData()" style="width: 150px;">
+                    <label for="urutTanggal">Urutan:</label>
+                    <select id="urutTanggal" onchange="muatData()" style="width: 130px;">
                         <option value="terbaru">Terbaru</option>
                         <option value="terlama">Terlama</option>
                     </select>
@@ -226,7 +243,7 @@
                         <th>Nama</th>
                         <th>Perangkat</th>
                         <th>Status DP</th>
-                        <th>Tanggal Jadwal</th>
+                        <th>Tanggal Masuk</th>
                         <th>Status Kerja</th>
                         <th>Aksi</th>
                     </tr>
@@ -235,7 +252,6 @@
             </table>
         </div>
 
-        <!-- FITUR BARU: WRAPPER UNTUK LAPORAN EKSTRA & ANALITIK -->
         <div id="tabLaporanEkstra" class="modal-view">
             <h2 style="margin-bottom: 1.5rem; font-size: 1.6rem; font-weight: 700;">Laporan Analitik Tambahan</h2>
             <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
@@ -257,22 +273,27 @@
             <span class="tutup" onclick="tutupModal()">&times;</span>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="font-size:1.3rem; font-weight:700;">Kelola Order (<span id="txtKodeHeader">-</span>)</h3>
-                <!-- FITUR BARU: TOMBOL CETAK NOTA DI DALAM MODAL -->
                 <button class="btn" style="background:#0f172a; color:white;" onclick="cetakNotaFisik()"><i class="bi bi-printer"></i> Cetak Nota Fisik</button>
             </div>
             
             <input type="hidden" id="kodePesanan">
 
-            <!-- TAMBAHAN: TAB MENU NAVIGASI (Tanpa Merusak Grid Asli) -->
             <div class="tab-menu-admin">
                 <button class="tab-btn-admin aktif" onclick="pindahTabAdmin('tabKiriLengkap')">Penjadwalan & Keuangan</button>
                 <button class="tab-btn-admin" onclick="pindahTabAdmin('tabKananLengkap')">Media Dokumen & Live Chat</button>
                 <button class="tab-btn-admin" onclick="pindahTabAdmin('tabGridAsli')">Tampilan Grid (Semua)</button>
             </div>
-            <!-- ----------------------------------------------------- -->
 
             <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.8rem; margin-top:1.2rem;" id="wrapperGridUtama">
                 <div id="tabKiriLengkap" class="modal-view aktif">
+                    
+                    <!-- FITUR BARU: BANNER PENGUNCIAN DATA READ-ONLY -->
+                    <div id="bannerTerkunci" style="display:none; background:#fef2f2; color:#991b1b; padding:1.2rem; border-left:5px solid #ef4444; margin-bottom:1.5rem; border-radius:8px; font-weight:600; box-shadow:0 4px 10px rgba(239, 68, 68, 0.1);">
+                        <i class="bi bi-lock-fill" style="font-size:1.2rem; margin-right:5px;"></i> 
+                        INVOICE TERKUNCI (READ-ONLY). Pesanan ini telah Lunas & Selesai. Pengeditan otomatis dinonaktifkan untuk menjaga integritas pelaporan keuangan.
+                    </div>
+                    <!-- ----------------------------------------------- -->
+
                     <div class="box-dp">
                         <h4 style="font-size:0.95rem; font-weight:700; color:#c2410c; margin-bottom:5px;">🔒 Langkah 1: Validasi Uang Muka (DP)</h4>
                         <p style="font-size:0.85rem; margin-bottom:0.8rem;">Metode Transfer DP: <strong id="txtMetodeDP">-</strong></p>
@@ -285,22 +306,23 @@
                     <div id="wrapperPenjadwalan">
                         <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">📅 Langkah 2: Atur Penjadwalan Teknisi</h4>
                         <label>Lokasi Perbaikan:</label>
-                        <select id="lokasiServis">
+                        <select id="lokasiServis" class="kunci-target">
                             <option value="home_service">Service di Rumah Pelanggan (On-Site)</option>
                             <option value="workshop">Barang Dibawa oleh Teknisi (Ke Workshop)</option>
                         </select>
 
                         <label>Status Progres Kerja</label>
-                        <select id="statusPesanan">
+                        <select id="statusPesanan" class="kunci-target">
                             <option value="baru">Menunggu Verifikasi Jadwal</option>
                             <option value="dijadwalkan">Sudah Dijadwalkan</option>
                             <option value="diproses">Sedang Diperbaiki</option>
-                            <option value="selesai_servis">Perbaikan Selesai</option>
+                            <option value="selesai_servis">Perbaikan Selesai (Menunggu Pelunasan)</option>
                             <option value="ditolak_pelanggan">Dibatalkan (Pelanggan Tolak Biaya Tambahan)</option>
+                            <option value="selesai">Lunas & Selesai Sepenuhnya</option>
                         </select>
 
                         <label>Teknisi</label>
-                        <select id="teknisi">
+                        <select id="teknisi" class="kunci-target">
                             <option value="">-- Pilih --</option>
                             <option value="Andi S.">Andi S.</option>
                             <option value="Bambang K.">Bambang K.</option>
@@ -308,24 +330,22 @@
                         </select>
 
                         <label>Tanggal & Waktu Servis</label>
-                        <input type="datetime-local" id="jadwal">
+                        <input type="datetime-local" id="jadwal" class="kunci-target">
 
-                        <!-- TAMBAHAN: INPUT ETA KEDATANGAN -->
                         <label style="color:#0ea5e9;">Live Update ETA Kedatangan Teknisi</label>
-                        <input type="text" id="etaUpdate" placeholder="Contoh: Teknisi dalam perjalanan (15 Menit lagi)">
-                        <!-- ------------------------------ -->
+                        <input type="text" id="etaUpdate" class="kunci-target" placeholder="Contoh: Teknisi dalam perjalanan (15 Menit lagi)">
 
                         <div class="box-tambahan-admin" id="boxInputTambahan">
                             <h4 style="font-size:0.95rem; font-weight:700; color:#15803d; margin-bottom:3px;">🔧 Laporkan Temuan Rusak Tambahan</h4>
                             <p style="font-size:0.8rem; color:#475569; margin-bottom:0.6rem;">Aktifkan jika teknisi butuh tambahan part di lapangan.</p>
                             
-                            <label style="font-weight:600;"><input type="checkbox" id="chkAdaTambahan" onchange="toggleFormTambahan()" style="width:auto; margin-right:5px;"> Aktifkan Komponen Tambahan</label>
+                            <label style="font-weight:600;"><input type="checkbox" id="chkAdaTambahan" class="kunci-target" onchange="toggleFormTambahan()" style="width:auto; margin-right:5px;"> Aktifkan Komponen Tambahan</label>
                             
                             <div id="subFormTambahan" style="display:none; margin-top:0.5rem;">
                                 <label>Komponen / Kendala Baru</label>
-                                <input type="text" id="infoTambahan" placeholder="Contoh: IC Power Lemah / Motor Kipas Mati">
+                                <input type="text" id="infoTambahan" class="kunci-target" placeholder="Contoh: IC Power Lemah / Motor Kipas Mati">
                                 <label>Harga Tambahan Part/Jasa (Rp)</label>
-                                <input type="number" id="biayaTambahan" placeholder="0" oninput="hitungTotal()">
+                                <input type="number" id="biayaTambahan" class="kunci-target" placeholder="0" oninput="hitungTotal()">
                                 <p style="font-size:0.85rem; margin-top:0.3rem;">Status Persetujuan User: <strong id="txtResponPelanggan" style="color:#2563eb;">PENDING</strong></p>
                             </div>
                         </div>
@@ -333,9 +353,9 @@
                         <hr style="margin:1rem 0; border-color:#e2e8f0;">
                         <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">💰 Langkah 3: Hitung Rincian Nota Pokok</h4>
                         <label>Biaya Suku Cadang Pokok (Rp)</label>
-                        <input type="number" id="biayaSuku" placeholder="0" oninput="hitungTotal()">
+                        <input type="number" id="biayaSuku" class="kunci-target" placeholder="0" oninput="hitungTotal()">
                         <label>Biaya Jasa Servis Pokok (Rp)</label>
-                        <input type="number" id="biayaJasa" placeholder="0" oninput="hitungTotal()">
+                        <input type="number" id="biayaJasa" class="kunci-target" placeholder="0" oninput="hitungTotal()">
                         
                         <div style="background:rgba(14, 165, 233, 0.05); padding:0.8rem; border-radius:6px; margin-top:0.5rem;">
                             <p style="font-size:0.88rem; font-weight:600; color:#1e40af;">Subtotal Tagihan Pokok: Rp <span id="totalTampilPokok">0</span></p>
@@ -347,13 +367,13 @@
 
                         <hr style="margin:1rem 0; border-color:#e2e8f0;">
                         <p style="font-size:0.9rem;"><strong>Metode Transfer Pelunasan:</strong> <span id="metodeBayarTampil" style="font-weight:600;">-</span></p>
-                        <button class="btn btn-validasi" id="btnValidasi" onclick="validasiPembayaranPelunasan()" style="margin-top:0.8rem; padding:0.6rem 1.2rem; width:100%;">Validasi Lunas Sisa</button>
+                        <button class="btn btn-validasi" id="btnValidasi" onclick="validasiPembayaranPelunasan()" style="margin-top:0.8rem; padding:0.6rem 1.2rem; width:100%;">Validasi Lunas Sisa (Tutup Transaksi)</button>
                         <label>Bukti Transfer Pelunasan:</label>
                         <div id="displayBuktiPelunasan" class="pratinjau">Belum ada bukti</div>
                     </div>
 
                     <div style="margin-top:1.5rem; text-align:right;">
-                        <button class="btn btn-edit" style="padding:0.7rem 1.8rem;" onclick="simpanPerubahan()"><i class="bi bi-save"></i> Simpan Semua Data</button>
+                        <button class="btn btn-edit" id="btnSimpanPerubahan" style="padding:0.7rem 1.8rem;" onclick="simpanPerubahan()"><i class="bi bi-save"></i> Simpan Semua Data</button>
                     </div>
                 </div>
 
@@ -385,9 +405,9 @@ let aktifMembukaKode = "";
 let cacheStringData = "";
 let intervalAdmin = null;
 let chartInstance = null; 
-window.semuaPesananGlobal = {}; // Untuk menyimpan data master keperluan export/print
+window.semuaPesananGlobal = {}; 
+window.dataTampilFilter = []; // FITUR BARU: Variabel menampung data spesifik untuk di export
 
-// --- INISIALISASI WEBSOCKET ADMIN ---
 const socket = io(window.location.origin);
 
 socket.on("updateDashboardAdmin", () => {
@@ -398,7 +418,6 @@ socket.on("chatBaruDiterima", (kodeChat) => {
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
 });
 
-// FITUR BARU: FUNGSI PINDAH TAB UTAMA DI ADMIN
 function pindahTabUtamaAdmin(tabIdTarget) {
     document.querySelectorAll(".tab-menu-admin")[0].querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
     event.currentTarget.classList.add("aktif");
@@ -413,7 +432,6 @@ function pindahTabUtamaAdmin(tabIdTarget) {
     }
 }
 
-// --- FITUR DARK MODE ADMIN ---
 function toggleDarkModeAdmin() {
     document.body.classList.toggle('dark-mode');
     const icon = document.getElementById('iconDarkAdmin');
@@ -431,11 +449,8 @@ function toggleDarkModeAdmin() {
     if(window.chartTeknisi) window.chartTeknisi.update();
 }
 if(localStorage.getItem('adminTema') === 'gelap') toggleDarkModeAdmin();
-// -----------------------------
 
-// --- FITUR TAB MODAL UI ADMIN ---
 function pindahTabAdmin(tabIdTarget) {
-    // Navigasi tombol di dalam Modal
     document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
     event.currentTarget.classList.add("aktif");
 
@@ -450,7 +465,6 @@ function pindahTabAdmin(tabIdTarget) {
         document.getElementById(tabIdTarget).classList.add("aktif");
     }
 }
-// --------------------------------
 
 function getAuthHeader() {
     const token = sessionStorage.getItem("adminToken");
@@ -519,18 +533,23 @@ function muatData() {
     fetch(`${API_URL}/orders`, { headers: getAuthHeader() })
     .then(handleApiError)
     .then(semua => {
-        window.semuaPesananGlobal = semua; // Simpan ke global untuk fitur Export/Print
+        window.semuaPesananGlobal = semua; 
         
         const currentDataString = JSON.stringify(semua);
         if (currentDataString === cacheStringData && !document.getElementById("cariKode").value) return; 
 
         const tbody = document.querySelector("#tabelPesanan tbody");
-        const filterTanggal = document.getElementById("filterTanggalKalender").value; 
         
+        // AMBIL NILAI FILTER DATE RANGE
+        const tglMulai = document.getElementById("filterTglMulai").value; 
+        const tglAkhir = document.getElementById("filterTglAkhir").value; 
         const filterCari = document.getElementById("cariKode") ? document.getElementById("cariKode").value.toLowerCase() : "";
 
         tbody.innerHTML = "";
+        window.dataTampilFilter = []; // Reset penampung data filter export
+
         let baru = 0, jadwal = 0, proses = 0, validasi = 0;
+        let pendapatanMurni = 0, piutangBerjalan = 0;
 
         let urutanKunci = Object.keys(semua);
         const tipeUrutan = document.getElementById("urutTanggal").value;
@@ -540,8 +559,26 @@ function muatData() {
         urutanKunci.forEach(kode => {
             const d = semua[kode];
             
+            // LOGIKA FILTER PENCARIAN & RENTANG TANGGAL PINTAR
             if (filterCari && !kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
-            if (filterTanggal && d.tanggalInput !== filterTanggal) return;
+            if (tglMulai && d.tanggalInput < tglMulai) return;
+            if (tglAkhir && d.tanggalInput > tglAkhir) return;
+
+            window.dataTampilFilter.push(d); // Masukkan ke wadah export CSV
+
+            // LOGIKA PENGHITUNGAN KEUANGAN
+            let totalSub = (d.biayaSuku || 0) + (d.biayaJasa || 0);
+            let totalTamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
+            let grandTotal = totalSub + totalTamb;
+
+            if (d.pembayaranValid || d.status === 'selesai') {
+                pendapatanMurni += grandTotal;
+            } else if (d.status !== 'batal' && d.status !== 'ditolak_pelanggan') {
+                let sisaTagihan = grandTotal - (d.dpValid ? 50000 : 0);
+                if(sisaTagihan > 0 && d.status !== 'baru') {
+                    piutangBerjalan += sisaTagihan;
+                }
+            }
 
             if(d.status === "baru") baru++;
             else if(d.status === "dijadwalkan") jadwal++;
@@ -552,7 +589,7 @@ function muatData() {
             if (d.dpValid) { teksDP = "DP LUNAS ✅"; kelasDP = "selesai"; }
             else if (d.dpTerbayar) { teksDP = "PERLU CEK ⏳"; kelasDP = "menunggu_validasi"; }
 
-            let kelasStatus = d.pembayaranValid ? "selesai" : d.status === "ditolak_pelanggan" ? "batal" : d.pembayaranDikonfirmasi ? "menunggu_validasi" : d.status;
+            let kelasStatus = d.pembayaranValid || d.status === "selesai" ? "selesai" : d.status === "ditolak_pelanggan" ? "batal" : d.pembayaranDikonfirmasi ? "menunggu_validasi" : d.status;
             let tombolAksi = "";
             if (d.status === "baru" && d.dpValid) {
                 tombolAksi = `<button class="btn btn-validasi" onclick="updateStatusCepat('${kode}', 'dijadwalkan')" title="Jadwalkan">📅</button>`;
@@ -566,7 +603,7 @@ function muatData() {
                 <td>${d.nama}</td>
                 <td>${d.merek ? d.merek.toUpperCase() : ''} ${d.tipe || ''}</td>
                 <td><span class="status ${kelasDP}">${teksDP}</span></td>
-                <td>${d.jadwal ? new Date(d.jadwal).toLocaleString("id-ID") : "<em>Menunggu DP Lunas</em>"}</td>
+                <td>${d.tanggalInput}</td>
                 <td><span class="status ${kelasStatus}">${ubahNamaStatus(d)}</span></td>
                 <td>${tombolAksi}</td>
                 <td>
@@ -577,20 +614,23 @@ function muatData() {
             tbody.appendChild(tr);
         });
 
+        // UPDATE UI DASHBOARD
         document.getElementById("jmlBaru").textContent = baru;
         document.getElementById("jmlJadwal").textContent = jadwal;
         document.getElementById("jmlProses").textContent = proses;
         document.getElementById("jmlValidasi").textContent = validasi;
         
+        document.getElementById("lblTotalPendapatan").textContent = "Rp " + pendapatanMurni.toLocaleString("id-ID");
+        document.getElementById("lblTotalPiutang").textContent = "Rp " + piutangBerjalan.toLocaleString("id-ID");
+        
         renderGrafikAdmin(baru, jadwal, proses, validasi);
-        renderGrafikEkstra(); // Update chart laporan tambahan juga
+        renderGrafikEkstra(); 
 
         if(!filterCari) cacheStringData = currentDataString; 
     })
     .catch(err => console.warn("Koneksi admin ke server bermasalah.", err));
 }
 
-// --- FUNGSI RENDER GRAFIK CHART.JS (UTAMA) ---
 function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
     const ctx = document.getElementById('grafikAdmin').getContext('2d');
     if(chartInstance) chartInstance.destroy();
@@ -614,13 +654,11 @@ function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
         }
     });
 }
-// -------------------------------------
 
-// FITUR BARU: RENDER CHART ANALITIK TAMBAHAN
 function renderGrafikEkstra() {
     let kerusakanCount = {}; let teknisiRev = {};
     
-    Object.values(window.semuaPesananGlobal).forEach(d => {
+    window.dataTampilFilter.forEach(d => {
         if(d.layanan) {
             d.layanan.split(', ').forEach(l => {
                 if(l !== "Belum dipilih" && l.trim() !== "") kerusakanCount[l] = (kerusakanCount[l] || 0) + 1;
@@ -650,24 +688,28 @@ function renderGrafikEkstra() {
         options: { responsive: true, maintainAspectRatio: false }
     });
 }
-// ------------------------------------------
 
-// FITUR BARU: EXPORT LAPORAN CSV (EXCEL)
+// UPDATE LOGIKA EXPORT CSV: HANYA EXPORT DATA YANG SEDANG DI FILTER!
 function exportCSV() {
-    let csvContent = "data:text/csv;charset=utf-8,Kode,Tanggal Input,Nama,WA,Merek,Tipe,Layanan,Teknisi,Biaya Jasa,Biaya Sparepart,Total Biaya,Status\n";
-    Object.values(window.semuaPesananGlobal).forEach(d => {
-        const total = (d.biayaSuku||0) + (d.biayaJasa||0);
-        csvContent += `${d.kode},${d.tanggalInput},"${d.nama}","${d.wa}",${d.merek},${d.tipe},"${d.layanan || '-'}",${d.teknisi||'-'},${d.biayaJasa||0},${d.biayaSuku||0},${total},${d.status}\n`;
+    if(window.dataTampilFilter.length === 0) return Swal.fire('Kosong', 'Tidak ada data untuk di-export pada rentang ini.', 'info');
+    let csvContent = "data:text/csv;charset=utf-8,Kode,Tanggal Input,Nama,WA,Merek,Tipe,Layanan,Teknisi,Biaya Jasa,Biaya Sparepart,Tambahan,Total Biaya,Status,Pembayaran\n";
+    
+    window.dataTampilFilter.forEach(d => {
+        const jasa = d.biayaJasa || 0;
+        const suku = d.biayaSuku || 0;
+        const tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
+        const total = jasa + suku + tamb;
+        const statLunas = (d.pembayaranValid || d.status === 'selesai') ? 'LUNAS' : 'BELUM LUNAS';
+        csvContent += `${d.kode},${d.tanggalInput},"${d.nama}","${d.wa}",${d.merek},${d.tipe},"${d.layanan || '-'}",${d.teknisi||'-'},${jasa},${suku},${tamb},${total},${d.status},${statLunas}\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Laporan_Servis_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Laporan_Servis_Filtered_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
 }
 
-// FITUR BARU: CETAK NOTA FISIK (THERMAL PRINT)
 function cetakNotaFisik() {
     const kode = document.getElementById("kodePesanan").value;
     const d = window.semuaPesananGlobal[kode];
@@ -691,13 +733,14 @@ function cetakNotaFisik() {
 }
 
 function resetFilterKalender() {
-    document.getElementById("filterTanggalKalender").value = "";
+    document.getElementById("filterTglMulai").value = "";
+    document.getElementById("filterTglAkhir").value = "";
     document.getElementById("cariKode").value = "";
     muatData();
 }
 
 function ubahNamaStatus(d) {
-    if(d.pembayaranValid) return "LUNAS & SELESAI";
+    if(d.pembayaranValid || d.status === "selesai") return "LUNAS & SELESAI";
     if(d.status === "ditolak_pelanggan") return "DITOLAK PELANGGAN";
     if(d.pembayaranDikonfirmasi) return "VALIDASI PELUNASAN";
     if(d.status === "baru") return "BARU MASUK";
@@ -761,8 +804,30 @@ function bukaModal(kode) {
         }
 
         hitungTotal(); 
-        document.getElementById("btnValidasi").disabled = !d.pembayaranDikonfirmasi || d.pembayaranValid;
         
+        // --- LOGIKA BARU: PENGUNCIAN DATA JIKA STATUS LUNAS/SELESAI ---
+        const isLocked = d.pembayaranValid || d.status === "selesai";
+        const lockBanner = document.getElementById("bannerTerkunci");
+        const btnSimpan = document.getElementById("btnSimpanPerubahan");
+        const formInputs = document.querySelectorAll(".kunci-target");
+        
+        if (isLocked) {
+            if(lockBanner) lockBanner.style.display = "block";
+            if(btnSimpan) btnSimpan.style.display = "none";
+            formInputs.forEach(inp => inp.disabled = true);
+            document.getElementById("btnValidasi").disabled = true;
+            document.getElementById("btnApproveDP").disabled = true;
+            document.getElementById("btnTolakDP").disabled = true;
+            document.getElementById("btnValidasi").classList.add("btn-locked");
+        } else {
+            if(lockBanner) lockBanner.style.display = "none";
+            if(btnSimpan) btnSimpan.style.display = "inline-block";
+            formInputs.forEach(inp => inp.disabled = false);
+            document.getElementById("btnValidasi").disabled = !d.pembayaranDikonfirmasi || d.pembayaranValid;
+            document.getElementById("btnValidasi").classList.remove("btn-locked");
+        }
+        // -------------------------------------------------------------
+
         document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin")[0].click();
         document.getElementById("modalKelola").style.display = "block";
         muatLogPesanAdmin(); 
@@ -785,7 +850,7 @@ function validasiDP(isApproved) {
             isApproved ? 'Akses Penjadwalan Dibuka.' : 'Pengajuan DP Ditolak.', 
             isApproved ? 'success' : 'info'
         );
-        bukaModal(kode); // Refresh Modal
+        bukaModal(kode); 
     });
 }
 
@@ -820,15 +885,27 @@ function simpanPerubahan() {
 
 function validasiPembayaranPelunasan() {
     const kode = document.getElementById("kodePesanan").value;
-    fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT",
-        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
-    })
-    .then(handleApiError)
-    .then(() => { 
-        Swal.fire('Lunas!', 'Pembayaran Pelunasan Terverifikasi.', 'success'); 
-        tutupModal(); 
+    Swal.fire({
+        title: 'Validasi Pelunasan & Tutup Invoice?',
+        text: "Setelah ini data akan terkunci (Read-Only) dan masuk ke pencatatan Laba Bersih.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Ya, Validasi & Tutup!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${API_URL}/orders/${kode}`, {
+                method: "PUT",
+                headers: { ...getAuthHeader(), "Content-Type": "application/json" },
+                body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
+            })
+            .then(handleApiError)
+            .then(() => { 
+                Swal.fire('Invoice Tertutup!', 'Pembayaran telah tervalidasi.', 'success'); 
+                tutupModal(); 
+            });
+        }
     });
 }
 
