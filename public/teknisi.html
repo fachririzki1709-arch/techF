@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Teknisi Lapangan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        * {margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif;}
+        body {background:#0f172a; color:#f8fafc; padding:2rem;}
+        .grid-task {display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem; margin-top:2rem;}
+        .task-card {background:#1e293b; padding:1.5rem; border-radius:10px; border-top:4px solid #38bdf8;}
+        input, select {width:100%; padding:0.8rem; margin:0.5rem 0; border:1px solid #334155; background:#0f172a; color:white; border-radius:6px;}
+        .btn {padding:0.8rem; background:#38bdf8; color:#0f172a; border:none; border-radius:6px; cursor:pointer; font-weight:700; width:100%;}
+        
+        #modalKerja {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100;}
+        .modal-content {background:#1e293b; width:90%; max-width:500px; margin:5% auto; padding:2rem; border-radius:12px; border:1px solid #334155;}
+        .box-input {background:#0f172a; padding:1rem; border-radius:8px; margin-bottom:1rem; border:1px solid #334155;}
+    </style>
+</head>
+<body>
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>🔧 Workspace Teknisi Lapangan</h2>
+    <button class="btn" style="width:auto; background:#ef4444; color:white;" onclick="logout()">Keluar</button>
+</div>
+<p style="color:#94a3b8; margin-top:5px;">Hanya menampilkan pekerjaan yang statusnya "Dijadwalkan" atau "Diproses".</p>
+
+<div class="grid-task" id="taskList"></div>
+
+<!-- Modal Laporan Lapangan -->
+<div id="modalKerja">
+    <div class="modal-content">
+        <h3 style="color:#38bdf8; margin-bottom:1rem;">Update Progress: <span id="mKode"></span></h3>
+        
+        <!-- TEKNISI HANYA FOKUS PADA STATUS TEKNIS DAN HARGA PART -->
+        <label>Ubah Status Pekerjaan Lapangan:</label>
+        <select id="mStatus">
+            <option value="dijadwalkan">Dalam Perjalanan / Persiapan</option>
+            <option value="diproses">Sedang Diperbaiki (Mesin Dibongkar)</option>
+            <option value="selesai_servis">Perbaikan Selesai (Menunggu Pelunasan Admin)</option>
+        </select>
+
+        <div class="box-input">
+            <label>Penggunaan Suku Cadang Awal (Rp):</label>
+            <input type="number" id="mSuku" placeholder="Cth: 150000">
+        </div>
+
+        <div class="box-input" style="border-color:#ef4444;">
+            <label style="color:#ef4444;">Lapor Temuan Kerusakan Tambahan (Jika Ada):</label>
+            <input type="text" id="mInfoTambahan" placeholder="Cth: Fleksibel Volume Sobek">
+            <label style="color:#ef4444; margin-top:10px; display:block;">Biaya Part Tambahan (Rp):</label>
+            <input type="number" id="mBiayaTambahan" placeholder="Cth: 25000">
+        </div>
+
+        <button class="btn" onclick="simpanLaporanTeknisi()" style="margin-bottom:10px;">Simpan Laporan & Status</button>
+        <button class="btn" style="background:#475569; color:white;" onclick="tutupModal()">Batal</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = window.location.origin + "/api";
+    let token = sessionStorage.getItem("techToken");
+    let currentKode = "";
+    const socket = io(window.location.origin);
+
+    if(!token) loginTeknisi();
+    else muatTugas();
+
+    socket.on("updateSistem", () => { if(token) muatTugas(); });
+
+    function loginTeknisi() {
+        const u = prompt("ID Teknisi:"); const p = prompt("Password Teknisi:");
+        fetch(`${API_URL}/teknisi/login`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username:u, password:p}) })
+        .then(res=>res.json()).then(d => { if(d.token){ sessionStorage.setItem("techToken", d.token); location.reload(); } else alert("Salah!"); });
+    }
+    function logout() { sessionStorage.removeItem("techToken"); location.reload(); }
+    function getAuth() { return { "Authorization": `Bearer ${token}` }; }
+
+    function muatTugas() {
+        fetch(`${API_URL}/orders`, {headers: getAuth()}).then(res=>res.json()).then(data => {
+            const list = document.getElementById("taskList"); list.innerHTML = "";
+            Object.values(data).forEach(d => {
+                // Teknisi HANYA melihat order yang sudah di-dispatch admin kepadanya
+                if(d.status === "dijadwalkan" || d.status === "diproses") {
+                    list.innerHTML += `
+                        <div class="task-card">
+                            <h3 style="color:#38bdf8;">${d.kode}</h3>
+                            <p style="margin:10px 0; font-size:0.9rem; color:#cbd5e1;">Kendala: <br><i>"${d.kerusakan}"</i></p>
+                            <span style="display:inline-block; padding:3px 8px; background:#475569; border-radius:4px; font-size:0.8rem;">Status: ${d.status.toUpperCase()}</span>
+                            <button class="btn" style="margin-top:1.5rem;" onclick="bukaModal('${d.kode}')">Kerjakan / Update Laporan</button>
+                        </div>
+                    `;
+                }
+            });
+        });
+    }
+
+    function bukaModal(kode) {
+        currentKode = kode;
+        fetch(`${API_URL}/orders/${kode}`, {headers: getAuth()}).then(res=>res.json()).then(d => {
+            document.getElementById("mKode").textContent = kode;
+            document.getElementById("mStatus").value = d.status;
+            document.getElementById("mSuku").value = d.biayaSuku || "";
+            document.getElementById("mInfoTambahan").value = d.infoKerusakanTambahan || "";
+            document.getElementById("mBiayaTambahan").value = d.biayaSukuTambahan || "";
+            document.getElementById("modalKerja").style.display = "block";
+        });
+    }
+    function tutupModal() { document.getElementById("modalKerja").style.display = "none"; }
+
+    function simpanLaporanTeknisi() {
+        const info = document.getElementById("mInfoTambahan").value.trim();
+        const dataTeknisi = {
+            status: document.getElementById("mStatus").value,
+            biayaSuku: parseInt(document.getElementById("mSuku").value) || 0,
+            infoKerusakanTambahan: info,
+            biayaSukuTambahan: parseInt(document.getElementById("mBiayaTambahan").value) || 0,
+            adaKerusakanTambahan: info !== "" // Otomatis true jika ada isi
+        };
+
+        fetch(`${API_URL}/orders/${currentKode}`, { method: "PUT", headers: {...getAuth(), "Content-Type":"application/json"}, body: JSON.stringify(dataTeknisi) })
+        .then(() => { Swal.fire('Laporan Masuk', 'Progress diteruskan ke Admin', 'success'); tutupModal(); });
+    }
+</script>
+</body>
+</html>
