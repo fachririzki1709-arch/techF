@@ -13,7 +13,8 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // --- MIDDLEWARE ---
-app.use(express.json({ limit: '10mb' })); 
+// PERBAIKAN: Limit JSON dinaikkan menjadi 50mb untuk menampung gambar Base64 beresolusi tinggi dari HP[span_1](start_span)[span_1](end_span)
+app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
 
 // --- WEBSOCKET ---
@@ -34,7 +35,7 @@ mongoose.connect(MONGO_URI)
 // --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
-    shareloc: { type: String, default: "" }, // <--- FIELD UNTUK LINK GOOGLE MAPS OTOMATIS
+    shareloc: { type: String, default: "" }, 
     status: { type: String, default: "baru" },
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     teknisi: String, jadwal: String, lokasiServis: String,
