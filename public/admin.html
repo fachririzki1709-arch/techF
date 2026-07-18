@@ -3,1186 +3,1012 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servis HP & Elektronik Online</title>
-    <!-- Import Font Premium & Ikon Modern -->
+    <title>Panel Admin - Home Service</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- Import Library PDF & SweetAlert2 untuk Notifikasi Premium -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+    <!-- Import SweetAlert2 untuk Admin -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- IMPORT SOCKET.IO UNTUK REAL-TIME NOTIF -->
+
+    <!-- TAMBAHAN IMPORT CHART.JS & SOCKET.IO -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     
     <style>
-        * {margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans', sans-serif;}
-        body {background:#f8fafc; color:#1e293b; line-height:1.6; display: flex; flex-direction: column; min-height: 100vh;}
+        :root { --bg-utama: #f1f5f9; --teks-utama: #1e293b; --bg-kartu: white; --border-line: #e2e8f0; --head-bg: #0f172a; }
+        body.dark-mode { --bg-utama: #0f172a; --teks-utama: #f8fafc; --bg-kartu: #1e293b; --border-line: #334155; --head-bg: #020617; }
+        
+        * {margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif;}
+        body {background:var(--bg-utama); color:var(--teks-utama); transition: background 0.3s;}
         
         header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            color:white; 
-            padding:1.2rem 5%; 
-            display:flex; 
-            justify-content:space-between; 
-            align-items:center; 
-            flex-wrap:wrap;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
-            border-bottom: 2px solid #0ea5e9;
+            background:var(--head-bg); color:white; padding:1.2rem 5%; 
+            display:flex; justify-content:space-between; align-items:center;
+            border-bottom: 3px solid #10b981; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
-        .logo {font-size:1.4rem; font-weight:700; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;}
-        .logo i {color: #38bdf8;}
-        nav a {color:white; text-decoration:none; margin-left:1.5rem; font-weight: 500; transition: all 0.3s; cursor: pointer;}
-        nav a:hover {color:#38bdf8; transform: translateY(-1px);}
-        
-        .main-content {flex: 1;}
-        .container {max-width:900px; margin:2.5rem auto; padding:0 5%;}
+        .logo {font-size:1.4rem; font-weight:700;}
+        .container {max-width:1200px; margin:2.5rem auto; padding:0 5%;}
+        h1 {margin-bottom:1.5rem; font-size:1.6rem; font-weight: 700; color:var(--teks-utama);}
 
-        .progress-container {display:flex; justify-content:space-between; background:white; padding:1.5rem 1.2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2.5rem; overflow-x:auto;}
-        .step-item {text-align:center; flex:1; min-width:80px; position:relative;}
-        .step-item:not(:last-child)::after {content:''; position:absolute; top:18px; left:50%; width:100%; height:3px; background:#e2e8f0; z-index:1; transition: all 0.4s;}
-        .step-item.completed:not(:last-child)::after {background: #10b981;}
-        .step-number {width:36px; height:36px; line-height:36px; margin:0 auto 8px; border-radius:50%; background:#e2e8f0; font-weight:700; font-size:0.9rem; position:relative; z-index:2; transition: all 0.3s;}
-        .step-item.active .step-number {background:#0ea5e9; color:white; scale: 1.1; box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);}
-        .step-item.completed .step-number {background:#10b981; color:white;}
-        .step-text {font-size:0.75rem; font-weight:600; color:#64748b;}
-        .step-item.active .step-text {color: #0ea5e9;}
+        .ringkasan {display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.2rem; margin-bottom:2.5rem;}
+        .kartu {background:var(--bg-kartu); padding:1.5rem; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.02); border-left:5px solid #0ea5e9; transition: transform 0.2s;}
+        .kartu:hover {transform: translateY(-2px);}
+        .kartu h3 {font-size:0.88rem; font-weight:600; color:#64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:0.5rem;}
+        .kartu .angka {font-size:2.2rem; font-weight:700; color: var(--teks-utama);}
 
-        .content-box {background:white; padding:2.2rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.04); border-left:5px solid #0ea5e9; margin-bottom:2rem; display:none;}
-        .content-box.active {display:block; animation:fade 0.4s ease-out;}
-        @keyframes fade {from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);}}
+        .kartu-keuangan { border-left-width: 6px !important; }
+        .kartu-pendapatan { border-left-color: #10b981 !important; background: rgba(16, 185, 129, 0.05) !important; }
+        .kartu-piutang { border-left-color: #ef4444 !important; background: rgba(239, 68, 68, 0.05) !important; }
+        body.dark-mode .kartu-pendapatan, body.dark-mode .kartu-piutang { background: var(--bg-kartu) !important; }
 
-        h2, h3 {font-weight: 700; margin-bottom: 1rem;}
-        h2 {color: #0f172a;}
-        h3 {font-size: 1.2rem; margin-top: 1.5rem; color: #334155;}
+        .kontrol-fitur {display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; background: var(--bg-kartu); padding: 1.2rem; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 1rem;}
+        .filter-grup {display:flex; align-items:center; gap:0.6rem;}
+        .filter-grup label {font-size:0.9rem; font-weight:600;}
+        .filter-grup select, .filter-grup input[type="date"], .filter-grup input[type="text"] {padding:0.5rem 1rem; border:2px solid var(--border-line); border-radius:6px; font-size:0.88rem; background: var(--bg-utama); color: var(--teks-utama); outline:none;}
+        .filter-grup select:focus, .filter-grup input[type="date"]:focus, .filter-grup input[type="text"]:focus {border-color:#0ea5e9;}
 
-        .kategori-wrapper { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 1.5rem 0;}
-        @media (min-width: 768px) { .kategori-wrapper { grid-template-columns: 1fr 1fr; } }
-        .kategori-card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: all 0.3s ease; }
-        .kategori-card:hover { border-color: #cbd5e1; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
-        .kategori-card h4 { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; color: #0f172a; margin-bottom: 1.2rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem; }
-        .kategori-card.hp h4 i { color: #0ea5e9; font-size: 1.3rem; }
-        .kategori-card.elektronik h4 i { color: #10b981; font-size: 1.3rem; }
+        table {width:100%; border-collapse:collapse; background:var(--bg-kartu); border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.03);}
+        th,td {padding:1rem 1.2rem; text-align:left; border-bottom:1px solid var(--border-line); font-size:0.92rem;}
+        th {background:rgba(14, 165, 233, 0.1); font-weight:600; color:var(--teks-utama); text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.05em;}
+        tr:hover {background-color: var(--border-line);}
         
-        .layanan-item { display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; margin:0.6rem 0; border:1px solid #e2e8f0; border-radius:8px; cursor: pointer; transition: all 0.2s ease; background: #f8fafc; }
-        .layanan-item:hover { border-color: #0ea5e9; background: #f0f9ff; }
-        .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; background: #f0fdf4; }
-        .layanan-item label {cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; width: 100%; font-size: 0.9rem;}
-        .layanan-item input[type="checkbox"] {width: 18px; height: 18px; accent-color: #0ea5e9;}
-        .kategori-card.elektronik .layanan-item input[type="checkbox"] {accent-color: #10b981;}
-        .harga {font-weight:700; color:#0369a1; font-size: 0.85rem;}
-        .kategori-card.elektronik .harga {color: #15803d;}
-        
-        .info {padding:1rem; border-radius:8px; margin:1.2rem 0; font-size:0.9rem; font-weight: 500; display: flex; align-items: center; gap: 0.6rem;}
-        .catatan {background:#f0f9ff; color:#075985; border-left: 4px solid #0ea5e9;}
-        .rekening-box {background:#fffbeb; padding:1.2rem; border-radius:8px; margin:1rem 0; border-left:4px solid #f59e0b; display:none; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);}
-        .jadwal-box {background:#fffbeb; padding:1.2rem; border-radius:8px; margin:1rem 0; border-left:4px solid #d97706;}
-        .harga-final {background:#eff6ff; padding:1.2rem; border-radius:8px; margin:1rem 0; border-left:4px solid #1e40af;}
-        .lacak-box {background:#f0fdf4; padding:1.5rem; border-radius:10px; margin:1rem 0; border-left:4px solid #166534;}
-        
-        .status-bar {display:flex; justify-content:space-between; margin-top:1.5rem; flex-wrap:wrap; gap: 1rem;}
-        .status-bar > div {text-align: center; flex: 1; min-width: 80px;}
-        .status-dot {width:28px; height:28px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:0.8rem; margin:0 auto 8px; font-weight: 700;}
-        .status-dot.aktif {background:#f59e0b; color:white; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);}
-        .status-dot.selesai {background:#10b981; color:white;}
+        .status {padding:0.3rem 0.75rem; border-radius:30px; font-size:0.78rem; font-weight:700; text-transform: uppercase;}
+        .baru {background:#e0f2fe; color:#0369a1;}
+        .dijadwalkan {background:#fef3c7; color:#d97706;}
+        .diproses {background:#ecfccb; color:#4d7c0f;}
+        .selesai_servis {background:#dbeafe; color:#2563eb;}
+        .menunggu_validasi {background:#f3e8ff; color:#7e22ce;}
+        .selesai {background:#dcfce7; color:#15803d;}
+        .belum_dp {background:#fee2e2; color:#b91c1c;}
+        .batal {background:#fef2f2; color:#ef4444; border:1px solid #fee2e2;}
 
-        input, select, textarea { width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border:2px solid #e2e8f0; border-radius:8px; font-size:0.95rem; transition: all 0.3s; background: #f8fafc; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #0ea5e9; background: white; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
-        label {font-size: 0.85rem; font-weight: 600; color: #475569;}
-        input[type="file"] {padding:0.6rem; background:#f1f5f9; cursor: pointer; margin-bottom: 0.3rem;}
-        optgroup { font-weight: 700; color: #0f172a; font-style: normal; background: #f1f5f9;}
-        
-        .input-error {border-color: #ef4444 !important; background-color: #fef2f2 !important;}
-        .error-text {color: #ef4444; font-size: 0.8rem; font-weight: 600; margin-top: -0.8rem; margin-bottom: 1rem; display: none;}
-        
-        .pratinjau {margin-top:1rem; padding:1.2rem; border:2px dashed #cbd5e1; border-radius:8px; text-align:center; background: #f8fafc; color: #64748b; font-size: 0.9rem;}
-        .pratinjau img, .pratinjau video {max-width:100%; max-height:250px; border-radius:6px; margin-top:0.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08);}
-        
-        .metode-bayar {display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin:1rem 0;}
-        .metode-item {padding:1rem; border:2px solid #e2e8f0; border-radius:8px; text-align:center; cursor:pointer; font-weight: 600; transition: all 0.2s;}
-        .metode-item:hover {border-color: #cbd5e1; background: #f8fafc;}
-        .metode-item.terpilih, .metode-item.aktif {border-color:#10b981; background:#f0fdf4; color: #166534; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);}
-        
-        .btn { padding:0.8rem 1.6rem; border:none; border-radius:8px; cursor:pointer; font-size:0.95rem; font-weight: 600; margin-right:0.6rem; margin-top:0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease-in-out; }
-        .btn:hover {transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
-        .btn:active {transform: translateY(0);}
-        .btn-primary {background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color:white;}
-        .btn-secondary {background:#e2e8f0; color:#1e293b;}
-        .btn-success {background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;}
-        .btn-danger {background:#ef4444; color:white;}
-        .btn-pdf {background:#dc2626; color:white;}
-        .btn-home {background:#475569; color:white;}
-        .btn:disabled {background: #94a3b8 !important; cursor: not-allowed; transform: none !important; box-shadow: none !important;}
+        .btn {padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600; margin-right:0.3rem; transition: all 0.2s;}
+        .btn:hover {transform: translateY(-1px);}
+        .btn-edit {background:#0ea5e9; color:white;}
+        .btn-validasi {background:#10b981; color:white;}
+        .btn-hapus {background:#ef4444; color:white;}
+        .btn-locked {background:#94a3b8 !important; cursor:not-allowed !important; transform:none !important;}
 
-        .faktur {border:2px solid #1e40af; padding:2rem; border-radius:12px; margin-top:1.5rem; background:#ffffff; box-shadow: 0 10px 25px rgba(30, 64, 175, 0.05);}
-        .faktur h4 {text-align:center; margin-bottom:1.5rem; color:#1e40af; font-size:1.4rem; font-weight: 700;}
-        .faktur .baris {display:flex; justify-content:space-between; margin:0.6rem 0; padding:0.4rem 0; border-bottom:1px dotted #e2e8f0; font-size: 0.95rem;}
-        .faktur .total {font-weight:700; font-size:1.2rem; color: #1e40af; margin-top:1.5rem; padding-top:1rem; border-top:2px solid #cbd5e1;}
-        .faktur .catatan {margin-top:1.5rem; text-align:center; font-size:0.9rem; color:#64748b; font-style: italic;}
-        .tombol-faktur {display:flex; gap:1rem; margin-top:2rem; justify-content:center; flex-wrap:wrap;}
+        .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:1000; overflow:auto; backdrop-filter: blur(4px);}
+        .modal-konten {background:var(--bg-kartu); width:92%; max-width:980px; margin:3% auto; padding:2.2rem; border-radius:12px; position:relative; box-shadow: 0 20px 40px rgba(0,0,0,0.1);}
+        .tutup {position:absolute; right:1.2rem; top:1.2rem; font-size:1.6rem; cursor:pointer; color:#94a3b8; transition:color 0.2s;}
+        .tutup:hover {color:#64748b;}
         
-        .alert-bahaya {background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:1.2rem; border-radius:8px; margin:1rem 0; font-size: 0.9rem;}
-        .alert-warning-box {background:#fff7ed; color:#c2410c; border-left:4px solid #f97316; padding:1.2rem; border-radius:8px; margin:1rem 0;}
-
-        .chat-widget { position: fixed; bottom: 25px; right: 25px; width: 340px; max-width: calc(100vw - 50px); background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); z-index: 9999; border: 1px solid #e2e8f0; overflow: hidden; display: none; flex-direction: column; animation: chatSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transition: all 0.3s ease; }
-        @keyframes chatSlide { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        input, select, textarea {width:100%; padding:0.7rem 1rem; margin:0.5rem 0 1.2rem; border:2px solid var(--border-line); background:var(--bg-utama); color:var(--teks-utama); border-radius:6px; outline:none; font-size:0.95rem; transition:0.3s;}
+        input:focus, select:focus, textarea:focus {border-color:#0ea5e9;}
+        input:disabled, select:disabled, textarea:disabled {background:#cbd5e1; color:#475569; border-color:#cbd5e1; cursor:not-allowed;}
+        body.dark-mode input:disabled, body.dark-mode select:disabled, body.dark-mode textarea:disabled {background:#334155; color:#94a3b8; border-color:#334155;}
         
-        .chat-widget.minimized { width: 65px; height: 65px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4); display: flex; align-items: center; justify-content: center; flex-direction: row; }
-        .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; }
-        .chat-widget.minimized .chat-header-left span, .chat-widget.minimized .chat-toggle-btn { display: none; }
-        .chat-widget.minimized .chat-header-left i { font-size: 2rem; margin: 0; color: white; display: flex; align-items: center; justify-content: center; width:100%; height:100%; }
-        .chat-widget.minimized .chat-messages, .chat-widget.minimized .chat-input-row {display: none !important;}
+        .pratinjau {margin:1rem 0; padding:1rem; border:2px dashed var(--border-line); border-radius:8px; text-align:center; background:var(--bg-utama);}
+        .pratinjau img, .pratinjau video {max-width:100%; max-height:280px; border-radius:6px;}
+        .box-dp {background:rgba(245, 158, 11, 0.1); padding:1.2rem; border-radius:8px; border:1px solid #ffedd5; margin-bottom:1.2rem;}
+        .box-tambahan-admin {background:rgba(22, 101, 52, 0.1); border:1px solid #bbf7d0; padding:1.2rem; border-radius:8px; margin:1.2rem 0;}
 
-        .chat-header {background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; cursor:pointer;}
-        .chat-header-left { display: flex; align-items: center; gap: 0.5rem; width:100%; }
-        .chat-toggle-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; padding: 0 0.2rem; display: flex; align-items: center; transition: transform 0.2rem;}
-        .chat-toggle-btn:hover { color: #38bdf8; }
-
-        .chat-messages {height: 240px; overflow-y: auto; padding: 1rem; background: #f8fafc; display: flex; flex-direction: column; gap: 0.6rem;}
-        .msg-bubble {max-width: 85%; padding: 0.6rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
-        .msg-admin {background: #ffffff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0;}
-        .msg-user {background: #0ea5e9; color: white; align-self: flex-end; border-bottom-right-radius: 2px;}
-        .chat-input-row {display: flex; border-top: 1px solid #e2e8f0; background: white;}
-        .chat-input-row input {border: none !important; border-radius: 0 !important; padding: 0.9rem; margin: 0 !important; flex: 1; background: white; font-size: 0.9rem;}
-        .chat-input-row button {background: #0ea5e9; color: white; border: none; padding: 0 1.4rem; cursor: pointer; font-weight: 600; transition: background 0.2s;}
-        .chat-input-row button:hover {background: #0284c7;}
-
-        body.dark-mode { background:#0f172a; color:#f8fafc; }
-        body.dark-mode .content-box, body.dark-mode .progress-container, body.dark-mode .chat-widget, body.dark-mode .chat-input-row input, body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background:#1e293b; color:#f8fafc; border-color:#334155; }
-        body.dark-mode h2, body.dark-mode h3, body.dark-mode .step-text, body.dark-mode label, body.dark-mode .faktur h4, body.dark-mode .faktur .total { color:#f8fafc; }
-        body.dark-mode .layanan-item, body.dark-mode .metode-item { border-color:#334155; background: #1e293b; }
-        body.dark-mode .layanan-item:hover, body.dark-mode .metode-item:hover { background: #334155; border-color: #0ea5e9;}
-        body.dark-mode .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; }
-        body.dark-mode .faktur { background: #0f172a; border-color: #3b82f6;}
-        body.dark-mode .kategori-card { background: #0f172a; border-color: #334155; }
-        body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
-        body.dark-mode optgroup { background: #0f172a; color: #0ea5e9;}
-        body.dark-mode .review-card { background: #1e293b; color: #f8fafc; border-color: #334155; }
+        .chat-admin-container {border: 2px solid var(--border-line); border-radius: 8px; background: var(--bg-utama); display: flex; flex-direction: column; height: 350px; margin-top: 1rem; overflow:hidden;}
+        .chat-admin-msg-box {flex: 1; overflow-y: auto; padding: 1rem; display:flex; flex-direction:column; gap:0.6rem;}
+        .chat-admin-input-row {display: flex; border-top: 2px solid var(--border-line); background: var(--bg-kartu);}
+        .chat-admin-input-row input {border: none !important; padding: 0.8rem; margin: 0; flex: 1; background:var(--bg-kartu); color:var(--teks-utama);}
+        .chat-admin-input-row button {background: #10b981; color: white; border: none; padding: 0 1.5rem; cursor: pointer; font-weight: 600;}
         
-        body.dark-mode .swal2-popup { background: #1e293b !important; color: #f8fafc !important; }
-        body.dark-mode .swal2-title, body.dark-mode .swal2-html-container { color: #f8fafc !important; }
-        body.dark-mode .swal2-input { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
-        
-        .hero-section { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 4rem 2rem; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); margin-bottom: 2rem;}
-        .hero-section h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;}
-        .hero-section p { font-size: 1.1rem; max-width: 600px; margin: 0 auto; opacity: 0.9;}
-        
-        .skeleton { animation: skeleton-loading 1.2s linear infinite alternate; background-color: #e2e8f0 !important; color: transparent !important; border-color: transparent !important; pointer-events: none; border-radius:4px;}
-        body.dark-mode .skeleton { background-color: #334155 !important; }
-        @keyframes skeleton-loading { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+        .msg-bubble {max-width: 82%; padding: 0.6rem 0.9rem; border-radius: 12px; font-size: 0.88rem; box-shadow:0 2px 4px rgba(0,0,0,0.02);}
+        .msg-admin {background: #10b981; color: white; align-self: flex-end; border-bottom-right-radius: 2px;}
+        .msg-user {background: var(--bg-kartu); color: var(--teks-utama); align-self: flex-start; border-bottom-left-radius: 2px; border:1px solid var(--border-line);}
 
-        .rating-stars { display: flex; gap: 8px; justify-content: center; font-size: 2rem; margin: 1rem 0; cursor: pointer;}
-        .rating-stars i { color: #cbd5e1; transition: 0.2s; }
-        .rating-stars i:hover, .rating-stars i.active { color: #f59e0b; }
-
-        .reviews-container { display:flex; gap:1.2rem; overflow-x:auto; padding:1rem 0; scroll-snap-type: x mandatory; scrollbar-width: none;}
-        .review-card { min-width:280px; background:white; padding:1.2rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.04); scroll-snap-align: start; border: 1px solid #e2e8f0;}
+        .login-overlay {position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:flex; justify-content:center; align-items:center; z-index:9999;}
+        .login-box {background:white; padding:2.5rem; border-radius:12px; width:100%; max-width:400px; box-shadow:0 20px 40px rgba(0,0,0,0.3); text-align:center;}
+        .login-box h2 {margin-bottom:0.5rem; color:#0f172a; font-size:1.6rem; font-weight:700;}
+        .login-box p {color:#64748b; font-size:0.9rem; margin-bottom:1.8rem;}
+        .login-box .btn-login {width:100%; padding:0.8rem; background:linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color:white; border:none; border-radius:6px; font-weight:700; font-size:1rem; cursor:pointer; margin-top:0.5rem; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);}
+        .btn-logout {background:#ef4444; color:white; font-size:0.85rem; padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-left: 10px;}
+        #mainPanelWrapper {display:none;}
         
-        .page-content { display: none; animation: fadeIn 0.4s; }
-        .page-content.active { display: block; }
-        .footer-section { background: #0f172a; color: #94a3b8; padding: 2.5rem 5%; text-align: center; margin-top: auto; border-top: 2px solid #38bdf8;}
-        .alur-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .alur-item { background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
-        .alur-item i { font-size: 2rem; color: #0ea5e9; margin-bottom: 1rem; display: block;}
-        body.dark-mode .alur-item { background: #1e293b; border-color: #334155; }
-        .foto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .foto-item { background: #e2e8f0; height: 200px; border-radius: 12px; display: flex; flex-direction:column; align-items: center; justify-content: center; color: #64748b; font-weight: bold; border: 2px dashed #cbd5e1; }
-        body.dark-mode .foto-item { background: #334155; border-color: #475569; color: #94a3b8;}
+        .admin-chart-box { background: var(--bg-kartu); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 280px;}
+        .tab-menu-admin { display:flex; gap:10px; border-bottom:2px solid var(--border-line); margin-bottom: 1.5rem; }
+        .tab-btn-admin { padding: 0.8rem 1.5rem; background:none; border:none; color: var(--teks-utama); font-weight:600; cursor:pointer; opacity: 0.6; transition: 0.3s;}
+        .tab-btn-admin.aktif { opacity: 1; border-bottom: 3px solid #0ea5e9; color: #0ea5e9;}
+        .modal-view { display: none; }
+        .modal-view.aktif { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
+        @media print {
+            body > *:not(#printArea) { display: none !important; }
+            #printArea { display: block !important; position: static; width: 80mm; margin: 0; padding: 0; color: black; background: white;}
+            #printArea * { font-family: 'Courier New', Courier, monospace; font-size: 12px; }
+            #printArea .flex { display: flex; justify-content: space-between; margin-bottom: 3px; }
+            #printArea .line { border-bottom: 1px dashed black; margin: 8px 0; }
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <!-- PERBAIKAN: Ditambahkan `kembaliKeAwal()` agar sesi tereset[span_3](start_span)[span_3](end_span) -->
-    <div class="logo" onclick="tampilHalaman('home'); kembaliKeAwal();"><i class="bi bi-phone-vibrate"></i> SF Tech Service</div>
-    <nav style="display:flex; align-items:center;">
-        <button onclick="toggleDarkMode()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
-        <!-- PERBAIKAN: Ditambahkan `kembaliKeAwal()` untuk menghapus cache status[span_4](start_span)[span_4](end_span) -->
-        <a onclick="tampilHalaman('home'); kembaliKeAwal();"><i class="bi bi-house"></i> Home</a>
-        <a onclick="tampilHalaman('about')"><i class="bi bi-info-circle"></i> About Us</a>
-        <a onclick="tampilHalaman('profile')"><i class="bi bi-images"></i> Profile</a>
-        <a onclick="tanyaKodeLacak()"><i class="bi bi-search"></i> Lacak Pesanan</a>
-    </nav>
-</header>
-
-<div class="main-content">
-    
-    <div id="page-home" class="page-content active">
-        <div class="hero-section" id="heroLandingPage">
-            <h1>Servis HP & Elektronik Bergaransi</h1>
-            <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari smartphone Anda.</p>
-        </div>
-
-        <div class="container" id="mainOrderContainer">
-            <div class="progress-container">
-                <div class="step-item active" data-step="1"><div class="step-number">1</div><div class="step-text">Layanan</div></div>
-                <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data Diri</div></div>
-                <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Bayar DP</div></div>
-                <div class="step-item" data-step="4"><div class="step-number">4</div><div class="step-text">Jadwal</div></div>
-                <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Proses</div></div>
-                <div class="step-item" data-step="6"><div class="step-number">6</div><div class="step-text">Bayar Sisa</div></div>
-                <div class="step-item" data-step="7"><div class="step-number">7</div><div class="step-text">Selesai</div></div>
-            </div>
-
-            <!-- STEP 1: LAYANAN -->
-            <div class="content-box active" id="step-1">
-                <h2>Pilih Kategori Perbaikan</h2>
-                <p style="margin-bottom: 1rem; color: #475569;">Pilih jenis layanan yang Anda butuhkan di bawah ini.</p>
-                
-                <div class="kategori-wrapper">
-                    <div class="kategori-card hp">
-                        <h4><i class="bi bi-phone-vibrate"></i> Layanan Smartphone</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan Dalam (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
-                    </div>
-                    
-                    <div class="kategori-card elektronik">
-                        <h4><i class="bi bi-plug"></i> Elektronik Rumah Tangga</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker / Magic Com</label><span class="harga">Mulai Rp 50rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
-                    </div>
-                </div>
-
-                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
-                <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan ke Data Diri <i class="bi bi-arrow-right"></i></button>
-            </div>
-
-            <!-- STEP 2: DATA DIRI & PERANGKAT -->
-            <div class="content-box" id="step-2">
-                <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi Perangkat</h3>
-                
-                <label>Nama Lengkap <span style="color:red;">*</span></label>
-                <input type="text" id="nama" placeholder="Contoh: Budi Santoso" oninput="simpanDraft()">
-                <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
-                
-                <label>Nomor WhatsApp <span style="color:red;">*</span></label>
-                <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
-                <div class="error-text" id="errWa">Nomor WhatsApp wajib diisi!</div>
-                
-                <label>Alamat Lengkap</label>
-                <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
-
-                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi / Google Maps (Opsional)</label>
-                <div style="display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;">
-                    <input type="url" id="shareloc" placeholder="Link Google Maps atau klik tombol di samping ->" oninput="simpanDraft()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-                    <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin: 0; white-space: nowrap;"><i class="bi bi-crosshair"></i> Lokasi Saat Ini</button>
-                </div>
-                
-                <label>Merek Perangkat <span style="color:red;">*</span></label>
-                <select id="merek" onchange="toggleMerekLainnya()">
-                    <option value="">-- Silakan Pilih Kategori Merek --</option>
-                    <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
-                        <option value="Samsung">Samsung</option>
-                        <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
-                        <option value="OPPO">OPPO / Realme</option>
-                        <option value="Vivo">Vivo</option>
-                        <option value="iPhone">Apple / iPhone</option>
-                        <option value="Infinix">Infinix / Tecno</option>
-                        <option value="Asus">Asus / ROG</option>
-                    </optgroup>
-                    <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
-                        <option value="Miyako">Miyako</option>
-                        <option value="Cosmos">Cosmos</option>
-                        <option value="Maspion">Maspion</option>
-                        <option value="Philips">Philips</option>
-                        <option value="Panasonic">Panasonic</option>
-                        <option value="Sharp">Sharp</option>
-                        <option value="Yong Ma">Yong Ma</option>
-                        <option value="Sekai">Sekai</option>
-                    </optgroup>
-                    <optgroup label="Lainnya">
-                        <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
-                    </optgroup>
-                </select>
-                <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
-                <div class="error-text" id="errMerek">Pilih salah satu merek perangkat!</div>
-                <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
-                
-                <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-                <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Rice Cooker CRJ-3301" oninput="simpanDraft()">
-                <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
-                
-                <label>Kerusakan / Keluhan</label>
-                <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
-
-                <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
-                <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
-                <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file: 5MB</p>
-                <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
-
-                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between;">
-                    <button class="btn btn-secondary" onclick="prevStep()"><i class="bi bi-arrow-left"></i> Kembali</button>
-                    <button class="btn btn-primary" id="btnKirimPesanan" onclick="kirimPesanan()"><i class="bi bi-send-check"></i> Kirim Pesanan</button>
-                </div>
-            </div>
-
-            <!-- STEP 3: BAYAR DP -->
-            <div class="content-box" id="step-3">
-                <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP)</h3>
-                <p>Kode Pesanan: <strong id="kodePesananDP">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
-                <p style="margin-top:0.5rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
-                
-                <div class="alert-bahaya">
-                    <strong><i class="bi bi-exclamation-triangle-fill"></i> KEBIJAKAN PEMBATALAN:</strong> Pembayaran Uang Muka (DP) ini bersifat <strong>Non-Refundable (Tidak dapat dikembalikan)</strong> dengan alasan apa pun.
-                </div>
-
-                <p>Pilih bank transfer DP:</p>
-                <div class="metode-bayar">
-                    <div class="metode-item pilihan-dp" id="dp-BCA" onclick="pilihMetodeDP('BCA')">Transfer BCA</div>
-                    <div class="metode-item pilihan-dp" id="dp-Mandiri" onclick="pilihMetodeDP('Mandiri')">Transfer Mandiri</div>
-                    <div class="metode-item pilihan-dp" id="dp-BRI" onclick="pilihMetodeDP('BRI')">Transfer BRI</div>
-                </div>
-
-                <div class="rekening-box" id="infoRekeningDP">
-                    <p><strong>Nomor Rekening:</strong> <span id="noRekDP">-</span></p>
-                    <p><strong>Atas Nama:</strong> SF Tech</p>
-                    <p><strong>Bank:</strong> <span id="namaBankDP">-</span></p>
-                </div>
-
-                <p style="margin: 1rem 0;">Metode DP dipilih: <strong id="metodeDPDipilih">-</strong></p>
-                <button class="btn btn-success" id="btnKonfirmasiDP" onclick="konfirmasiBayarDP()"><i class="bi bi-check-circle"></i> Konfirmasi Bayar DP</button>
-                <label>Upload Bukti Transfer DP:</label>
-                <input type="file" id="fileBuktiDP" accept="image/*" onchange="previewBukti(this, 'pratinjauDP')">
-                <div class="pratinjau" id="pratinjauDP" style="display:none;"></div>
-                <div class="info catatan" id="infoValidasiDP" style="display:none; margin-top:1rem; background: #fff7ed; border-left-color: #d97706; color: #92400e;">
-                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu verifikasi pembayaran DP oleh admin. Penjadwalan teknisi akan dibuka setelah DP valid...</strong></span>
-                </div>
-            </div>
-
-            <!-- STEP 4: JADWAL -->
-            <div class="content-box" id="step-4">
-                <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
-                <p>Kode Pesanan: <strong id="kodePesanan">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
-                <div id="infoJadwal" style="margin-top: 1rem;">
-                    <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
-                </div>
-                <div class="jadwal-box" id="tampilJadwal" style="display:none;">
-                    <p><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
-                    <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
-                    <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
-                    <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
-                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
-                </div>
-            </div>
-
-            <!-- STEP 5: PROSES -->
-            <div class="content-box" id="step-5">
-                <h3><i class="bi bi-tools"></i> Proses Perbaikan</h3>
-                
-                <div id="boxKerusakanTambahan" class="alert-warning-box" style="display:none;">
-                    <h4><i class="bi bi-exclamation-diamond-fill"></i> Temuan Kerusakan Tambahan oleh Teknisi!</h4>
-                    <p style="margin-top: 0.5rem;">Teknisi kami menemukan kendala baru saat membongkar perangkat Anda:</p>
-                    <p style="background: white; padding: 0.7rem; border-radius: 6px; margin: 0.5rem 0; font-weight: bold; border-left: 4px solid #f97316;" id="txtKerusakanTambahan" class="data-dinamis">-</p>
-                    <p>Ada penambahan biaya pengerjaan sebesar: <strong style="color:#c2410c; font-size:1.1rem;">Rp <span id="txtBiayaTambahan" class="data-dinamis">0</span></strong></p>
-                    
-                    <div class="alert-bahaya" style="font-size:0.85rem; margin:0.8rem 0; border-radius: 6px;">
-                        Jika Anda <strong>MENOLAK</strong> pengerjaan tambahan ini, proses servis dihentikan dan <strong>Uang DP Anda hangus</strong>.
-                    </div>
-                    
-                    <div style="margin-top:1rem;" id="aksiTambahan">
-                        <button class="btn btn-success" onclick="responsTambahan(true)"><i class="bi bi-hand-thumbs-up"></i> Setuju & Lanjutkan</button>
-                        <button class="btn btn-danger" onclick="responsTambahan(false)"><i class="bi bi-x-circle"></i> Tolak (Batalkan Servis)</button>
-                    </div>
-                </div>
-
-                <div class="lacak-box" id="mainLacakBox">
-                    <p><strong>Status:</strong> <span id="statusSaatIni" class="data-dinamis">Menunggu Konfirmasi</span></p>
-                    <div class="status-bar">
-                        <div><div class="status-dot selesai" id="s1"><i class="bi bi-check"></i></div><div style="font-size:0.75rem; font-weight:500;">Diterima</div></div>
-                        <div><div class="status-dot" id="s2"><i class="bi bi-calendar-event"></i></div><div style="font-size:0.75rem; font-weight:500;">Jadwal</div></div>
-                        <div><div class="status-dot" id="s3"><i class="bi bi-wrench-adjustable"></i></div><div style="font-size:0.75rem; font-weight:500;">Diperbaiki</div></div>
-                        <div><div class="status-dot" id="s4"><i class="bi bi-phone"></i></div><div style="font-size:0.75rem; font-weight:500;">Selesai</div></div>
-                    </div>
-
-                    <div style="margin-top:1.5rem;">
-                        <h4 style="font-size: 1rem;">Kondisi Perangkat Awal:</h4>
-                        <div class="pratinjau data-dinamis" id="tampilKondisiHP">Belum tersedia</div>
-                    </div>
-                </div>
-                <div class="harga-final" id="tampilHarga" style="display:block;">
-                    <h4 style="font-size: 1.1rem; color:#1e40af;"><i class="bi bi-receipt-cutoff"></i> Rincian Biaya</h4>
-                    <p>Biaya Suku Cadang: Rp <span id="lblBiayaSuku" class="data-dinamis">0</span></p>
-                    <p>Biaya Jasa Servis: Rp <span id="lblBiayaJasa" class="data-dinamis">0</span></p>
-                    <div id="rowBiayaTambahanFaktur" style="display:block; color: #c2410c;">
-                        <p>Biaya Kerusakan Tambahan: +Rp <span id="lblBiayaTambahanFaktur" class="data-dinamis">0</span></p>
-                    </div>
-                    <p style="color: #15803d; font-weight: 500;">Uang Muka (DP): -Rp 50.000 (Sudah dibayar)</p>
-                    <hr style="margin:0.8rem 0; border-color: #cbd5e1;">
-                    <p style="font-size:1.3rem; font-weight:700; color: #1e3a8a;">Sisa yang Harus Dibayar: Rp <span id="lblTotalBiaya" class="data-dinamis">0</span></p>
-                </div>
-            </div>
-
-            <!-- STEP 6: PELUNASAN -->
-            <div class="content-box" id="step-6">
-                <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran Sisa</h3>
-                <p>Sisa Pelunasan: <strong style="font-size:1.2rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">0</span></strong></p>
-                <p style="margin-top:0.5rem;">Pilih metode pembayaran:</p>
-
-                <div class="metode-bayar">
-                    <div class="metode-item pilihan-bayar" id="bayar-Tunai" onclick="pilihMetodeBayar('Tunai')">Tunai / Cash</div>
-                    <div class="metode-item pilihan-bayar" id="bayar-BCA" onclick="pilihMetodeBayar('BCA')">Transfer BCA</div>
-                    <div class="metode-item pilihan-bayar" id="bayar-Mandiri" onclick="pilihMetodeBayar('Mandiri')">Transfer Mandiri</div>
-                    <div class="metode-item pilihan-bayar" id="bayar-BRI" onclick="pilihMetodeBayar('BRI')">Transfer BRI</div>
-                </div>
-
-                <div class="rekening-box" id="infoRekening">
-                    <p><strong>Nomor Rekening:</strong> <span id="noRek">-</span></p>
-                    <p><strong>Atas Nama:</strong> SF Tech</p>
-                    <p><strong>Bank:</strong> <span id="namaBank">-</span></p>
-                </div>
-                <label>Upload Bukti Transfer Pelunasan:</label>
-                <input type="file" id="fileBuktiPelunasan" accept="image/*" onchange="previewBukti(this, 'pratinjauPelunasan')">
-                <div class="pratinjau" id="pratinjauPelunasan" style="display:none;"></div>
-                
-                <p style="margin:1rem 0;">Metode dipilih: <strong id="metodeDipilih">-</strong></p>
-                <button class="btn btn-success" id="btnKonfirmasi" onclick="konfirmasiBayar()"><i class="bi bi-cloud-arrow-up"></i> Konfirmasi Pembayaran</button>
-
-                <div class="info catatan" id="infoValidasi" style="display:none; margin-top:1rem;">
-                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu validasi sisa pembayaran dari admin...</strong></span>
-                </div>
-            </div>
-
-            <!-- STEP 7: SELESAI -->
-            <div class="content-box" id="step-7">
-                <h3><i class="bi bi-patch-check-fill" style="color:#10b981;"></i> Pesanan Selesai</h3>
-                <p id="txtKeteranganSelesai">Pembayaran Anda telah divalidasi secara penuh. Terima kasih telah menggunakan layanan kami!</p>
-                <div class="info info-success" id="txtGaransiLabel" style="background: #f0fdf4; color: #166534; border-left: 4px solid #10b981; padding:0.8rem; margin:0.8rem 0; border-radius:6px; font-weight:600;">
-                    <i class="bi bi-shield-check"></i> Garansi servis berlaku selama 30 hari.
-                </div>
-
-                <div class="faktur" id="fakturTampilan">
-                    <h4>FAKTUR PEMBAYARAN SERVIS</h4>
-                    <div class="baris"><span>No. Faktur</span><span id="noFaktur" class="data-dinamis" style="font-weight:600;">-</span></div>
-                    <div class="baris"><span>Kode Pesanan</span><span id="fakturKode" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Nama Pelanggan</span><span id="fakturNama" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Merek & Tipe</span><span id="fakturMerekTipe" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Kerusakan</span><span id="fakturKerusakan" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Teknisi</span><span id="fakturTeknisi" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Tanggal & Waktu</span><span id="fakturTanggal" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Jenis Layanan</span><span id="fakturLayanan" class="data-dinamis" style="max-width: 60%; text-align:right;">-</span></div>
-                    <div class="baris"><span>Biaya Suku Cadang</span><span id="fakturSuku" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Biaya Jasa</span><span id="fakturJasa" class="data-dinamis">-</span></div>
-                    <div class="baris" id="fakturRowTambahan" style="display:block; color:#c2410c;"><span>Biaya Kerusakan Tambahan</span><span id="fakturTambahan" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>DP yang Dibayar</span><span>Rp 50.000</span></div>
-                    <div class="baris"><span>Metode Pelunasan</span><span id="fakturMetode" class="data-dinamis" style="font-weight:600;">-</span></div>
-                    <div class="baris total"><span>TOTAL KESELURUHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
-                    <div class="catatan" id="txtFakturNote">Terima kasih atas kepercayaan Anda kepada kami</div>
-                </div>
-
-                <div id="boxBeriRating" style="margin-top:2rem; padding:1.5rem; text-align:center; background:#f1f5f9; border-radius:10px;">
-                    <h4>Beri Penilaian Pelayanan Kami</h4>
-                    <div class="rating-stars" id="starContainer">
-                        <i class="bi bi-star" data-val="1"></i>
-                        <i class="bi bi-star" data-val="2"></i>
-                        <i class="bi bi-star" data-val="3"></i>
-                        <i class="bi bi-star" data-val="4"></i>
-                        <i class="bi bi-star" data-val="5"></i>
-                    </div>
-                    <textarea id="ulasanPelanggan" rows="2" placeholder="Tuliskan ulasan Anda mengenai hasil servis..." style="margin-top:10px;"></textarea>
-                    <button class="btn btn-success" onclick="kirimRatingUlasan()">Kirim Ulasan</button>
-                </div>
-
-                <div class="tombol-faktur">
-                    <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
-                    <button class="btn btn-home" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="container" id="publicReviewsSection" style="margin-top:2rem; margin-bottom:2.5rem; display:none;">
-            <h3 style="text-align:center; font-size:1.2rem; margin-bottom:0;"><i class="bi bi-chat-heart-fill" style="color:#ef4444;"></i> Ulasan Pelanggan Kami</h3>
-            <div class="reviews-container" id="reviewList"></div>
-        </div>
-    </div>
-
-    <div id="page-about" class="page-content container">
-        <div class="content-box active" style="display:block; margin-top: 2rem;">
-            <h2>Tentang Kami</h2>
-            <p>SF Tech Service adalah penyedia layanan perbaikan smartphone dan alat elektronik rumah tangga profesional. Kami hadir untuk memberikan solusi cepat, transparan, dan bergaransi kepada seluruh pelanggan kami, baik melalui kunjungan ke rumah (Home Service) maupun pengerjaan di workshop kami.</p>
-            
-            <h3 style="margin-top:2.5rem; text-align:center;"><i class="bi bi-signpost-split" style="color:#0ea5e9;"></i> Alur Pelayanan Kami</h3>
-            <div class="alur-grid">
-                <div class="alur-item">
-                    <i class="bi bi-laptop"></i>
-                    <h4 style="margin-bottom:0.5rem;">1. Input Data Online</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Pilih jenis layanan, lengkapi data diri, dan jelaskan kendala perangkat Anda melalui website kami.</p>
-                </div>
-                <div class="alur-item">
-                    <i class="bi bi-wallet2"></i>
-                    <h4 style="margin-bottom:0.5rem;">2. Bayar DP & Jadwal</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Lakukan pembayaran uang muka agar sistem kami dapat mencarikan dan menjadwalkan teknisi untuk Anda.</p>
-                </div>
-                <div class="alur-item">
-                    <i class="bi bi-tools"></i>
-                    <h4 style="margin-bottom:0.5rem;">3. Proses Perbaikan</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Teknisi akan memeriksa & memperbaiki unit. Anda bisa melacak status secara real-time di website.</p>
-                </div>
-                <div class="alur-item">
-                    <i class="bi bi-check-circle"></i>
-                    <h4 style="margin-bottom:0.5rem;">4. Selesai & Lunas</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Setelah selesai, lunasi sisa tagihan, terima nota digital garansi 30 hari, dan nikmati kembali perangkat Anda.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="page-profile" class="page-content container">
-        <div class="content-box active" style="display:block; margin-top: 2rem;">
-            <h2>Profil Perusahaan & Galeri Servis</h2>
-            <p>Sejak didirikan, kami telah melayani ratusan pelanggan dan mengembalikan fungsi berbagai jenis perangkat dengan teknisi bersertifikat dan suku cadang berkualitas.</p>
-            
-            <h3 style="margin-top:2.5rem;"><i class="bi bi-images" style="color:#10b981;"></i> Bukti Hasil Servis</h3>
-            <div class="foto-grid">
-                <div class="foto-item">
-                    <i class="bi bi-camera" style="font-size:2.5rem; margin-bottom:10px;"></i>
-                    <p>Foto Servis 1 (Placeholder)</p>
-                </div>
-                <div class="foto-item">
-                    <i class="bi bi-phone" style="font-size:2.5rem; margin-bottom:10px;"></i>
-                    <p>Foto Servis 2 (Placeholder)</p>
-                </div>
-                <div class="foto-item">
-                    <i class="bi bi-motherboard" style="font-size:2.5rem; margin-bottom:10px;"></i>
-                    <p>Foto Servis 3 (Placeholder)</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<div id="printArea" style="display: none;">
+    <h2 style="text-align:center; font-size:16px; margin:0; font-weight:bold;">SF Tech Service</h2>
+    <p style="text-align:center; font-size:10px; margin:0;">Nota Pembayaran Resmi</p>
+    <div class="line"></div>
+    <div class="flex"><span>No:</span><span id="pKode"></span></div>
+    <div class="flex"><span>Tgl:</span><span id="pTgl"></span></div>
+    <div class="flex"><span>Plg:</span><span id="pNama"></span></div>
+    <div class="flex"><span>Unit:</span><span id="pUnit"></span></div>
+    <div class="line"></div>
+    <div class="flex"><span>Layanan:</span><span id="pLayanan"></span></div>
+    <div class="flex"><span>Sparepart:</span><span id="pSuku"></span></div>
+    <div class="flex"><span>Tambahan:</span><span id="pTambahan"></span></div>
+    <div class="line"></div>
+    <div class="flex" style="font-weight:bold;"><span>TOTAL:</span><span id="pTotal"></span></div>
+    <div class="flex"><span>Metode:</span><span id="pMetode"></span></div>
+    <div class="line"></div>
+    <p style="text-align:center; font-size:10px; margin-top:10px;">Terima Kasih!<br>Garansi Servis 30 Hari</p>
 </div>
 
-<footer class="footer-section">
-    <div style="display:flex; justify-content:center; gap: 15px; margin-bottom:1rem;">
-        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-facebook"></i></a>
-        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-instagram"></i></a>
-        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-whatsapp"></i></a>
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h2>🔒 Login Admin</h2>
+        <p>Silakan masukkan kredensial panel kendali</p>
+        
+        <label style="text-align:left; display:block; font-size:0.85rem; font-weight:600; color:#475569;">ID Admin</label>
+        <input type="text" id="adminId" placeholder="Masukkan ID Admin" onkeypress="aksiEnterLogin(event)">
+        
+        <label style="text-align:left; display:block; font-size:0.85rem; font-weight:600; color:#475569;">Password</label>
+        <input type="password" id="adminPassword" placeholder="Masukkan Password" onkeypress="aksiEnterLogin(event)">
+        
+        <button class="btn-login" onclick="prosesLogin()">Masuk Ke Panel</button>
     </div>
-    <p>&copy; 2026 SF Tech Service. Semua Hak Dilindungi.</p>
-</footer>
+</div>
 
-<div class="chat-widget minimized" id="chatWidgetPelanggan">
-    <div class="chat-header" onclick="toggleChatWidget()">
-        <div class="chat-header-left">
-            <i class="bi bi-chat-dots-fill"></i> 
-            <span>Chat Admin (<span id="txtChatKode">-</span>)</span>
+<div id="mainPanelWrapper">
+    <header>
+        <div class="logo">⚙️ Panel Admin Servis</div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button class="btn btn-edit" style="background:#10b981; margin-right: 10px;" onclick="exportCSV()"><i class="bi bi-file-earmark-excel"></i> Export CSV Filter</button>
+            
+            <button onclick="toggleDarkModeAdmin()" class="btn" style="background:rgba(255,255,255,0.2);"><i class="bi bi-moon-fill" id="iconDarkAdmin"></i></button>
+            <div style="font-size:0.82rem; background:#1e293b; padding:0.5rem 0.8rem; border-radius:6px; color:#10b981; font-weight:700; display:flex; align-items:center; gap:5px;"><span style="width:7px; height:7px; background:#10b981; border-radius:50%; display:inline-block;"></span> Socket Live</div>
+            <button class="btn-logout" onclick="prosesLogout()">Keluar 🚪</button>
         </div>
-        <button class="chat-toggle-btn" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
-            <i class="bi bi-dash-lg"></i>
-        </button>
+    </header>
+    <div class="container">
+        
+        <div class="tab-menu-admin" style="margin-bottom: 2rem;">
+            <button class="tab-btn-admin aktif" onclick="pindahTabUtamaAdmin('tabDaftarPesananUtama')">Daftar Pesanan</button>
+            <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabLaporanEkstra')">Laporan Keuangan & Analitik</button>
+        </div>
+        
+        <div id="tabDaftarPesananUtama" class="modal-view aktif">
+            <h1>Daftar Pesanan Servis</h1>
+            
+            <div class="admin-chart-box">
+                <canvas id="grafikAdmin"></canvas>
+            </div>
+
+            <div class="ringkasan" style="margin-bottom: 1rem; border-bottom: 2px dashed var(--border-line); padding-bottom: 1rem;">
+                <div class="kartu kartu-keuangan kartu-pendapatan">
+                    <h3 style="color:#10b981;"><i class="bi bi-wallet-fill"></i> Total Pendapatan (Lunas)</h3>
+                    <div class="angka" id="lblTotalPendapatan">Rp 0</div>
+                </div>
+                <div class="kartu kartu-keuangan kartu-piutang">
+                    <h3 style="color:#ef4444;"><i class="bi bi-exclamation-triangle-fill"></i> Total Piutang (Tagihan Berjalan)</h3>
+                    <div class="angka" id="lblTotalPiutang">Rp 0</div>
+                </div>
+            </div>
+
+            <div class="ringkasan">
+                <div class="kartu"><h3>Pesanan Baru</h3><div class="angka" id="jmlBaru">0</div></div>
+                <div class="kartu" style="border-left-color: #f59e0b;"><h3>Dijadwalkan</h3><div class="angka" id="jmlJadwal">0</div></div>
+                <div class="kartu" style="border-left-color: #10b981;"><h3>Diproses</h3><div class="angka" id="jmlProses">0</div></div>
+                <div class="kartu" style="border-left-color: #a855f7;"><h3>Perlu Validasi</h3><div class="angka" id="jmlValidasi">0</div></div>
+            </div>
+
+            <div class="kontrol-fitur">
+                <div class="filter-grup">
+                    <label for="cariKode"><i class="bi bi-search"></i> Cari:</label>
+                    <input type="text" id="cariKode" placeholder="Kode atau Nama..." oninput="muatData()" style="width: 180px; cursor: text;">
+                </div>
+                <div class="filter-grup">
+                    <label><i class="bi bi-calendar-range"></i> Dari:</label>
+                    <input type="date" id="filterTglMulai" onchange="muatData()">
+                    <label>Hingga:</label>
+                    <input type="date" id="filterTglAkhir" onchange="muatData()">
+                    <button class="btn btn-secondary" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset Data</button>
+                </div>
+                <div class="filter-grup">
+                    <label for="urutTanggal">Urutan:</label>
+                    <select id="urutTanggal" onchange="muatData()" style="width: 130px;">
+                        <option value="terbaru">Terbaru</option>
+                        <option value="terlama">Terlama</option>
+                    </select>
+                </div>
+            </div>
+
+            <table id="tabelPesanan">
+                <thead>
+                    <tr>
+                        <th>Kode</th>
+                        <th>Nama</th>
+                        <th>Perangkat</th>
+                        <th>Status DP</th>
+                        <th>Tanggal Masuk</th>
+                        <th>Status Kerja</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="tabLaporanEkstra" class="modal-view">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.6rem; font-weight: 700;">Laporan Analitik Tambahan</h2>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                <div class="admin-chart-box" style="flex: 1; min-width: 300px; height: 350px;">
+                    <h4 style="margin-bottom: 1rem; text-align: center;"><i class="bi bi-pie-chart-fill" style="color:#0ea5e9;"></i> Top 5 Jenis Kerusakan</h4>
+                    <canvas id="grafikKerusakan"></canvas>
+                </div>
+                <div class="admin-chart-box" style="flex: 1; min-width: 300px; height: 350px;">
+                    <h4 style="margin-bottom: 1rem; text-align: center;"><i class="bi bi-bar-chart-fill" style="color:#10b981;"></i> Pendapatan per Teknisi (Rp)</h4>
+                    <canvas id="grafikTeknisi"></canvas>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <div class="chat-messages" id="boxPesanPelanggan"></div>
-    <div class="chat-input-row">
-        <input type="text" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()">
-        <button onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
+
+    <div class="modal" id="modalKelola">
+        <div class="modal-konten">
+            <span class="tutup" onclick="tutupModal()">&times;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="font-size:1.3rem; font-weight:700;">Kelola Order (<span id="txtKodeHeader">-</span>)</h3>
+                <button class="btn" style="background:#0f172a; color:white;" onclick="cetakNotaFisik()"><i class="bi bi-printer"></i> Cetak Nota Fisik</button>
+            </div>
+            
+            <input type="hidden" id="kodePesanan">
+
+            <div class="tab-menu-admin">
+                <button class="tab-btn-admin aktif" onclick="pindahTabAdmin('tabKiriLengkap')">Penjadwalan & Keuangan</button>
+                <button class="tab-btn-admin" onclick="pindahTabAdmin('tabKananLengkap')">Media Dokumen & Live Chat</button>
+                <button class="tab-btn-admin" onclick="pindahTabAdmin('tabGridAsli')">Tampilan Grid (Semua)</button>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.8rem; margin-top:1.2rem;" id="wrapperGridUtama">
+                <div id="tabKiriLengkap" class="modal-view aktif">
+                    
+                    <div id="bannerTerkunci" style="display:none; background:#fef2f2; color:#991b1b; padding:1.2rem; border-left:5px solid #ef4444; margin-bottom:1.5rem; border-radius:8px; font-weight:600; box-shadow:0 4px 10px rgba(239, 68, 68, 0.1);">
+                        <i class="bi bi-lock-fill" style="font-size:1.2rem; margin-right:5px;"></i> 
+                        INVOICE TERKUNCI (READ-ONLY). Pesanan ini telah Lunas & Selesai. Pengeditan otomatis dinonaktifkan untuk menjaga integritas pelaporan keuangan.
+                    </div>
+
+                    <div class="box-dp">
+                        <h4 style="font-size:0.95rem; font-weight:700; color:#c2410c; margin-bottom:5px;">🔒 Langkah 1: Validasi Uang Muka (DP)</h4>
+                        <p style="font-size:0.85rem; margin-bottom:0.8rem;">Metode Transfer DP: <strong id="txtMetodeDP">-</strong></p>
+                        <button class="btn btn-validasi" id="btnApproveDP" onclick="validasiDP(true)">Setujui DP Lunas</button>
+                        <button class="btn btn-hapus" id="btnTolakDP" onclick="validasiDP(false)">Tolak DP</button>
+                        <label>Bukti Transfer DP:</label>
+                        <div id="displayBuktiDP" class="pratinjau">Belum ada bukti</div>
+                    </div>
+
+                    <div id="wrapperPenjadwalan">
+                        <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">📅 Langkah 2: Atur Penjadwalan Teknisi</h4>
+                        <label>Lokasi Perbaikan:</label>
+                        <select id="lokasiServis" class="kunci-target">
+                            <option value="home_service">Service di Rumah Pelanggan (On-Site)</option>
+                            <option value="workshop">Barang Dibawa oleh Teknisi (Ke Workshop)</option>
+                        </select>
+
+                        <p style="font-size:0.85rem; margin-top:0.5rem; margin-bottom: 1rem;">Link Shareloc / Maps: <span id="linkShareloc">-</span></p>
+
+                        <label>Status Progres Kerja</label>
+                        <select id="statusPesanan" class="kunci-target">
+                            <option value="baru">Menunggu Verifikasi Jadwal</option>
+                            <option value="dijadwalkan">Sudah Dijadwalkan</option>
+                            <option value="diproses">Sedang Diperbaiki</option>
+                            <option value="selesai_servis">Perbaikan Selesai (Menunggu Pelunasan)</option>
+                            <option value="ditolak_pelanggan">Dibatalkan (Pelanggan Tolak Biaya Tambahan)</option>
+                            <option value="selesai">Lunas & Selesai Sepenuhnya</option>
+                        </select>
+
+                        <label>Teknisi</label>
+                        <select id="teknisi" class="kunci-target">
+                            <option value="">-- Pilih --</option>
+                            <option value="Andi S.">Andi S.</option>
+                            <option value="Bambang K.">Bambang K.</option>
+                            <option value="Dian R.">Dian R.</option>
+                        </select>
+
+                        <label>Tanggal & Waktu Servis</label>
+                        <input type="datetime-local" id="jadwal" class="kunci-target">
+
+                        <label style="color:#0ea5e9;">Live Update ETA Kedatangan Teknisi</label>
+                        <input type="text" id="etaUpdate" class="kunci-target" placeholder="Contoh: Teknisi dalam perjalanan (15 Menit lagi)">
+
+                        <div class="box-tambahan-admin" id="boxInputTambahan">
+                            <h4 style="font-size:0.95rem; font-weight:700; color:#15803d; margin-bottom:3px;">🔧 Laporkan Temuan Rusak Tambahan</h4>
+                            <p style="font-size:0.8rem; color:#475569; margin-bottom:0.6rem;">Aktifkan jika teknisi butuh tambahan part di lapangan.</p>
+                            
+                            <label style="font-weight:600;"><input type="checkbox" id="chkAdaTambahan" class="kunci-target" onchange="toggleFormTambahan()" style="width:auto; margin-right:5px;"> Aktifkan Komponen Tambahan</label>
+                            
+                            <div id="subFormTambahan" style="display:none; margin-top:0.5rem;">
+                                <label>Komponen / Kendala Baru</label>
+                                <input type="text" id="infoTambahan" class="kunci-target" placeholder="Contoh: IC Power Lemah / Motor Kipas Mati">
+                                <label>Harga Tambahan Part/Jasa (Rp)</label>
+                                <input type="number" id="biayaTambahan" class="kunci-target" placeholder="0" oninput="hitungTotal()">
+                                <p style="font-size:0.85rem; margin-top:0.3rem;">Status Persetujuan User: <strong id="txtResponPelanggan" style="color:#2563eb;">PENDING</strong></p>
+                            </div>
+                        </div>
+
+                        <hr style="margin:1rem 0; border-color:#e2e8f0;">
+                        <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">💰 Langkah 3: Hitung Rincian Nota Pokok</h4>
+                        <label>Biaya Suku Cadang Pokok (Rp)</label>
+                        <input type="number" id="biayaSuku" class="kunci-target" placeholder="0" oninput="hitungTotal()">
+                        <label>Biaya Jasa Servis Pokok (Rp)</label>
+                        <input type="number" id="biayaJasa" class="kunci-target" placeholder="0" oninput="hitungTotal()">
+                        
+                        <div style="background:rgba(14, 165, 233, 0.05); padding:0.8rem; border-radius:6px; margin-top:0.5rem;">
+                            <p style="font-size:0.88rem; font-weight:600; color:#1e40af;">Subtotal Tagihan Pokok: Rp <span id="totalTampilPokok">0</span></p>
+                            <p style="font-size:0.88rem; font-weight:600; color:#c2410c;" id="rowTampilTambahanAdmin">Subtotal Tambahan Disetujui: Rp <span id="totalTampilTambahan">0</span></p>
+                            <p style="font-size:0.85rem; color:#16a34a;">Potongan Uang Muka (DP): -Rp 50.000</p>
+                            <hr style="margin:0.4rem 0; border-color:#cbd5e1;">
+                            <p style="font-size:1.05rem; font-weight:700;">Sisa Bersih Pelunasan: Rp <span id="totalTampil">0</span></p>
+                        </div>
+
+                        <hr style="margin:1rem 0; border-color:#e2e8f0;">
+                        <p style="font-size:0.9rem;"><strong>Metode Transfer Pelunasan:</strong> <span id="metodeBayarTampil" style="font-weight:600;">-</span></p>
+                        <button class="btn btn-validasi" id="btnValidasi" onclick="validasiPembayaranPelunasan()" style="margin-top:0.8rem; padding:0.6rem 1.2rem; width:100%;">Validasi Lunas Sisa (Tutup Transaksi)</button>
+                        <label>Bukti Transfer Pelunasan:</label>
+                        <div id="displayBuktiPelunasan" class="pratinjau">Belum ada bukti</div>
+                    </div>
+
+                    <div style="margin-top:1.5rem; text-align:right;">
+                        <button class="btn btn-edit" id="btnSimpanPerubahan" style="padding:0.7rem 1.8rem;" onclick="simpanPerubahan()"><i class="bi bi-save"></i> Simpan Semua Data</button>
+                    </div>
+                </div>
+
+                <div id="tabKananLengkap" class="modal-view">
+                    <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:5px;">Dokumen Foto Unit Masuk</h4>
+                    <div class="pratinjau" id="tampilKondisiAdmin">Belum ada dokumen</div>
+                    
+                    <p style="font-size:0.85rem;"><strong>Catatan Kerusakan Pelanggan:</strong></p>
+                    <textarea id="keluhanAdmin" rows="2" readonly style="font-size:0.85rem; margin-top:5px; border-color:#e2e8f0;"></textarea>
+
+                    <h4 style="margin-top:1.2rem; border-top:2px dashed #cbd5e1; padding-top:1rem; font-size:0.95rem; font-weight:700;"><i class="bi bi-chat-text-fill" style="color:#10b981;"></i> Jalur Chat Live Pelanggan</h4>
+                    <div class="chat-admin-container">
+                        <div class="chat-admin-msg-box" id="boxPesanAdmin"></div>
+                        <div class="chat-admin-input-row">
+                            <input type="text" id="inputPesanAdmin" placeholder="Ketik balasan pesan..." onkeypress="aksiEnterChatAdmin(event)">
+                            <button onclick="kirimChatAdmin()"><i class="bi bi-send-fill"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-function tampilHalaman(id) {
-    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
-    
-    if(id === 'home') {
-        muatUlasanPublik();
-    } else {
-        document.getElementById("publicReviewsSection").style.display = "none";
-    }
-}
-
-window.buktiDPBase64 = "";
-window.buktiPelunasanBase64 = "";
-
-function previewBukti(input, previewId) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const preview = document.getElementById(previewId);
-            preview.style.display = 'block';
-            preview.innerHTML = `<img src="${e.target.result}" style="max-height:150px;">`;
-            if(previewId === 'pratinjauDP') window.buktiDPBase64 = e.target.result;
-            else window.buktiPelunasanBase64 = e.target.result;
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
 const API_URL = window.location.origin + "/api";
-let currentStep = 1; 
-let kodeSaya = "";   
-let fileDataURL = "";
-let tipeFile = "";
-let metodeDP = "";
-let metodeBayar = "";
-let intervalChat = null;
-let nilaiRating = 0; 
+let aktifMembukaKode = "";
+let cacheStringData = "";
+let intervalAdmin = null;
+let chartInstance = null; 
+window.semuaPesananGlobal = {}; 
+window.dataTampilFilter = [];
 
 const socket = io(window.location.origin);
 
-socket.on("updateDataPelanggan", (kode) => {
-    if(kode === kodeSaya) {
-        tampilkanSkeleton(); 
-        setTimeout(() => cekStatus(), 600); 
-    }
+socket.on("updateDashboardAdmin", () => {
+    muatData(); 
 });
+
 socket.on("chatBaruDiterima", (kodeChat) => {
-    if(kodeChat === kodeSaya) muatLogPesan();
+    if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
 });
 
-function simpanDraft() {
-    if(currentStep > 2 || kodeSaya) return; 
-    const layananChecked = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.id);
-    const draft = {
-        step: currentStep, layanan: layananChecked,
-        nama: document.getElementById("nama").value, wa: document.getElementById("wa").value,
-        alamat: document.getElementById("alamat").value, 
-        shareloc: document.getElementById("shareloc").value,
-        merek: document.getElementById("merek").value,
-        merekLainnya: document.getElementById("merekLainnya").value,
-        tipe: document.getElementById("tipe").value, kerusakan: document.getElementById("kerusakan").value
-    };
-    localStorage.setItem("draftFormServis", JSON.stringify(draft));
-}
+function pindahTabUtamaAdmin(tabIdTarget) {
+    document.querySelectorAll(".tab-menu-admin")[0].querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
+    event.currentTarget.classList.add("aktif");
 
-function restoreDraft() {
-    const draft = localStorage.getItem("draftFormServis");
-    if(draft && !kodeSaya) {
-        try {
-            const data = JSON.parse(draft);
-            currentStep = data.step || 1;
-            document.getElementById("nama").value = data.nama || "";
-            document.getElementById("wa").value = data.wa || "";
-            document.getElementById("alamat").value = data.alamat || "";
-            document.getElementById("shareloc").value = data.shareloc || ""; 
-            document.getElementById("merek").value = data.merek || "";
-            document.getElementById("merekLainnya").value = data.merekLainnya || "";
-            document.getElementById("tipe").value = data.tipe || "";
-            document.getElementById("kerusakan").value = data.kerusakan || "";
-            
-            data.layanan.forEach(id => { const cb = document.getElementById(id); if(cb) cb.checked = true; });
-            updateBrandOptions();
-            toggleMerekLainnya();
-        } catch(e){}
+    document.getElementById("tabDaftarPesananUtama").classList.remove("aktif");
+    document.getElementById("tabLaporanEkstra").classList.remove("aktif");
+    
+    document.getElementById(tabIdTarget).classList.add("aktif");
+    
+    if(tabIdTarget === 'tabLaporanEkstra') {
+        renderGrafikEkstra();
     }
 }
 
-function dapatkanLokasiOtomatis() {
-    const btn = document.getElementById("btnLokasiGPS");
-    const inputShareloc = document.getElementById("shareloc");
-    
-    if (!navigator.geolocation) {
-        return Swal.fire('Tidak Mendukung', 'Browser Anda tidak mendukung fitur lokasi.', 'error');
-    }
-    
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Membaca GPS...';
-    btn.disabled = true;
-    
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            inputShareloc.value = `https://maps.google.com/?q=${lat},${lng}`;
-            simpanDraft();
-            btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Berhasil';
-            setTimeout(() => { btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini'; btn.disabled = false; }, 3000);
-        },
-        (error) => {
-            console.error(error);
-            btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini';
-            btn.disabled = false;
-            let pesanError = 'Tidak dapat mengambil lokasi.';
-            if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda. Mohon izinkan pada browser.';
-            Swal.fire('Gagal', pesanError, 'error');
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-}
-
-let originalOptHP = null;
-let originalOptElek = null;
-let originalOptLainnya = null;
-
-function inisialisasiOpsiMerek() {
-    if(!originalOptHP) {
-        originalOptHP = document.getElementById("optgroup-hp").cloneNode(true);
-        originalOptElek = document.getElementById("optgroup-elektronik").cloneNode(true);
-        originalOptLainnya = document.querySelector('#merek optgroup[label="Lainnya"]').cloneNode(true);
-    }
-}
-
-function updateBrandOptions() {
-    inisialisasiOpsiMerek(); 
-    const isHP = Array.from(document.querySelectorAll('.kategori-card.hp input[type="checkbox"]')).some(cb => cb.checked);
-    const isElek = Array.from(document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]')).some(cb => cb.checked);
-    const merekSelect = document.getElementById("merek");
-    const currentValue = merekSelect.value;
-    
-    merekSelect.innerHTML = '<option value="">-- Silakan Pilih Kategori Merek --</option>';
-    if (isHP || (!isHP && !isElek)) merekSelect.appendChild(originalOptHP.cloneNode(true));
-    if (isElek || (!isHP && !isElek)) merekSelect.appendChild(originalOptElek.cloneNode(true));
-    merekSelect.appendChild(originalOptLainnya.cloneNode(true));
-    
-    if (Array.from(merekSelect.options).some(opt => opt.value === currentValue)) merekSelect.value = currentValue;
-    else merekSelect.value = "";
-    toggleMerekLainnya();
-}
-
-function muatUlasanPublik() {
-    fetch(`${API_URL}/reviews`)
-    .then(res => res.json())
-    .then(data => {
-        if(data.length > 0) {
-            document.getElementById("publicReviewsSection").style.display = "block";
-            const list = document.getElementById("reviewList");
-            list.innerHTML = "";
-            data.forEach(rev => {
-                let stars = "";
-                for(let i=0; i<5; i++) stars += i < rev.rating ? '<i class="bi bi-star-fill" style="color:#f59e0b;"></i>' : '<i class="bi bi-star" style="color:#cbd5e1;"></i>';
-                list.innerHTML += `<div class="review-card">
-                    <p style="font-weight:bold; font-size:0.9rem; margin-bottom:3px;">${rev.nama} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">- ${rev.merek} ${rev.tipe}</span></p>
-                    <div style="font-size:0.8rem; margin-bottom:8px;">${stars}</div>
-                    <p style="font-size:0.85rem; font-style:italic;">"${rev.ulasan}"</p>
-                </div>`;
-            });
-        }
-    });
-}
-
-function toggleDarkMode() {
+function toggleDarkModeAdmin() {
     document.body.classList.toggle('dark-mode');
-    const icon = document.getElementById('iconDark');
-    if(document.body.classList.contains('dark-mode')) {
-        icon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
-        localStorage.setItem('tema', 'gelap');
+    const icon = document.getElementById('iconDarkAdmin');
+    if (document.body.classList.contains('dark-mode')) {
+        icon.classList.replace('bi-moon-fill', 'bi-sun-fill');
+        localStorage.setItem('adminTema', 'gelap');
+        if(chartInstance) Chart.defaults.color = '#f8fafc';
     } else {
-        icon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
-        localStorage.setItem('tema', 'terang');
+        icon.classList.replace('bi-sun-fill', 'bi-moon-fill');
+        localStorage.setItem('adminTema', 'terang');
+        if(chartInstance) Chart.defaults.color = '#1e293b';
+    }
+    if(chartInstance) chartInstance.update();
+    if(window.chartKerusakan) window.chartKerusakan.update();
+    if(window.chartTeknisi) window.chartTeknisi.update();
+}
+if(localStorage.getItem('adminTema') === 'gelap') toggleDarkModeAdmin();
+
+function pindahTabAdmin(tabIdTarget) {
+    document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin").forEach(b => b.classList.remove("aktif"));
+    event.currentTarget.classList.add("aktif");
+
+    if (tabIdTarget === 'tabGridAsli') {
+        document.getElementById("wrapperGridUtama").style.display = "grid";
+        document.getElementById("tabKiriLengkap").classList.add("aktif");
+        document.getElementById("tabKananLengkap").classList.add("aktif");
+    } else {
+        document.getElementById("wrapperGridUtama").style.display = "block";
+        document.getElementById("tabKiriLengkap").classList.remove("aktif");
+        document.getElementById("tabKananLengkap").classList.remove("aktif");
+        document.getElementById(tabIdTarget).classList.add("aktif");
     }
 }
-if(localStorage.getItem('tema') === 'gelap') { toggleDarkMode(); }
 
-function tampilkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.add("skeleton")); }
-function hilangkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.remove("skeleton")); }
+function getAuthHeader() {
+    const token = sessionStorage.getItem("adminToken");
+    return token ? { "Authorization": `Bearer ${token}` } : {};
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-    inisialisasiOpsiMerek(); 
-    kodeSaya = localStorage.getItem("kodeAktifPelanggan") || "";
-    if(kodeSaya) {
-        document.getElementById("heroLandingPage").style.display = "none";
-        document.getElementById("publicReviewsSection").style.display = "none";
-        cekStatus();
-        aktifkanSistemChat();
-    } else {
-        restoreDraft();
-        updateProgress();
-        showContent();
-        pasangListenerValidasiRealTime();
-        muatUlasanPublik();
+    if (sessionStorage.getItem("adminToken")) {
+        tampilkanDashboardUtama();
     }
-
-    document.querySelectorAll('#starContainer i').forEach(star => {
-        star.addEventListener('click', function() {
-            nilaiRating = parseInt(this.getAttribute('data-val'));
-            document.querySelectorAll('#starContainer i').forEach(s => {
-                s.classList.replace('bi-star-fill', 'bi-star');
-                s.classList.remove('active');
-                if(parseInt(s.getAttribute('data-val')) <= nilaiRating) {
-                    s.classList.replace('bi-star', 'bi-star-fill');
-                    s.classList.add('active');
-                }
-            });
-        });
-    });
 });
 
-function nextStep() {
-    if (currentStep === 2) { kirimPesanan(); } else {
-        if (currentStep < 7) { currentStep++; simpanDraft(); updateProgress(); showContent(); }
-    }
-}
-function prevStep() {
-    if (currentStep > 1) { currentStep--; simpanDraft(); updateProgress(); showContent(); }
-}
+function prosesLogin() {
+    const username = document.getElementById("adminId").value.trim();
+    const password = document.getElementById("adminPassword").value;
 
-function toggleMerekLainnya() {
-    const select = document.getElementById("merek");
-    const inputLainnya = document.getElementById("merekLainnya");
-    if(select.value === "Lainnya") { inputLainnya.style.display = "block"; } else {
-        inputLainnya.style.display = "none"; inputLainnya.value = ""; validasiInputRealTime(inputLainnya, 'errMerekLainnya'); 
-    }
-    validasiInputRealTime(select, 'errMerek'); simpanDraft();
-}
-
-function validasiInputRealTime(element, errId) {
-    const errSpan = document.getElementById(errId);
-    if (!element.value.trim()) {
-        element.classList.add('input-error'); if(errSpan) errSpan.style.display = 'block'; return false;
-    } else {
-        element.classList.remove('input-error'); if(errSpan) errSpan.style.display = 'none'; return true;
-    }
-}
-
-function pasangListenerValidasiRealTime() {
-    document.getElementById('nama').addEventListener('input', function() { validasiInputRealTime(this, 'errNama'); simpanDraft(); });
-    document.getElementById('wa').addEventListener('input', function() { 
-        if(this.value.startsWith('0')) this.value = '62' + this.value.substring(1);
-        validasiInputRealTime(this, 'errWa'); simpanDraft();
-    });
-    document.getElementById('merek').addEventListener('change', function() { validasiInputRealTime(this, 'errMerek'); });
-    document.getElementById('tipe').addEventListener('input', function() { validasiInputRealTime(this, 'errTipe'); simpanDraft();});
-    document.getElementById('merekLainnya').addEventListener('input', function() { validasiInputRealTime(this, 'errMerekLainnya'); simpanDraft();});
-}
-
-function tampilPratinjau() {
-    const fileKondisi = document.getElementById("fileKondisi");
-    const pratinjau = document.getElementById("pratinjauFile");
-    if(fileKondisi && fileKondisi.files[0]) {
-        const file = fileKondisi.files[0];
-        if(file.size > 5 * 1024 * 1024) {
-            Swal.fire({ icon: 'error', title: 'Ukuran Terlalu Besar!', text: 'Maksimal ukuran file 5MB.', confirmButtonColor: '#0ea5e9' });
-            fileKondisi.value = ""; fileDataURL = ""; pratinjau.innerHTML = "Belum ada file dipilih"; return;
-        }
-        tipeFile = file.type;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            fileDataURL = e.target.result;
-            if(file.type.startsWith("image/")) pratinjau.innerHTML = `<img src="${fileDataURL}" style="max-width:100%; max-height:200px;">`;
-            else if(file.type.startsWith("video/")) pratinjau.innerHTML = `<video src="${fileDataURL}" controls style="max-width:100%; max-height:200px;"></video>`;
-        }
-        reader.readAsDataURL(file);
-    }
-}
-
-function kirimPesanan() {
-    const isNamaValid = validasiInputRealTime(document.getElementById("nama"), 'errNama');
-    const isWaValid = validasiInputRealTime(document.getElementById("wa"), 'errWa');
-    const isMerekValid = validasiInputRealTime(document.getElementById("merek"), 'errMerek');
-    const isTipeValid = validasiInputRealTime(document.getElementById("tipe"), 'errTipe');
-    let isMerekLainnyaValid = true;
-    let merekFinal = document.getElementById("merek").value;
-    if (merekFinal === "Lainnya") {
-        isMerekLainnyaValid = validasiInputRealTime(document.getElementById("merekLainnya"), 'errMerekLainnya');
-        merekFinal = document.getElementById("merekLainnya").value.trim();
-    }
-
-    if (!isNamaValid || !isWaValid || !isMerekValid || !isTipeValid || !isMerekLainnyaValid) {
-        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Mohon periksa kolom isian merah.', confirmButtonColor: '#0ea5e9' });
-        return;
-    }
-
-    const btnKirim = document.getElementById("btnKirimPesanan");
-    btnKirim.disabled = true; btnKirim.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim...';
-
-    const layananTerpilih = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.parentElement.textContent.trim()).join(", ");
-    kodeSaya = "HS-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.floor(Math.random()*900+100);
-
-    const data = {
-        kode: kodeSaya, nama: document.getElementById("nama").value.trim(), wa: document.getElementById("wa").value.trim(),
-        alamat: document.getElementById("alamat").value.trim(), shareloc: document.getElementById("shareloc").value.trim(),
-        merek: merekFinal, tipe: document.getElementById("tipe").value.trim(), kerusakan: document.getElementById("kerusakan").value.trim(),
-        layanan: layananTerpilih || "Belum dipilih", status: "baru", teknisi: "", jadwal: "", biayaSuku: 0, biayaJasa: 0, totalHarga: 0,
-        metodePembayaran: "", pembayaranDikonfirmasi: false, pembayaranValid: false, kondisiHP: fileDataURL || "", tipeKondisi: tipeFile || "",
-        dpTerbayar: false, dpValid: false, metodeDP: "", lokasiServis: "", adaKerusakanTambahan: false, infoKerusakanTambahan: "",
-        biayaSukuTambahan: 0, statusPersetujuanTambahan: "pending", tanggalInput: new Date().toISOString().split('T')[0]
-    };
-
-    fetch(`${API_URL}/orders`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
-    .then(res => { if (!res.ok) throw new Error("Gagal mendaftarkan data"); return res.json(); })
-    .then(() => {
-        localStorage.setItem("kodeAktifPelanggan", kodeSaya);
-        localStorage.removeItem("draftFormServis");
-        document.getElementById("heroLandingPage").style.display = "none";
-        document.getElementById("publicReviewsSection").style.display = "none";
-        document.getElementById("kodePesananDP").textContent = kodeSaya;
-        document.getElementById("kodePesanan").textContent = kodeSaya;
-        document.getElementById("txtChatKode").textContent = kodeSaya;
-        
-        btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
-        currentStep = 3; updateProgress(); showContent(); aktifkanSistemChat();
-        Swal.fire({ icon: 'success', title: 'Pesanan Terkirim!', text: 'Silakan lanjut ke Pembayaran DP.', confirmButtonColor: '#10b981' });
-        cekStatus();
+    fetch(`${API_URL}/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("ID atau Password salah!");
+        return res.json();
+    })
+    .then(data => {
+        sessionStorage.setItem("adminToken", data.token);
+        Swal.fire({ icon: 'success', title: 'Login Berhasil', showConfirmButton: false, timer: 1500 });
+        tampilkanDashboardUtama();
     })
     .catch(err => {
-        console.error(err);
-        btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
-        Swal.fire({ icon: 'error', title: 'Sistem Sibuk', text: 'Gagal memproses pesanan. Pastikan server aktif.', confirmButtonColor: '#ef4444' });
+        Swal.fire('Gagal!', err.message, 'error');
     });
 }
 
-function salinKode() {
-    let kode = kodeSaya || localStorage.getItem("kodeAktifPelanggan");
-    if (!kode) return;
-    navigator.clipboard.writeText(kode).then(() => {
-        Swal.fire({ icon: 'success', title: 'Tersalin!', text: 'Kode ' + kode + ' disalin.', timer: 1500, showConfirmButton: false });
-    });
+function prosesLogout() {
+    sessionStorage.removeItem("adminToken");
+    if(intervalAdmin) clearInterval(intervalAdmin);
+    location.reload();
 }
 
-function pilihMetodeDP(metode) {
-    metodeDP = metode;
-    document.querySelectorAll(".pilihan-dp").forEach(el => el.classList.remove("aktif"));
-    document.getElementById(`dp-${metode}`).classList.add("aktif");
+function aksiEnterLogin(event) {
+    if (event.key === "Enter") prosesLogin();
+}
+
+function tampilkanDashboardUtama() {
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("mainPanelWrapper").style.display = "block";
+    muatData();
     
-    document.getElementById("infoRekeningDP").style.display = "block";
-    document.getElementById("namaBankDP").textContent = metode;
-    document.getElementById("noRekDP").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
-    document.getElementById("metodeDPDipilih").textContent = "Transfer " + metode;
+    // PERBAIKAN: Interval dihapus untuk mencegah antrean (lag/hang) yang menyebabkan fitur delete tidak bekerja[span_6](start_span)[span_6](end_span).
+    // Anda sudah menggunakan Socket.io di atas, jadi sistem Anda sudah ter-update secara "live" tanpa perlu interval ini.
+    // intervalAdmin = setInterval(muatData, 4000); 
 }
 
-function konfirmasiBayarDP() {
-    if(!metodeDP) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih metode transfer DP!', confirmButtonColor: '#0ea5e9' });
-
-    fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metodeDP: metodeDP, dpTerbayar: true, buktiDP: window.buktiDPBase64 })
-    })
-    .then(res => res.json())
-    .then(() => {
-        Swal.fire({ icon: 'success', title: 'Terkirim', text: 'Bukti DP tersimpan. Tunggu verifikasi.', confirmButtonColor: '#10b981' });
-        cekStatus();
-    }).catch(err => Swal.fire('Gagal!', 'Gagal konfirmasi DP.', 'error'));
-}
-
-function tanyaKodeLacak() {
-    tampilHalaman('home');
-    Swal.fire({
-        title: 'Lacak Pesanan',
-        input: 'text',
-        inputLabel: 'Masukkan Kode Pesanan Anda',
-        inputPlaceholder: 'Contoh: HS-20260712-105',
-        showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-search"></i> Lacak',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#0ea5e9'
-    }).then((result) => {
-        if (result.isConfirmed && result.value) {
-            const kode = result.value.trim();
-            fetch(`${API_URL}/orders/${kode}`)
-            .then(res => { if(!res.ok) throw new Error(); return res.json(); })
-            .then(data => {
-                kodeSaya = data.kode;
-                localStorage.setItem("kodeAktifPelanggan", kodeSaya);
-                document.getElementById("heroLandingPage").style.display = "none";
-                document.getElementById("publicReviewsSection").style.display = "none";
-                document.getElementById("kodePesananDP").textContent = kodeSaya;
-                document.getElementById("kodePesanan").textContent = kodeSaya;
-                document.getElementById("txtChatKode").textContent = kodeSaya;
-                aktifkanSistemChat(); cekStatus();
-            })
-            .catch(() => Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar!', confirmButtonColor: '#ef4444' }));
-        }
-    });
-}
-
-function responsTambahan(setuju) {
-    let payload = setuju ? { statusPersetujuanTambahan: "disetujui" } : { statusPersetujuanTambahan: "ditolak", status: "ditolak_pelanggan" };
-    fetch(`${API_URL}/orders/${kodeSaya}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-    .then(() => {
-        Swal.fire(setuju ? 'Disetujui!' : 'Ditolak!', setuju ? 'Tambahan disetujui.' : 'Servis dibatalkan.', setuju ? 'success' : 'error');
-        cekStatus();
-    });
-}
-
-function pilihMetodeBayar(metode) {
-    metodeBayar = metode;
-    document.querySelectorAll(".pilihan-bayar").forEach(el => el.classList.remove("aktif"));
-    document.getElementById(`bayar-${metode}`).classList.add("aktif");
-    
-    const infoBox = document.getElementById("infoRekening");
-    if(metode === "Tunai") {
-        infoBox.style.display = "none"; document.getElementById("metodeDipilih").textContent = "Tunai / Cash";
-    } else {
-        infoBox.style.display = "block";
-        document.getElementById("namaBank").textContent = metode;
-        document.getElementById("noRek").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
-        document.getElementById("metodeDipilih").textContent = "Transfer " + metode;
+function handleApiError(res) {
+    if (res.status === 401 || res.status === 403) {
+        Swal.fire('Sesi Habis', 'Sesi login Anda tidak valid atau telah habis. Silakan login kembali.', 'warning').then(() => {
+            prosesLogout();
+        });
+        throw new Error("Sesi tidak valid");
     }
+    return res.json();
 }
 
-function konfirmasiBayar() {
-    if(!metodeBayar) return Swal.fire('Perhatian', 'Pilih metode!', 'warning');
-    fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metodePembayaran: metodeBayar, pembayaranDikonfirmasi: true, buktiPelunasan: window.buktiPelunasanBase64 })
-    }).then(res => res.json()).then(() => { Swal.fire('Berhasil', 'Pelunasan & bukti terkirim.', 'success'); cekStatus(); });
+function muatData() {
+    if (!sessionStorage.getItem("adminToken")) return;
+
+    fetch(`${API_URL}/orders`, { headers: getAuthHeader() })
+    .then(handleApiError)
+    .then(semua => {
+        window.semuaPesananGlobal = semua; 
+        
+        const currentDataString = JSON.stringify(semua);
+        if (currentDataString === cacheStringData && !document.getElementById("cariKode").value) return; 
+
+        const tbody = document.querySelector("#tabelPesanan tbody");
+        
+        const tglMulai = document.getElementById("filterTglMulai").value; 
+        const tglAkhir = document.getElementById("filterTglAkhir").value; 
+        const filterCari = document.getElementById("cariKode") ? document.getElementById("cariKode").value.toLowerCase() : "";
+
+        tbody.innerHTML = "";
+        window.dataTampilFilter = []; 
+
+        let baru = 0, jadwal = 0, proses = 0, validasi = 0;
+        let pendapatanMurni = 0, piutangBerjalan = 0;
+
+        let urutanKunci = Object.keys(semua);
+        const tipeUrutan = document.getElementById("urutTanggal").value;
+        if(tipeUrutan === "terbaru") urutanKunci.sort((a, b) => b.localeCompare(a));
+        else urutanKunci.sort((a, b) => a.localeCompare(b));
+
+        urutanKunci.forEach(kode => {
+            const d = semua[kode];
+            
+            if (filterCari && !kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
+            if (tglMulai && d.tanggalInput < tglMulai) return;
+            if (tglAkhir && d.tanggalInput > tglAkhir) return;
+
+            window.dataTampilFilter.push(d); 
+
+            let totalSub = (d.biayaSuku || 0) + (d.biayaJasa || 0);
+            let totalTamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
+            let grandTotal = totalSub + totalTamb;
+
+            if (d.pembayaranValid || d.status === 'selesai') {
+                pendapatanMurni += grandTotal;
+            } else if (d.status !== 'batal' && d.status !== 'ditolak_pelanggan') {
+                let sisaTagihan = grandTotal - (d.dpValid ? 50000 : 0);
+                if(sisaTagihan > 0 && d.status !== 'baru') {
+                    piutangBerjalan += sisaTagihan;
+                }
+            }
+
+            if(d.status === "baru") baru++;
+            else if(d.status === "dijadwalkan") jadwal++;
+            else if(d.status === "diproses" || d.status === "selesai_servis") proses++;
+            if(d.pembayaranDikonfirmasi && !d.pembayaranValid) validasi++;
+
+            let teksDP = "BELUM BAYAR"; let kelasDP = "belum_dp";
+            if (d.dpValid) { teksDP = "DP LUNAS ✅"; kelasDP = "selesai"; }
+            else if (d.dpTerbayar) { teksDP = "PERLU CEK ⏳"; kelasDP = "menunggu_validasi"; }
+
+            let kelasStatus = d.pembayaranValid || d.status === "selesai" ? "selesai" : d.status === "ditolak_pelanggan" ? "batal" : d.pembayaranDikonfirmasi ? "menunggu_validasi" : d.status;
+            let tombolAksi = "";
+            if (d.status === "baru" && d.dpValid) {
+                tombolAksi = `<button class="btn btn-validasi" onclick="updateStatusCepat('${kode}', 'dijadwalkan')" title="Jadwalkan">📅</button>`;
+            } else if (d.status === "dijadwalkan") {
+                tombolAksi = `<button class="btn btn-edit" onclick="updateStatusCepat('${kode}', 'diproses')" title="Proses">⚙️</button>`;
+            }
+            
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${kode}</strong></td>
+                <td>${d.nama}</td>
+                <td>${d.merek ? d.merek.toUpperCase() : ''} ${d.tipe || ''}</td>
+                <td><span class="status ${kelasDP}">${teksDP}</span></td>
+                <td>${d.tanggalInput}</td>
+                <td><span class="status ${kelasStatus}">${ubahNamaStatus(d)}</span></td>
+                <td>${tombolAksi}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="bukaModal('${kode}')"><i class="bi bi-gear"></i> Kelola</button>
+                    <button class="btn btn-hapus" onclick="hapusPesanan('${kode}')"><i class="bi bi-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById("jmlBaru").textContent = baru;
+        document.getElementById("jmlJadwal").textContent = jadwal;
+        document.getElementById("jmlProses").textContent = proses;
+        document.getElementById("jmlValidasi").textContent = validasi;
+        
+        document.getElementById("lblTotalPendapatan").textContent = "Rp " + pendapatanMurni.toLocaleString("id-ID");
+        document.getElementById("lblTotalPiutang").textContent = "Rp " + piutangBerjalan.toLocaleString("id-ID");
+        
+        renderGrafikAdmin(baru, jadwal, proses, validasi);
+        renderGrafikEkstra(); 
+
+        if(!filterCari) cacheStringData = currentDataString; 
+    })
+    .catch(err => console.warn("Koneksi admin ke server bermasalah.", err));
 }
 
-function kirimRatingUlasan() {
-    if(nilaiRating === 0) return Swal.fire('Oops', 'Mohon klik bintang penilaian terlebih dahulu.', 'warning');
-    fetch(`${API_URL}/orders/${kodeSaya}/rating`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: nilaiRating, ulasan: document.getElementById("ulasanPelanggan").value.trim() })
-    }).then(() => {
-        Swal.fire('Terima Kasih', 'Ulasan & Rating Anda telah kami terima!', 'success');
-        document.getElementById("boxBeriRating").style.display = "none";
+function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
+    const ctx = document.getElementById('grafikAdmin').getContext('2d');
+    if(chartInstance) chartInstance.destroy();
+    
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Baru', 'Dijadwalkan', 'Diproses', 'Perlu Validasi Lunas'],
+            datasets: [{
+                label: 'Jumlah Transaksi',
+                data: [cBaru, cJadwal, cProses, cValidasi],
+                backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7'],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
     });
 }
 
-function cekStatus() {
-    if(!kodeSaya) return; 
-    fetch(`${API_URL}/orders/${kodeSaya}`).then(res => res.json()).then(data => {
-        if(!data) { kembaliKeAwal(); return; }
-        hilangkanSkeleton();
-        if(document.getElementById("boxKerusakanTambahan")) {
-            if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "pending" && data.status !== "ditolak_pelanggan") {
-                document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
-            } else if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "disetujui") {
-                document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
-                document.getElementById("aksiTambahan").innerHTML = "<p style='color:#16a34a; font-weight:bold;'><i class='bi bi-check-circle-fill'></i> Disetujui.</p>";
-            } else document.getElementById("boxKerusakanTambahan").style.display = "none";
+function renderGrafikEkstra() {
+    let kerusakanCount = {}; let teknisiRev = {};
+    
+    window.dataTampilFilter.forEach(d => {
+        if(d.layanan) {
+            d.layanan.split(', ').forEach(l => {
+                if(l !== "Belum dipilih" && l.trim() !== "") kerusakanCount[l] = (kerusakanCount[l] || 0) + 1;
+            });
         }
-
-        if(document.getElementById("tampilKondisiHP") && data.kondisiHP) {
-            document.getElementById("tampilKondisiHP").innerHTML = data.tipeKondisi.startsWith("video/") 
-                ? `<video src="${data.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>` 
-                : `<img src="${data.kondisiHP}" style="max-width:100%; border-radius:8px;">`;
+        if(d.status === "selesai_servis" || d.status === "selesai" || d.pembayaranValid) {
+            const tName = d.teknisi || "Tanpa Teknisi";
+            teknisiRev[tName] = (teknisiRev[tName] || 0) + (d.biayaSuku || 0) + (d.biayaJasa || 0);
         }
-        if(data.rating > 0) document.getElementById("boxBeriRating").style.display = "none";
+    });
 
-        let targetStep = currentStep;
-        if (currentStep === 7) { isiDataFaktur(data); return; }
-        if (data.status === "ditolak_pelanggan") { currentStep = 7; updateProgress(); showContent(); isiDataFaktur(data); return; }
+    const sortedKerusakan = Object.entries(kerusakanCount).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    
+    const ctxK = document.getElementById('grafikKerusakan').getContext('2d');
+    if(window.chartKerusakan) window.chartKerusakan.destroy();
+    window.chartKerusakan = new Chart(ctxK, {
+        type: 'doughnut',
+        data: { labels: sortedKerusakan.map(k => k[0]), datasets: [{ data: sortedKerusakan.map(k => k[1]), backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7', '#ef4444'] }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
 
-        if (!data.dpValid) {
-            targetStep = 3;
-            if (data.dpTerbayar) {
-                document.getElementById("infoValidasiDP").style.display = "flex";
-                document.getElementById("btnKonfirmasiDP").disabled = true; document.getElementById("btnKonfirmasiDP").innerText = "Menunggu Validasi Admin";
+    const ctxT = document.getElementById('grafikTeknisi').getContext('2d');
+    if(window.chartTeknisi) window.chartTeknisi.destroy();
+    window.chartTeknisi = new Chart(ctxT, {
+        type: 'bar',
+        data: { labels: Object.keys(teknisiRev), datasets: [{ label: 'Pendapatan (Rp)', data: Object.values(teknisiRev), backgroundColor: '#10b981', borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+function exportCSV() {
+    if(window.dataTampilFilter.length === 0) return Swal.fire('Kosong', 'Tidak ada data untuk di-export pada rentang ini.', 'info');
+    let csvContent = "data:text/csv;charset=utf-8,Kode,Tanggal Input,Nama,WA,Merek,Tipe,Layanan,Teknisi,Biaya Jasa,Biaya Sparepart,Tambahan,Total Biaya,Status,Pembayaran\n";
+    
+    window.dataTampilFilter.forEach(d => {
+        const jasa = d.biayaJasa || 0;
+        const suku = d.biayaSuku || 0;
+        const tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
+        const total = jasa + suku + tamb;
+        const statLunas = (d.pembayaranValid || d.status === 'selesai') ? 'LUNAS' : 'BELUM LUNAS';
+        csvContent += `${d.kode},${d.tanggalInput},"${d.nama}","${d.wa}",${d.merek},${d.tipe},"${d.layanan || '-'}",${d.teknisi||'-'},${jasa},${suku},${tamb},${total},${d.status},${statLunas}\n`;
+    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Laporan_Servis_Filtered_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+}
+
+function cetakNotaFisik() {
+    const kode = document.getElementById("kodePesanan").value;
+    const d = window.semuaPesananGlobal[kode];
+    
+    if(!d) return Swal.fire('Error', 'Pilih pesanan terlebih dahulu', 'error');
+
+    document.getElementById("pKode").textContent = kode;
+    document.getElementById("pTgl").textContent = new Date().toLocaleDateString('id-ID');
+    document.getElementById("pNama").textContent = d.nama;
+    document.getElementById("pUnit").textContent = `${d.merek} ${d.tipe}`;
+    document.getElementById("pLayanan").textContent = "Rp " + (d.biayaJasa || 0).toLocaleString("id-ID");
+    document.getElementById("pSuku").textContent = "Rp " + (d.biayaSuku || 0).toLocaleString("id-ID");
+    
+    let tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
+    document.getElementById("pTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
+    
+    document.getElementById("pTotal").textContent = "Rp " + ((d.biayaJasa||0) + (d.biayaSuku||0) + tamb).toLocaleString("id-ID");
+    document.getElementById("pMetode").textContent = d.metodePembayaran || "Tunai";
+
+    window.print();
+}
+
+function resetFilterKalender() {
+    document.getElementById("filterTglMulai").value = "";
+    document.getElementById("filterTglAkhir").value = "";
+    document.getElementById("cariKode").value = "";
+    muatData();
+}
+
+function ubahNamaStatus(d) {
+    if(d.pembayaranValid || d.status === "selesai") return "LUNAS & SELESAI";
+    if(d.status === "ditolak_pelanggan") return "DITOLAK PELANGGAN";
+    if(d.pembayaranDikonfirmasi) return "VALIDASI PELUNASAN";
+    if(d.status === "baru") return "BARU MASUK";
+    if(d.status === "dijadwalkan") return "DIJADWALKAN";
+    if(d.status === "diproses") return "PROSES PERBAIKAN";
+    if(d.status === "selesai_servis") return "SELESAI SERVIS (TAGIHAN)";
+    return d.status ? d.status.toUpperCase() : "BARU";
+}
+
+function bukaModal(kode) {
+    if (!sessionStorage.getItem("adminToken")) return;
+    aktifMembukaKode = kode;
+
+    fetch(`${API_URL}/orders/${kode}`, { headers: getAuthHeader() })
+    .then(handleApiError)
+    .then(d => {
+        document.getElementById("kodePesanan").value = kode;
+        document.getElementById("txtKodeHeader").textContent = kode;
+        document.getElementById("statusPesanan").value = d.status || "baru";
+        document.getElementById("teknisi").value = d.teknisi || "";
+        document.getElementById("jadwal").value = d.jadwal || "";
+        
+        document.getElementById("displayBuktiDP").innerHTML = d.buktiDP 
+            ? `<img src="${d.buktiDP}" style="max-height:150px; cursor:pointer;" onclick="window.open('${d.buktiDP}')">` 
+            : "Belum ada bukti";
+            
+        document.getElementById("displayBuktiPelunasan").innerHTML = d.buktiPelunasan 
+            ? `<img src="${d.buktiPelunasan}" style="max-height:150px; cursor:pointer;" onclick="window.open('${d.buktiPelunasan}')">` 
+            : "Belum ada bukti";
+        
+        document.getElementById("etaUpdate").value = d.etaTeknisi || "";
+        
+        document.getElementById("biayaSuku").value = d.biayaSuku || 0;
+        document.getElementById("biayaJasa").value = d.biayaJasa || 0;
+        document.getElementById("metodeBayarTampil").textContent = d.metodePembayaran || "-";
+        document.getElementById("keluhanAdmin").value = d.kerusakan || "-";
+        document.getElementById("txtMetodeDP").textContent = d.metodeDP || "Belum Memilih";
+        document.getElementById("lokasiServis").value = d.lokasiServis || "home_service";
+
+        document.getElementById("chkAdaTambahan").checked = d.adaKerusakanTambahan || false;
+        document.getElementById("infoTambahan").value = d.infoKerusakanTambahan || "";
+        document.getElementById("biayaTambahan").value = d.biayaSukuTambahan || 0;
+        
+        document.getElementById("txtResponPelanggan").textContent = (d.statusPersetujuanTambahan || "pending").toUpperCase();
+        toggleFormTambahan();
+
+        const boxShareloc = document.getElementById("linkShareloc");
+        if(boxShareloc) {
+            if (d.shareloc) {
+                boxShareloc.innerHTML = `<a href="${d.shareloc}" target="_blank" style="color:#0ea5e9; font-weight:bold;"><i class="bi bi-geo-alt-fill"></i> Buka Titik Maps Pelanggan</a>`;
+            } else {
+                boxShareloc.innerHTML = "<em>Tidak ada link lokasi</em>";
             }
-        } 
-        else if (data.dpValid && data.status === "baru") {
-            targetStep = 4;
-            document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> DP Terverifikasi! Menunggu Jadwal...</p>";
-            document.getElementById("tampilJadwal").style.display = "none";
-        }
-        else if (data.status === "dijadwalkan") {
-            targetStep = 4;
-            document.getElementById("teknisi").textContent = data.teknisi;
-            document.getElementById("jadwal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : "-";
-            document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Ke Workshop";
-            document.getElementById("lblETA").textContent = data.etaTeknisi || "Belum diupdate admin";
-            document.getElementById("tampilJadwal").style.display = "block"; document.getElementById("infoJadwal").style.display = "none";
-        }
-        else if (data.status === "diproses") {
-            targetStep = 5;
-            document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
-            document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
-            sinkronBiayaTampil(data);
-        }
-        else if (data.status === "selesai_servis") { targetStep = 6; sinkronBiayaTampil(data); }
-        else if (data.status === "selesai" || data.pembayaranValid === true) {
-            targetStep = 6;
-            document.getElementById("infoValidasi").style.display = "block";
-            document.getElementById("infoValidasi").innerHTML = `<strong>🎉 Pelunasan Valid!</strong><br><button class="btn btn-success" style="margin-top:10px" onclick="bukaHalamanFaktur()"><i class="bi bi-file-text"></i> Lihat Nota</button>`;
-            document.getElementById("btnKonfirmasi").disabled = true;
-            sinkronBiayaTampil(data);
         }
 
-        if(targetStep !== currentStep) { currentStep = targetStep; updateProgress(); showContent(); }
-        muatLogPesan(); 
-    }).catch(() => console.warn("Sinkronisasi tertunda."));
+        const tampilKondisi = document.getElementById("tampilKondisiAdmin");
+        if(tampilKondisi) {
+            tampilKondisi.innerHTML = d.kondisiHP 
+                ? (d.tipeKondisi && d.tipeKondisi.startsWith("video/") ? `<video src="${d.kondisiHP}" controls style="max-width:100%"></video>` : `<img src="${d.kondisiHP}" style="max-width:100%; border-radius:5px;">`) 
+                : "<em>Tidak ada lampiran berkas</em>";
+        }
+
+        const wrapperJadwal = document.getElementById("wrapperPenjadwalan");
+        if (d.dpValid) {
+            if(wrapperJadwal) { wrapperJadwal.style.opacity = "1"; wrapperJadwal.style.pointerEvents = "auto"; }
+            document.getElementById("btnApproveDP").disabled = true; document.getElementById("btnTolakDP").disabled = true;
+        } else {
+            if(wrapperJadwal) { wrapperJadwal.style.opacity = "0.3"; wrapperJadwal.style.pointerEvents = "none"; }
+            document.getElementById("btnApproveDP").disabled = !d.dpTerbayar; document.getElementById("btnTolakDP").disabled = !d.dpTerbayar;
+        }
+
+        hitungTotal(); 
+        
+        const isLocked = d.pembayaranValid || d.status === "selesai";
+        const lockBanner = document.getElementById("bannerTerkunci");
+        const btnSimpan = document.getElementById("btnSimpanPerubahan");
+        const formInputs = document.querySelectorAll(".kunci-target");
+        
+        if (isLocked) {
+            if(lockBanner) lockBanner.style.display = "block";
+            if(btnSimpan) btnSimpan.style.display = "none";
+            formInputs.forEach(inp => inp.disabled = true);
+            document.getElementById("btnValidasi").disabled = true;
+            document.getElementById("btnApproveDP").disabled = true;
+            document.getElementById("btnTolakDP").disabled = true;
+            document.getElementById("btnValidasi").classList.add("btn-locked");
+        } else {
+            if(lockBanner) lockBanner.style.display = "none";
+            if(btnSimpan) btnSimpan.style.display = "inline-block";
+            formInputs.forEach(inp => inp.disabled = false);
+            document.getElementById("btnValidasi").disabled = !d.pembayaranDikonfirmasi || d.pembayaranValid;
+            document.getElementById("btnValidasi").classList.remove("btn-locked");
+        }
+
+        document.getElementById("modalKelola").querySelectorAll(".tab-btn-admin")[0].click();
+        document.getElementById("modalKelola").style.display = "block";
+        muatLogPesanAdmin(); 
+    });
 }
 
-function sinkronBiayaTampil(data) {
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
-    document.getElementById("lblBiayaSuku").textContent = suku.toLocaleString("id-ID");
-    document.getElementById("lblBiayaJasa").textContent = jasa.toLocaleString("id-ID");
-    document.getElementById("lblBiayaTambahanFaktur").textContent = tamb.toLocaleString("id-ID");
-    document.getElementById("lblTotalBiaya").textContent = (suku + jasa + tamb).toLocaleString("id-ID");
-    document.getElementById("bayarTotal").textContent = (suku + jasa + tamb - 50000).toLocaleString("id-ID");
+function validasiDP(isApproved) {
+    const kode = document.getElementById("kodePesanan").value;
+    let payload = isApproved ? { dpValid: true } : { dpTerbayar: false, dpValid: false, metodeDP: "" };
+
+    fetch(`${API_URL}/orders/${kode}`, {
+        method: "PUT",
+        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(handleApiError)
+    .then(() => {
+        Swal.fire(
+            isApproved ? 'DP Valid!' : 'Ditolak', 
+            isApproved ? 'Akses Penjadwalan Dibuka.' : 'Pengajuan DP Ditolak.', 
+            isApproved ? 'success' : 'info'
+        );
+        bukaModal(kode); 
+    });
 }
 
-function isiDataFaktur(data) {
-    document.getElementById("fakturKode").textContent = data.kode;
-    document.getElementById("fakturNama").textContent = data.nama;
-    document.getElementById("fakturMerekTipe").textContent = `${data.merek.toUpperCase()} ${data.tipe}`;
-    document.getElementById("fakturKerusakan").textContent = data.kerusakan;
-    document.getElementById("fakturLayanan").textContent = data.layanan;
-    document.getElementById("fakturTeknisi").textContent = data.teknisi || "Belum ada teknisi";
-    document.getElementById("noFaktur").textContent = "INV-" + data.kode.replace("HS-", "");
-    document.getElementById("fakturTanggal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : new Date().toLocaleString("id-ID");
-    document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
+function simpanPerubahan() {
+    const kode = document.getElementById("kodePesanan").value;
+    const checkedTambahan = document.getElementById("chkAdaTambahan").checked;
 
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
-    document.getElementById("fakturSuku").textContent = "Rp " + suku.toLocaleString("id-ID");
-    document.getElementById("fakturJasa").textContent = "Rp " + jasa.toLocaleString("id-ID");
-    document.getElementById("fakturTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
-    document.getElementById("fakturTotal").textContent = "Rp " + (suku + jasa + tamb).toLocaleString("id-ID");
+    const payload = {
+        status: document.getElementById("statusPesanan").value,
+        teknisi: document.getElementById("teknisi").value,
+        jadwal: document.getElementById("jadwal").value,
+        lokasiServis: document.getElementById("lokasiServis").value,
+        etaTeknisi: document.getElementById("etaUpdate").value.trim(), 
+        adaKerusakanTambahan: checkedTambahan,
+        infoKerusakanTambahan: document.getElementById("infoTambahan").value.trim(),
+        biayaSukuTambahan: parseInt(document.getElementById("biayaTambahan").value) || 0,
+        biayaSuku: parseInt(document.getElementById("biayaSuku").value) || 0,
+        biayaJasa: parseInt(document.getElementById("biayaJasa").value) || 0
+    };
+
+    fetch(`${API_URL}/orders/${kode}`, {
+        method: "PUT",
+        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(handleApiError)
+    .then(() => { 
+        Swal.fire('Tersimpan!', 'Perubahan Berhasil Disimpan.', 'success');
+        tutupModal(); 
+    });
 }
 
-function bukaHalamanFaktur() { currentStep = 7; updateProgress(); showContent(); cekStatus(); }
-
-// PERBAIKAN: Fungsi kembaliKeAwal juga akan memastikan UI me-reset layar sepenuhnya
-function kembaliKeAwal() { localStorage.removeItem("kodeAktifPelanggan"); kodeSaya = ""; currentStep = 1; if(intervalChat) clearInterval(intervalChat); location.reload(); }
-
-function aktifkanSistemChat() { const w = document.getElementById("chatWidgetPelanggan"); if(w) w.style.display = "flex"; muatLogPesan(); }
-function toggleChatWidget() { document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); }
-
-function kirimChatPelanggan() {
-    const inp = document.getElementById("inputPesanPelanggan"); const teks = inp.value.trim();
-    if(!teks || !kodeSaya) return;
-    fetch(`${API_URL}/chats`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode: kodeSaya, pengirim: 'user', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) })
-    .then(() => inp.value = "");
+function validasiPembayaranPelunasan() {
+    const kode = document.getElementById("kodePesanan").value;
+    Swal.fire({
+        title: 'Validasi Pelunasan & Tutup Invoice?',
+        text: "Setelah ini data akan terkunci (Read-Only) dan masuk ke pencatatan Laba Bersih.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Ya, Validasi & Tutup!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${API_URL}/orders/${kode}`, {
+                method: "PUT",
+                headers: { ...getAuthHeader(), "Content-Type": "application/json" },
+                body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
+            })
+            .then(handleApiError)
+            .then(() => { 
+                Swal.fire('Invoice Tertutup!', 'Pembayaran telah tervalidasi.', 'success'); 
+                tutupModal(); 
+            });
+        }
+    });
 }
 
-function muatLogPesan() {
-    if(!kodeSaya) return;
-    const box = document.getElementById("boxPesanPelanggan");
+function hapusPesanan(kode) {
+    Swal.fire({
+        title: 'Hapus Pesanan?',
+        text: `Apakah Anda yakin menghapus pesanan ${kode} secara permanen?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Ya, Hapus!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${API_URL}/orders/${kode}`, { 
+                method: "DELETE",
+                headers: getAuthHeader()
+            })
+            .then(handleApiError)
+            .then(() => {
+                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+            });
+        }
+    });
+}
+
+function hitungTotal() {
+    const suku = parseInt(document.getElementById("biayaSuku").value) || 0;
+    const jasa = parseInt(document.getElementById("biayaJasa").value) || 0;
+    const tamb = document.getElementById("chkAdaTambahan").checked ? (parseInt(document.getElementById("biayaTambahan").value) || 0) : 0;
+    
+    document.getElementById("totalTampilPokok").textContent = (suku + jasa).toLocaleString("id-ID");
+    document.getElementById("totalTampilTambahan").textContent = tamb.toLocaleString("id-ID");
+    
+    const sisaBersih = (suku + jasa + tamb) - 50000;
+    document.getElementById("totalTampil").textContent = sisaBersih < 0 ? 0 : sisaBersih.toLocaleString("id-ID");
+}
+
+function toggleFormTambahan() {
+    const chk = document.getElementById("chkAdaTambahan").checked;
+    document.getElementById("subFormTambahan").style.display = chk ? "block" : "none";
+    hitungTotal();
+}
+
+function tutupModal() {
+    document.getElementById("modalKelola").style.display = "none";
+    aktifMembukaKode = "";
+}
+
+function aksiEnterChatAdmin(event) {
+    if (event.key === "Enter") kirimChatAdmin();
+}
+
+function kirimChatAdmin() {
+    const inp = document.getElementById("inputPesanAdmin");
+    const teks = inp.value.trim();
+    if(!teks || !aktifMembukaKode) return;
+
+    const payload = { 
+        kode: aktifMembukaKode, pengirim: 'admin', teks: teks, 
+        waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) 
+    };
+
+    fetch(`${API_URL}/chats`, {
+        method: "POST",
+        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(handleApiError)
+    .then(() => { inp.value = ""; });
+}
+
+function muatLogPesanAdmin() {
+    if(!aktifMembukaKode) return;
+    const box = document.getElementById("boxPesanAdmin");
     if(!box) return;
-    fetch(`${API_URL}/chats/${kodeSaya}`).then(res => res.json()).then(chatData => {
+    
+    fetch(`${API_URL}/chats/${aktifMembukaKode}`, { headers: getAuthHeader() })
+    .then(handleApiError)
+    .then(chatData => {
         let htmlStr = "";
         chatData.forEach(msg => {
             let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
-            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Admin' : '📱 Anda';
+            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda (Admin)' : '📱 Pelanggan';
             htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
     });
 }
 
-function updateProgress() {
-    document.querySelectorAll(".step-item").forEach((node, i) => {
-        if (i < currentStep) { node.classList.add("completed"); if(i === (currentStep - 1)) node.classList.add("active"); else node.classList.remove("active"); } 
-        else { node.classList.remove("completed", "active"); }
-    });
-}
-function showContent() {
-    document.querySelectorAll(".content-box").forEach((content, i) => {
-        if (i === (currentStep - 1)) content.classList.add("active"); else content.classList.remove("active");
-    });
-}
-function unduhPDF() {
-    try {
-        const { jsPDF } = window.jspdf; if (!jsPDF) return Swal.fire('Error', 'Library PDF belum termuat.', 'error');
-        const doc = new jsPDF(); const getText = (id) => document.getElementById(id) ? document.getElementById(id).textContent : "-";
-
-        doc.setFontSize(22); doc.setTextColor(30, 64, 175); doc.text("FAKTUR SERVIS", 105, 20, { align: 'center' });
-        doc.setFontSize(10); doc.setTextColor(100); doc.text("SF Tech Service Center", 105, 28, { align: 'center' });
-        doc.setDrawColor(30, 64, 175); doc.line(10, 40, 200, 40);
-        doc.setFontSize(11); doc.setTextColor(0);
-        doc.text(`No. Faktur  : ${getText("noFaktur")}`, 15, 50); doc.text(`Tgl Servis  : ${getText("fakturTanggal")}`, 15, 56);
-        doc.text(`Pelanggan   : ${getText("fakturNama")}`, 15, 62); doc.text(`Perangkat   : ${getText("fakturMerekTipe")}`, 15, 68);
-
-        doc.autoTable({
-            startY: 75, head: [['Keterangan', 'Biaya']],
-            body: [ ['Biaya Suku Cadang', getText("fakturSuku")], ['Biaya Jasa Servis', getText("fakturJasa")], ['Biaya Kerusakan Tambahan', getText("fakturTambahan")], ['Potongan DP (Uang Muka)', '- Rp 50.000'] ],
-            theme: 'striped', headStyles: { fillColor: [30, 64, 175] }
+function updateStatusCepat(kode, statusBaru) {
+    fetch(`${API_URL}/orders/${kode}`, {
+        method: "PUT",
+        headers: { ...getAuthHeader(), "Content-Type": "application/json" },
+        body: JSON.stringify({ status: statusBaru })
+    })
+    .then(handleApiError)
+    .then(() => {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Status ${kode} diubah ke ${statusBaru}`,
+            showConfirmButton: false,
+            timer: 2000
         });
-
-        doc.setFont("helvetica", "bold"); doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
-        doc.save(`Invoice_${getText("fakturKode")}.pdf`);
-    } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
+    })
+    .catch(err => Swal.fire('Error', 'Gagal memperbarui status.', 'error'));
 }
+
 </script>
+<footer style="text-align: center; padding: 2rem; background: #0f172a; color: #94a3b8; margin-top: 2rem;">
+    <p>&copy; 2026 Admin Dashboard SF Tech</p>
+</footer>
 </body>
+
 </html>
