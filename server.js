@@ -13,7 +13,6 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // --- MIDDLEWARE ---
-// PERBAIKAN: Limit JSON dinaikkan menjadi 50mb untuk menampung gambar Base64 beresolusi tinggi dari HP[span_1](start_span)[span_1](end_span)
 app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
 
@@ -115,6 +114,15 @@ app.post('/api/orders', async (req, res) => {
     try {
         const dataBaru = new Order(req.body);
         await dataBaru.save();
+        
+        // MIGRASI CHAT KONSULTASI KE CHAT ORDER (Jika sebelumnya konsultasi)
+        if(req.body.kodeKonsultasi) {
+            await Chat.updateMany(
+                { kode: req.body.kodeKonsultasi },
+                { $set: { kode: dataBaru.kode } }
+            );
+        }
+
         io.emit("updateDashboardAdmin");
         res.status(201).json({ message: "Data tersimpan" });
     } catch (error) { res.status(500).json({ error: "Gagal simpan" }); }
@@ -142,6 +150,19 @@ app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
         io.emit("updateDashboardAdmin");
         res.json({ message: "Hapus berhasil" });
     } catch (error) { res.status(500).json({ error: "Gagal hapus" }); }
+});
+
+// ROUTE BARU: Ambil Daftar Chat Konsultasi Saja (Untuk Admin)
+app.get('/api/chats/konsultasi/list', verifyAdmin, async (req, res) => {
+    try {
+        const chats = await Chat.find({ kode: { $regex: '^KONSUL-' } }).sort({ _id: 1 });
+        const grouped = {};
+        chats.forEach(c => {
+            if(!grouped[c.kode]) grouped[c.kode] = [];
+            grouped[c.kode].push(c);
+        });
+        res.json(grouped);
+    } catch (error) { res.status(500).json({ error: "Gagal memuat konsultasi" }); }
 });
 
 app.post('/api/chats', async (req, res) => {
