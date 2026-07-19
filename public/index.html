@@ -853,7 +853,7 @@ function updateBrandOptions() {
 }
 
 function muatUlasanPublik() {
-    fetch(`${API_URL}/reviews`)
+    fetch(`${API_URL}/reviews`, { cache: 'no-store' })
     .then(res => res.json())
     .then(data => {
         if(data.length > 0) {
@@ -1142,7 +1142,7 @@ function tanyaKodeLacak() {
     }).then((result) => {
         if (result.isConfirmed && result.value) {
             const kode = result.value.trim();
-            fetch(`${API_URL}/orders/${kode}`)
+            fetch(`${API_URL}/orders/${kode}`, { cache: 'no-store' })
             .then(res => { if(!res.ok) throw new Error(); return res.json(); })
             .then(data => {
                 kodeSaya = data.kode;
@@ -1222,7 +1222,7 @@ function kirimRatingUlasan() {
 function cekStatus() {
     if(!kodeSaya || kodeSaya.startsWith("KONSUL-")) return; 
     
-    fetch(`${API_URL}/orders/${kodeSaya}`).then(res => res.json()).then(data => {
+    fetch(`${API_URL}/orders/${kodeSaya}?_t=${Date.now()}`, { cache: 'no-store' }).then(res => res.json()).then(data => {
         if(!data) { kembaliKeAwal(); return; }
         hilangkanSkeleton();
         
@@ -1363,7 +1363,7 @@ function muatLogPesan() {
     const box = document.getElementById("boxPesanPelanggan");
     if(!box) return;
     
-    fetch(`${API_URL}/chats/${kodeSaya}`).then(res => res.json()).then(chatData => {
+    fetch(`${API_URL}/chats/${kodeSaya}?_t=${Date.now()}`, { cache: 'no-store' }).then(res => res.json()).then(chatData => {
         let htmlStr = "";
         
         // Cek jika kosong, berikan Auto Message Bot secara Realtime Frontend
