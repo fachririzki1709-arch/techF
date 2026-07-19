@@ -13,6 +13,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // --- MIDDLEWARE ---
+// Menambahkan limit 50mb agar upload base64 gambar tidak error
 app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
 
@@ -115,7 +116,7 @@ app.post('/api/orders', async (req, res) => {
         const dataBaru = new Order(req.body);
         await dataBaru.save();
         
-        // MIGRASI CHAT KONSULTASI KE CHAT ORDER (Jika sebelumnya konsultasi)
+        // FITUR BARU: Migrasi Chat Konsultasi ke Chat Order
         if(req.body.kodeKonsultasi) {
             await Chat.updateMany(
                 { kode: req.body.kodeKonsultasi },
@@ -152,7 +153,7 @@ app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal hapus" }); }
 });
 
-// ROUTE BARU: Ambil Daftar Chat Konsultasi Saja (Untuk Admin)
+// FITUR BARU: Ambil Daftar Konsultasi Saja
 app.get('/api/chats/konsultasi/list', verifyAdmin, async (req, res) => {
     try {
         const chats = await Chat.find({ kode: { $regex: '^KONSUL-' } }).sort({ _id: 1 });
