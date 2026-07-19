@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>Panel Admin - SF Tech Service</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -380,7 +381,7 @@
                                 <label>Harga Tambahan Part/Jasa (Rp)</label>
                                 <input type="number" id="biayaTambahan" class="kunci-target" placeholder="0" oninput="hitungTotal()">
                                 <p style="font-size:0.85rem; margin-top:0.3rem;">Status Persetujuan User: <strong id="txtResponPelanggan" style="color:#2563eb;">PENDING</strong></p>
-                                <p id="peringatanTambahanPending" style="display:none; font-size:0.8rem; color:#ef4444; margin-top:0.3rem;">⚠️ Anda tidak dapat menyelesaikan invoice jika persetujuan pelanggan masih PENDING.</p>
+                                <p id="peringatanTambahanPending" style="display:none; font-size:0.8rem; color:#ef4444; margin-top:0.3rem;">⚠️ Anda tidak dapat menyelesaikan invoice jika persetujuan tambahan masih PENDING.</p>
                             </div>
                         </div>
 
@@ -576,11 +577,10 @@ function handleApiError(res) {
     return res.json();
 }
 
-// UX Enhancement: Smart Search Debouncer
 let timeoutCari;
 function debounceMuatData() {
     clearTimeout(timeoutCari);
-    timeoutCari = setTimeout(() => { muatData(); }, 350); // Menunggu user selesai mengetik 350ms
+    timeoutCari = setTimeout(() => { muatData(); }, 350); 
 }
 
 function muatData() {
@@ -885,6 +885,7 @@ function ubahNamaStatus(d) {
     return d.status ? d.status.toUpperCase() : "BARU";
 }
 
+// UPDATE LOGIKA: Penanganan status "ditolak_lanjut" pada admin
 function validasiStatusKeTambahan() {
     const status = document.getElementById("statusPesanan").value;
     const chk = document.getElementById("chkAdaTambahan").checked;
@@ -931,7 +932,12 @@ function bukaModal(kode) {
         document.getElementById("infoTambahan").value = d.infoKerusakanTambahan || "";
         document.getElementById("biayaTambahan").value = d.biayaSukuTambahan || 0;
         
-        document.getElementById("txtResponPelanggan").textContent = (d.statusPersetujuanTambahan || "pending").toUpperCase();
+        // Terjemahan Status Pelanggan Terkait Biaya Tambahan
+        let txtRespon = (d.statusPersetujuanTambahan || "pending").toUpperCase();
+        if(txtRespon === 'DITOLAK_LANJUT') txtRespon = 'DITOLAK (LANJUT SERVIS AWAL)';
+        if(txtRespon === 'DITOLAK_BATAL') txtRespon = 'DITOLAK (BATAL TOTAL)';
+        document.getElementById("txtResponPelanggan").textContent = txtRespon;
+        
         toggleFormTambahan();
         validasiStatusKeTambahan();
 
@@ -1014,7 +1020,7 @@ function simpanPerubahan() {
     const status = document.getElementById("statusPesanan").value;
     const respon = document.getElementById("txtResponPelanggan").textContent.toUpperCase();
 
-    // Pencegahan tutup invoice jika pelanggan belum ACC harga tambahan
+    // Pencegahan tutup invoice jika pelanggan belum merespon harga tambahan
     if (checkedTambahan && respon === "PENDING" && status === "selesai_servis") {
         return Swal.fire('Tahan', 'Persetujuan tambahan masih PENDING. Anda tidak dapat memproses ke tagihan.', 'warning');
     }
@@ -1096,7 +1102,11 @@ function hapusPesanan(kode) {
 function hitungTotal() {
     const suku = parseInt(document.getElementById("biayaSuku").value) || 0;
     const jasa = parseInt(document.getElementById("biayaJasa").value) || 0;
-    const tamb = document.getElementById("chkAdaTambahan").checked ? (parseInt(document.getElementById("biayaTambahan").value) || 0) : 0;
+    
+    // UPDATE LOGIKA: Tambahan hanya dihitung jika DISETUJUI, ditolak = Rp 0
+    const txtResponRaw = document.getElementById("txtResponPelanggan").textContent;
+    const isDisetujui = txtResponRaw === 'DISETUJUI';
+    const tamb = (document.getElementById("chkAdaTambahan").checked && isDisetujui) ? (parseInt(document.getElementById("biayaTambahan").value) || 0) : 0;
     
     document.getElementById("totalTampilPokok").textContent = (suku + jasa).toLocaleString("id-ID");
     document.getElementById("totalTampilTambahan").textContent = tamb.toLocaleString("id-ID");
@@ -1158,7 +1168,6 @@ function muatLogPesanAdmin() {
     });
 }
 
-// UX Enhancement: Fungsi untuk Update Status Langsung dari Tabel (Quick Select)
 function updateStatusCepatDropdown(kode, statusBaru) {
     fetch(`${API_URL}/orders/${kode}`, {
         method: "PUT",
