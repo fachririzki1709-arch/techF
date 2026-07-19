@@ -780,7 +780,7 @@ function debounceMuatData() {
 function muatData() {
     if (!sessionStorage.getItem("adminToken")) return;
 
-    fetch(`${API_URL}/orders?limit=2000`, { headers: getAuthHeader() })
+    fetch(`${API_URL}/orders?limit=2000&_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(handleApiError)
     .then(semua => {
         window.semuaPesananGlobal = semua; 
@@ -966,7 +966,7 @@ function batalkanPilihanBulk() {
 
 let aktifKonsulKode = "";
 function muatDaftarKonsultasi() {
-    fetch(`${API_URL}/chats/konsultasi/list`, { headers: getAuthHeader() })
+    fetch(`${API_URL}/chats/konsultasi/list?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(handleApiError).then(data => {
         const list = document.getElementById("listKonsultasi");
         list.innerHTML = ""; let count = 0;
@@ -998,7 +998,7 @@ function bukaChatKonsul(kode) {
 
 function muatLogPesanKonsul() {
     if(!aktifKonsulKode) return;
-    fetch(`${API_URL}/chats/${aktifKonsulKode}`, { headers: getAuthHeader() })
+    fetch(`${API_URL}/chats/${aktifKonsulKode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(handleApiError).then(chatData => {
         const box = document.getElementById("boxPesanKonsul"); let htmlStr = "";
         chatData.forEach(msg => {
@@ -1145,7 +1145,7 @@ function bukaModal(kode) {
     if (!sessionStorage.getItem("adminToken")) return;
     aktifMembukaKode = kode;
 
-    fetch(`${API_URL}/orders/${kode}`, { headers: getAuthHeader() }).then(handleApiError).then(d => {
+    fetch(`${API_URL}/orders/${kode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' }).then(handleApiError).then(d => {
         document.getElementById("kodePesanan").value = kode;
         document.getElementById("txtKodeHeader").textContent = kode;
         document.getElementById("statusPesanan").value = d.status || "baru";
@@ -1327,7 +1327,7 @@ function muatLogPesanAdmin() {
     const box = document.getElementById("boxPesanAdmin");
     if(!box) return;
     
-    fetch(`${API_URL}/chats/${aktifMembukaKode}`, { headers: getAuthHeader() }).then(handleApiError).then(chatData => {
+    fetch(`${API_URL}/chats/${aktifMembukaKode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' }).then(handleApiError).then(chatData => {
         let htmlStr = "";
         chatData.forEach(msg => {
             let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
