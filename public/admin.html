@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin - Home Service</title>
+    <title>Panel Admin - SF Tech Service</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
-    <!-- Import SweetAlert2 untuk Admin -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- TAMBAHAN IMPORT CHART.JS & SOCKET.IO -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     
@@ -153,25 +149,27 @@
         <label style="text-align:left; display:block; font-size:0.85rem; font-weight:600; color:#475569;">Password</label>
         <input type="password" id="adminPassword" placeholder="Masukkan Password" onkeypress="aksiEnterLogin(event)">
         
-        <button class="btn-login" onclick="prosesLogin()">Masuk Ke Panel</button>
+        <button class="btn-login" aria-label="Masuk ke Panel" onclick="prosesLogin()">Masuk Ke Panel</button>
     </div>
 </div>
 
 <div id="mainPanelWrapper">
     <header>
-        <div class="logo">⚙️ Panel Admin Servis</div>
+        <div class="logo">
+            <!-- Gunakan img src jika ada logo khusus, ini default text-based -->
+            ⚙️ Panel Admin Servis
+        </div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button class="btn btn-edit" style="background:#10b981; margin-right: 10px;" onclick="exportCSV()"><i class="bi bi-file-earmark-excel"></i> Export CSV Filter</button>
+            <button class="btn btn-edit" aria-label="Export Laporan CSV" style="background:#10b981; margin-right: 10px;" onclick="exportCSV()"><i class="bi bi-file-earmark-excel"></i> Export CSV Filter</button>
             
-            <button onclick="toggleDarkModeAdmin()" class="btn" style="background:rgba(255,255,255,0.2);"><i class="bi bi-moon-fill" id="iconDarkAdmin"></i></button>
+            <button onclick="toggleDarkModeAdmin()" aria-label="Ganti Tema Tampilan Admin" class="btn" style="background:rgba(255,255,255,0.2);"><i class="bi bi-moon-fill" id="iconDarkAdmin"></i></button>
             <div style="font-size:0.82rem; background:#1e293b; padding:0.5rem 0.8rem; border-radius:6px; color:#10b981; font-weight:700; display:flex; align-items:center; gap:5px;"><span style="width:7px; height:7px; background:#10b981; border-radius:50%; display:inline-block;"></span> Socket Live</div>
-            <button class="btn-logout" onclick="prosesLogout()">Keluar 🚪</button>
+            <button class="btn-logout" aria-label="Keluar dari Panel" onclick="prosesLogout()">Keluar 🚪</button>
         </div>
     </header>
     <div class="container">
         
         <div class="tab-menu-admin" style="margin-bottom: 2rem;">
-            <!-- FITUR BARU: Tab Konsultasi Pelanggan -->
             <button class="tab-btn-admin aktif" onclick="pindahTabUtamaAdmin('tabDaftarPesananUtama')"><i class="bi bi-card-list"></i> Daftar Pesanan</button>
             <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabKonsultasiPelanggan')"><i class="bi bi-chat-square-text"></i> Live Chat Konsultasi <span id="badgeKonsul" style="background:#ef4444; color:white; border-radius:30px; padding:2px 8px; font-size:0.75rem; display:none; margin-left: 5px;">0</span></button>
             <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabLaporanEkstra')"><i class="bi bi-bar-chart"></i> Laporan Keuangan & Analitik</button>
@@ -212,7 +210,7 @@
                     <input type="date" id="filterTglMulai" onchange="muatData()">
                     <label>Hingga:</label>
                     <input type="date" id="filterTglAkhir" onchange="muatData()">
-                    <button class="btn btn-secondary" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset Data</button>
+                    <button class="btn btn-secondary" aria-label="Reset Filter Kalender" onclick="resetFilterKalender()" style="margin-left:5px; padding:0.4rem 0.8rem;">Reset Data</button>
                 </div>
                 <div class="filter-grup">
                     <label for="urutTanggal">Urutan:</label>
@@ -239,17 +237,14 @@
             </table>
         </div>
 
-        <!-- FITUR BARU: TAB VIEW KONSULTASI -->
         <div id="tabKonsultasiPelanggan" class="modal-view">
             <h2 style="margin-bottom: 1.5rem; font-size: 1.6rem; font-weight: 700;">Konsultasi Pelanggan Baru</h2>
             <p style="margin-bottom: 1.5rem; color: #64748b;">Daftar pelanggan yang menghubungi Anda sebelum melakukan pemesanan servis.</p>
             
             <div style="display:flex; gap:1.5rem; height: 500px; flex-wrap: wrap;">
-                <!-- List Konsultasi -->
                 <div style="flex:1; min-width:280px; background:var(--bg-kartu); border-radius:12px; border:2px solid var(--border-line); overflow-y:auto;" id="listKonsultasi">
                     <div style="padding:1rem; text-align:center; color:#94a3b8;">Memuat data...</div>
                 </div>
-                <!-- Chat Box -->
                 <div style="flex:2; min-width:300px; background:var(--bg-kartu); border-radius:12px; border:2px solid var(--border-line); display:flex; flex-direction:column;">
                     <div style="padding:1rem; border-bottom:2px solid var(--border-line); font-weight:bold; display: flex; justify-content: space-between; align-items: center;">
                         <span><i class="bi bi-person-circle"></i> ID: <span id="lblChatKonsulAktif">Pilih pelanggan di list</span></span>
@@ -257,7 +252,7 @@
                     <div class="chat-admin-msg-box" id="boxPesanKonsul" style="flex:1; background: var(--bg-utama);"></div>
                     <div class="chat-admin-input-row" style="border-top:2px solid var(--border-line); display: flex;">
                         <input type="text" id="inputPesanKonsul" placeholder="Balas konsultasi..." onkeypress="if(event.key==='Enter') kirimChatKonsul()" disabled style="flex: 1; border: none !important; padding: 0.8rem; margin: 0; background:var(--bg-kartu); color:var(--teks-utama);">
-                        <button onclick="kirimChatKonsul()" id="btnKirimKonsul" disabled style="background:#10b981; color: white; border: none; padding: 0 1.5rem; cursor: pointer; font-weight: 600;"><i class="bi bi-send-fill"></i></button>
+                        <button aria-label="Kirim Chat Konsultasi" onclick="kirimChatKonsul()" id="btnKirimKonsul" disabled style="background:#10b981; color: white; border: none; padding: 0 1.5rem; cursor: pointer; font-weight: 600;"><i class="bi bi-send-fill"></i></button>
                     </div>
                 </div>
             </div>
@@ -281,10 +276,10 @@
 
     <div class="modal" id="modalKelola">
         <div class="modal-konten">
-            <span class="tutup" onclick="tutupModal()">&times;</span>
+            <span class="tutup" aria-label="Tutup Modal Kelola" onclick="tutupModal()">&times;</span>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="font-size:1.3rem; font-weight:700;">Kelola Order (<span id="txtKodeHeader">-</span>)</h3>
-                <button class="btn" style="background:#0f172a; color:white;" onclick="cetakNotaFisik()"><i class="bi bi-printer"></i> Cetak Nota Fisik</button>
+                <button class="btn" aria-label="Cetak Nota Fisik" style="background:#0f172a; color:white;" onclick="cetakNotaFisik()"><i class="bi bi-printer"></i> Cetak Nota Fisik</button>
             </div>
             
             <input type="hidden" id="kodePesanan">
@@ -323,7 +318,7 @@
                         <p style="font-size:0.85rem; margin-top:0.5rem; margin-bottom: 1rem;">Link Shareloc / Maps: <span id="linkShareloc">-</span></p>
 
                         <label>Status Progres Kerja</label>
-                        <select id="statusPesanan" class="kunci-target">
+                        <select id="statusPesanan" class="kunci-target" onchange="validasiStatusKeTambahan()">
                             <option value="baru">Menunggu Verifikasi Jadwal</option>
                             <option value="dijadwalkan">Sudah Dijadwalkan</option>
                             <option value="diproses">Sedang Diperbaiki</option>
@@ -358,6 +353,7 @@
                                 <label>Harga Tambahan Part/Jasa (Rp)</label>
                                 <input type="number" id="biayaTambahan" class="kunci-target" placeholder="0" oninput="hitungTotal()">
                                 <p style="font-size:0.85rem; margin-top:0.3rem;">Status Persetujuan User: <strong id="txtResponPelanggan" style="color:#2563eb;">PENDING</strong></p>
+                                <p id="peringatanTambahanPending" style="display:none; font-size:0.8rem; color:#ef4444; margin-top:0.3rem;">⚠️ Anda tidak dapat menyelesaikan invoice jika persetujuan pelanggan masih PENDING.</p>
                             </div>
                         </div>
 
@@ -393,14 +389,14 @@
                     <div class="pratinjau" id="tampilKondisiAdmin">Belum ada dokumen</div>
                     
                     <p style="font-size:0.85rem;"><strong>Catatan Kerusakan Pelanggan:</strong></p>
-                    <textarea id="keluhanAdmin" rows="2" readonly style="font-size:0.85rem; margin-top:5px; border-color:#e2e8f0;"></textarea>
+                    <textarea id="keluhanAdmin" aria-label="Keluhan Pelanggan" rows="2" readonly style="font-size:0.85rem; margin-top:5px; border-color:#e2e8f0;"></textarea>
 
                     <h4 style="margin-top:1.2rem; border-top:2px dashed #cbd5e1; padding-top:1rem; font-size:0.95rem; font-weight:700;"><i class="bi bi-chat-text-fill" style="color:#10b981;"></i> Jalur Chat Live Pelanggan</h4>
                     <div class="chat-admin-container">
                         <div class="chat-admin-msg-box" id="boxPesanAdmin"></div>
                         <div class="chat-admin-input-row">
-                            <input type="text" id="inputPesanAdmin" placeholder="Ketik balasan pesan..." onkeypress="aksiEnterChatAdmin(event)">
-                            <button onclick="kirimChatAdmin()"><i class="bi bi-send-fill"></i></button>
+                            <input type="text" id="inputPesanAdmin" aria-label="Ketik balasan untuk pelanggan" placeholder="Ketik balasan pesan..." onkeypress="aksiEnterChatAdmin(event)">
+                            <button aria-label="Kirim Chat ke Pelanggan" onclick="kirimChatAdmin()"><i class="bi bi-send-fill"></i></button>
                         </div>
                     </div>
                 </div>
@@ -424,7 +420,6 @@ socket.on("updateDashboardAdmin", () => {
     muatData(); 
 });
 
-// FITUR BARU: Pemisahan Chat Baru Order vs Konsultasi
 socket.on("chatBaruDiterima", (kodeChat) => {
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
     if(kodeChat === aktifKonsulKode) muatLogPesanKonsul();
@@ -528,7 +523,7 @@ function tampilkanDashboardUtama() {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("mainPanelWrapper").style.display = "block";
     muatData();
-    muatDaftarKonsultasi(); // Load Chat Konsultasi
+    muatDaftarKonsultasi(); 
 }
 
 function handleApiError(res) {
@@ -544,7 +539,7 @@ function handleApiError(res) {
 function muatData() {
     if (!sessionStorage.getItem("adminToken")) return;
 
-    fetch(`${API_URL}/orders`, { headers: getAuthHeader() })
+    fetch(`${API_URL}/orders?limit=2000`, { headers: getAuthHeader() })
     .then(handleApiError)
     .then(semua => {
         window.semuaPesananGlobal = semua; 
@@ -603,9 +598,9 @@ function muatData() {
             let kelasStatus = d.pembayaranValid || d.status === "selesai" ? "selesai" : d.status === "ditolak_pelanggan" ? "batal" : d.pembayaranDikonfirmasi ? "menunggu_validasi" : d.status;
             let tombolAksi = "";
             if (d.status === "baru" && d.dpValid) {
-                tombolAksi = `<button class="btn btn-validasi" onclick="updateStatusCepat('${kode}', 'dijadwalkan')" title="Jadwalkan">📅</button>`;
+                tombolAksi = `<button class="btn btn-validasi" aria-label="Jadwalkan" onclick="updateStatusCepat('${kode}', 'dijadwalkan')" title="Jadwalkan">📅</button>`;
             } else if (d.status === "dijadwalkan") {
-                tombolAksi = `<button class="btn btn-edit" onclick="updateStatusCepat('${kode}', 'diproses')" title="Proses">⚙️</button>`;
+                tombolAksi = `<button class="btn btn-edit" aria-label="Proses" onclick="updateStatusCepat('${kode}', 'diproses')" title="Proses">⚙️</button>`;
             }
             
             const tr = document.createElement("tr");
@@ -618,8 +613,8 @@ function muatData() {
                 <td><span class="status ${kelasStatus}">${ubahNamaStatus(d)}</span></td>
                 <td>${tombolAksi}</td>
                 <td>
-                    <button class="btn btn-edit" onclick="bukaModal('${kode}')"><i class="bi bi-gear"></i> Kelola</button>
-                    <button class="btn btn-hapus" onclick="hapusPesanan('${kode}')"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-edit" aria-label="Kelola Order" onclick="bukaModal('${kode}')"><i class="bi bi-gear"></i> Kelola</button>
+                    <button class="btn btn-hapus" aria-label="Hapus Order" onclick="hapusPesanan('${kode}')"><i class="bi bi-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -641,7 +636,6 @@ function muatData() {
     .catch(err => console.warn("Koneksi admin ke server bermasalah.", err));
 }
 
-// FITUR BARU: Fungsi Live Chat Konsultasi Admin
 let aktifKonsulKode = "";
 function muatDaftarKonsultasi() {
     fetch(`${API_URL}/chats/konsultasi/list`, { headers: getAuthHeader() })
@@ -815,6 +809,18 @@ function ubahNamaStatus(d) {
     return d.status ? d.status.toUpperCase() : "BARU";
 }
 
+function validasiStatusKeTambahan() {
+    const status = document.getElementById("statusPesanan").value;
+    const chk = document.getElementById("chkAdaTambahan").checked;
+    const respon = document.getElementById("txtResponPelanggan").textContent.toUpperCase();
+    
+    if (chk && respon === "PENDING" && status === "selesai_servis") {
+        document.getElementById("peringatanTambahanPending").style.display = "block";
+    } else {
+        document.getElementById("peringatanTambahanPending").style.display = "none";
+    }
+}
+
 function bukaModal(kode) {
     if (!sessionStorage.getItem("adminToken")) return;
     aktifMembukaKode = kode;
@@ -828,6 +834,7 @@ function bukaModal(kode) {
         document.getElementById("teknisi").value = d.teknisi || "";
         document.getElementById("jadwal").value = d.jadwal || "";
         
+        // Membaca file dari URL lokal (berasal dari convert backend base64)
         document.getElementById("displayBuktiDP").innerHTML = d.buktiDP 
             ? `<img src="${d.buktiDP}" style="max-height:150px; cursor:pointer;" onclick="window.open('${d.buktiDP}')">` 
             : "Belum ada bukti";
@@ -851,6 +858,7 @@ function bukaModal(kode) {
         
         document.getElementById("txtResponPelanggan").textContent = (d.statusPersetujuanTambahan || "pending").toUpperCase();
         toggleFormTambahan();
+        validasiStatusKeTambahan();
 
         const boxShareloc = document.getElementById("linkShareloc");
         if(boxShareloc) {
@@ -864,7 +872,7 @@ function bukaModal(kode) {
         const tampilKondisi = document.getElementById("tampilKondisiAdmin");
         if(tampilKondisi) {
             tampilKondisi.innerHTML = d.kondisiHP 
-                ? (d.tipeKondisi && d.tipeKondisi.startsWith("video/") ? `<video src="${d.kondisiHP}" controls style="max-width:100%"></video>` : `<img src="${d.kondisiHP}" style="max-width:100%; border-radius:5px;">`) 
+                ? (d.kondisiHP.endsWith(".mp4") || (d.tipeKondisi && d.tipeKondisi.startsWith("video/")) ? `<video src="${d.kondisiHP}" controls style="max-width:100%"></video>` : `<img src="${d.kondisiHP}" style="max-width:100%; border-radius:5px;">`) 
                 : "<em>Tidak ada lampiran berkas</em>";
         }
 
@@ -929,9 +937,16 @@ function validasiDP(isApproved) {
 function simpanPerubahan() {
     const kode = document.getElementById("kodePesanan").value;
     const checkedTambahan = document.getElementById("chkAdaTambahan").checked;
+    const status = document.getElementById("statusPesanan").value;
+    const respon = document.getElementById("txtResponPelanggan").textContent.toUpperCase();
+
+    // Pencegahan tutup invoice jika pelanggan belum ACC harga tambahan
+    if (checkedTambahan && respon === "PENDING" && status === "selesai_servis") {
+        return Swal.fire('Tahan', 'Persetujuan tambahan masih PENDING. Anda tidak dapat memproses ke tagihan.', 'warning');
+    }
 
     const payload = {
-        status: document.getElementById("statusPesanan").value,
+        status: status,
         teknisi: document.getElementById("teknisi").value,
         jadwal: document.getElementById("jadwal").value,
         lokasiServis: document.getElementById("lokasiServis").value,
@@ -1020,6 +1035,7 @@ function toggleFormTambahan() {
     const chk = document.getElementById("chkAdaTambahan").checked;
     document.getElementById("subFormTambahan").style.display = chk ? "block" : "none";
     hitungTotal();
+    validasiStatusKeTambahan();
 }
 
 function tutupModal() {
