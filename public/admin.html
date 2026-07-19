@@ -106,7 +106,7 @@
         
         .admin-chart-box { background: var(--bg-kartu); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 280px;}
         .tab-menu-admin { display:flex; gap:10px; border-bottom:2px solid var(--border-line); margin-bottom: 1.5rem; }
-        .tab-btn-admin { padding: 0.8rem 1.5rem; background:none; border:none; color: var(--teks-utama); font-weight:600; cursor:pointer; opacity: 0.6; transition: 0.3s;}
+        .tab-btn-admin { padding: 0.8rem 1.5rem; background:none; border:none; color: var(--teks-utama); font-weight:600; cursor:pointer; opacity: 0.6; transition: 0.3s; display: flex; align-items: center; gap: 5px;}
         .tab-btn-admin.aktif { opacity: 1; border-bottom: 3px solid #0ea5e9; color: #0ea5e9;}
         .modal-view { display: none; }
         .modal-view.aktif { display: block; animation: fadeIn 0.4s; }
@@ -171,8 +171,10 @@
     <div class="container">
         
         <div class="tab-menu-admin" style="margin-bottom: 2rem;">
-            <button class="tab-btn-admin aktif" onclick="pindahTabUtamaAdmin('tabDaftarPesananUtama')">Daftar Pesanan</button>
-            <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabLaporanEkstra')">Laporan Keuangan & Analitik</button>
+            <!-- FITUR BARU: Tab Menu Konsultasi -->
+            <button class="tab-btn-admin aktif" onclick="pindahTabUtamaAdmin('tabDaftarPesananUtama')"><i class="bi bi-card-list"></i> Daftar Pesanan</button>
+            <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabKonsultasiPelanggan')"><i class="bi bi-chat-square-text"></i> Live Chat Konsultasi <span id="badgeKonsul" style="background:#ef4444; color:white; border-radius:30px; padding:2px 8px; font-size:0.75rem; display:none; margin-left: 5px;">0</span></button>
+            <button class="tab-btn-admin" onclick="pindahTabUtamaAdmin('tabLaporanEkstra')"><i class="bi bi-bar-chart"></i> Laporan Keuangan & Analitik</button>
         </div>
         
         <div id="tabDaftarPesananUtama" class="modal-view aktif">
@@ -235,6 +237,30 @@
                 </thead>
                 <tbody></tbody>
             </table>
+        </div>
+
+        <!-- FITUR BARU: Konten Halaman Konsultasi Pelanggan -->
+        <div id="tabKonsultasiPelanggan" class="modal-view">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.6rem; font-weight: 700;">Konsultasi Pelanggan Baru</h2>
+            <p style="margin-bottom: 1.5rem; color: #64748b;">Daftar pelanggan yang menghubungi Anda sebelum melakukan pemesanan servis.</p>
+            
+            <div style="display:flex; gap:1.5rem; height: 500px; flex-wrap: wrap;">
+                <!-- List Konsultasi -->
+                <div style="flex:1; min-width:280px; background:var(--bg-kartu); border-radius:12px; border:2px solid var(--border-line); overflow-y:auto;" id="listKonsultasi">
+                    <div style="padding:1rem; text-align:center; color:#94a3b8;">Memuat data...</div>
+                </div>
+                <!-- Chat Box -->
+                <div style="flex:2; min-width:300px; background:var(--bg-kartu); border-radius:12px; border:2px solid var(--border-line); display:flex; flex-direction:column;">
+                    <div style="padding:1rem; border-bottom:2px solid var(--border-line); font-weight:bold; display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="bi bi-person-circle"></i> ID: <span id="lblChatKonsulAktif">Pilih pelanggan di list</span></span>
+                    </div>
+                    <div class="chat-admin-msg-box" id="boxPesanKonsul" style="flex:1; background: var(--bg-utama);"></div>
+                    <div class="chat-admin-input-row" style="border-top:2px solid var(--border-line); display: flex;">
+                        <input type="text" id="inputPesanKonsul" placeholder="Balas konsultasi..." onkeypress="if(event.key==='Enter') kirimChatKonsul()" disabled style="flex: 1; border: none !important; padding: 0.8rem; margin: 0; background:var(--bg-kartu); color:var(--teks-utama);">
+                        <button onclick="kirimChatKonsul()" id="btnKirimKonsul" disabled style="background:#10b981; color: white; border: none; padding: 0 1.5rem; cursor: pointer; font-weight: 600;"><i class="bi bi-send-fill"></i></button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="tabLaporanEkstra" class="modal-view">
@@ -398,8 +424,11 @@ socket.on("updateDashboardAdmin", () => {
     muatData(); 
 });
 
+// FITUR BARU: Socket on Chat Baru Diterima membedakan Chat Konsultasi vs Chat Order
 socket.on("chatBaruDiterima", (kodeChat) => {
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
+    if(kodeChat === aktifKonsulKode) muatLogPesanKonsul();
+    if(kodeChat.startsWith("KONSUL-")) muatDaftarKonsultasi(); 
 });
 
 function pindahTabUtamaAdmin(tabIdTarget) {
@@ -408,6 +437,7 @@ function pindahTabUtamaAdmin(tabIdTarget) {
 
     document.getElementById("tabDaftarPesananUtama").classList.remove("aktif");
     document.getElementById("tabLaporanEkstra").classList.remove("aktif");
+    document.getElementById("tabKonsultasiPelanggan").classList.remove("aktif"); // FITUR BARU
     
     document.getElementById(tabIdTarget).classList.add("aktif");
     
@@ -498,6 +528,7 @@ function tampilkanDashboardUtama() {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("mainPanelWrapper").style.display = "block";
     muatData();
+    muatDaftarKonsultasi(); // FITUR BARU: Memuat daftar live chat baru
     
     // PERBAIKAN: Interval dihapus untuk mencegah antrean (lag/hang) yang menyebabkan fitur delete tidak bekerja[span_6](start_span)[span_6](end_span).
     // Anda sudah menggunakan Socket.io di atas, jadi sistem Anda sudah ter-update secara "live" tanpa perlu interval ini.
@@ -612,6 +643,62 @@ function muatData() {
         if(!filterCari) cacheStringData = currentDataString; 
     })
     .catch(err => console.warn("Koneksi admin ke server bermasalah.", err));
+}
+
+// FITUR BARU: Fungsi-Fungsi Chat Konsultasi Live
+let aktifKonsulKode = "";
+function muatDaftarKonsultasi() {
+    fetch(`${API_URL}/chats/konsultasi/list`, { headers: getAuthHeader() })
+    .then(handleApiError).then(data => {
+        const list = document.getElementById("listKonsultasi");
+        list.innerHTML = ""; let count = 0;
+        for (const kode in data) {
+            count++; const msgs = data[kode]; const lastMsg = msgs[msgs.length - 1];
+            let activeStyle = aktifKonsulKode === kode ? 'background: rgba(14,165,233,0.1); border-left: 4px solid #0ea5e9;' : '';
+            list.innerHTML += `
+                <div style="padding:1rem; border-bottom:1px solid var(--border-line); cursor:pointer; ${activeStyle}" onclick="bukaChatKonsul('${kode}')">
+                    <strong>${kode}</strong><br>
+                    <span style="font-size:0.8rem; color:#64748b;">${lastMsg.pengirim === 'admin' ? 'Anda' : 'Pelanggan'}: ${lastMsg.teks.substring(0, 30)}...</span>
+                </div>`;
+        }
+        if(count === 0) list.innerHTML = `<div style="padding:1rem; text-align:center; color:#94a3b8;">Belum ada konsultasi</div>`;
+        
+        const badge = document.getElementById("badgeKonsul");
+        if(count > 0) { badge.style.display = "inline-block"; badge.textContent = count; }
+        else { badge.style.display = "none"; }
+    });
+}
+
+function bukaChatKonsul(kode) {
+    aktifKonsulKode = kode;
+    document.getElementById("lblChatKonsulAktif").textContent = kode;
+    document.getElementById("inputPesanKonsul").disabled = false;
+    document.getElementById("btnKirimKonsul").disabled = false;
+    muatDaftarKonsultasi(); 
+    muatLogPesanKonsul();
+}
+
+function muatLogPesanKonsul() {
+    if(!aktifKonsulKode) return;
+    fetch(`${API_URL}/chats/${aktifKonsulKode}`, { headers: getAuthHeader() })
+    .then(handleApiError).then(chatData => {
+        const box = document.getElementById("boxPesanKonsul"); let htmlStr = "";
+        chatData.forEach(msg => {
+            let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
+            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda' : '📱 Pelanggan';
+            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
+        });
+        if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
+    });
+}
+
+function kirimChatKonsul() {
+    const inp = document.getElementById("inputPesanKonsul"); const teks = inp.value.trim();
+    if(!teks || !aktifKonsulKode) return;
+    fetch(`${API_URL}/chats`, {
+        method: "POST", headers: { ...getAuthHeader(), "Content-Type": "application/json" },
+        body: JSON.stringify({ kode: aktifKonsulKode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) })
+    }).then(() => { inp.value = ""; muatLogPesanKonsul(); });
 }
 
 function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
