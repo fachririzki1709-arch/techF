@@ -49,7 +49,7 @@
 
         .progress-container {display:flex; justify-content:space-between; background:white; padding:1.5rem 1.2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2.5rem; overflow-x:auto;}
         .step-item {text-align:center; flex:1; min-width:80px; position:relative;}
-        .step-item:not(:last-child)::after {content:''; position:absolute; top:18px; left:50%; width:100%; height:3px; background:#e2e8f0; z-index:1; transition: all 0.4s;}
+        .step-item:not(:last-child)::after {content:'absolute'; position:absolute; top:18px; left:50%; width:100%; height:3px; background:#e2e8f0; z-index:1; transition: all 0.4s;}
         .step-item.completed:not(:last-child)::after {background: #10b981;}
         .step-number {width:36px; height:36px; line-height:36px; margin:0 auto 8px; border-radius:50%; background:#e2e8f0; font-weight:700; font-size:0.9rem; position:relative; z-index:2; transition: all 0.3s;}
         .step-item.active .step-number {background:#0ea5e9; color:white; scale: 1.1; box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);}
@@ -203,12 +203,13 @@
 <body>
 
 <header>
-   <div class="logo" onclick="tampilHalaman('home'); kembaliKeAwal();">
+   <!-- PERBAIKAN: Fungsi navigasi yang lebih aman agar tidak menghapus draft secara tidak sengaja -->
+   <div class="logo" onclick="klikMenuHome();">
         <img src="Full Horizon_1.png" alt="SF Service Logo" style="height: 40px; width: auto; vertical-align: middle;">
     </div>
     <nav style="display:flex; align-items:center;">
         <button onclick="toggleDarkMode()" aria-label="Ganti Tema Tampilan" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
-        <a onclick="tampilHalaman('home'); kembaliKeAwal();"><i class="bi bi-house"></i> Home</a>
+        <a onclick="klikMenuHome();"><i class="bi bi-house"></i> Home</a>
         <a onclick="tampilHalaman('about')"><i class="bi bi-info-circle"></i> About Us</a>
         <a onclick="tampilHalaman('profile')"><i class="bi bi-images"></i> Profile</a>
         <a onclick="tanyaKodeLacak()"><i class="bi bi-search"></i> Lacak Pesanan</a>
@@ -292,7 +293,7 @@
                 <select id="merek" onchange="toggleMerekLainnya()">
                     <option value="">-- Silakan Pilih Kategori Merek --</option>
                     <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
-                        <!-- Peningkatan Spesifikasi Hardware: Menguraikan merek untuk estimasi ketersediaan parts LCD/Baterai -->
+                        <!-- Peningkatan Spesifikasi Hardware -->
                         <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
                         <option value="OPPO">OPPO / Realme</option>
                         <option value="Infinix">Infinix / Tecno</option>
@@ -339,7 +340,12 @@
 
             <!-- STEP 3: BAYAR DP -->
             <div class="content-box" id="step-3">
-                <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP)</h3>
+                <!-- FITUR BARU: Tombol untuk keluar dari mode pelacakan jika ingin membuat pesanan baru -->
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP)</h3>
+                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
+                </div>
+                
                 <p>Kode Pesanan: <strong id="kodePesananDP">-</strong> <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
                 <p style="margin-top:0.5rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
                 
@@ -372,7 +378,11 @@
 
             <!-- STEP 4: JADWAL -->
             <div class="content-box" id="step-4">
-                <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
+                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
+                </div>
+                
                 <p>Kode Pesanan: <strong id="kodePesanan">-</strong> <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
                 <div id="infoJadwal" style="margin-top: 1rem;">
                     <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
@@ -388,7 +398,10 @@
 
             <!-- STEP 5: PROSES -->
             <div class="content-box" id="step-5">
-                <h3><i class="bi bi-tools"></i> Proses Perbaikan</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3><i class="bi bi-tools"></i> Proses Perbaikan</h3>
+                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
+                </div>
                 
                 <div id="boxKerusakanTambahan" class="alert-warning-box" style="display:none;">
                     <h4><i class="bi bi-exclamation-diamond-fill"></i> Temuan Kerusakan Tambahan oleh Teknisi!</h4>
@@ -435,7 +448,11 @@
 
             <!-- STEP 6: PELUNASAN -->
             <div class="content-box" id="step-6">
-                <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran Sisa</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran Sisa</h3>
+                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
+                </div>
+                
                 <p>Sisa Pelunasan: <strong style="font-size:1.2rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">0</span></strong></p>
                 <p style="margin-top:0.5rem;">Pilih metode pembayaran:</p>
 
@@ -505,7 +522,8 @@
 
                 <div class="tombol-faktur">
                     <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()" aria-label="Unduh PDF Faktur"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
-                    <button class="btn btn-home" aria-label="Kembali ke Beranda" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
+                    <!-- Ini tombol Halaman Awal saat transaksi sudah 100% tuntas -->
+                    <button class="btn btn-home" aria-label="Buat Pesanan Baru" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Buat Pesanan Baru</button>
                 </div>
             </div>
         </div>
@@ -582,7 +600,6 @@
 </footer>
 
 <div class="chat-widget minimized" id="chatWidgetPelanggan">
-    <!-- FITUR BARU: ID headerDragChat diletakkan di sini untuk pointer geser -->
     <div class="chat-header" id="headerDragChat">
         <div class="chat-header-left">
             <i class="bi bi-chat-dots-fill"></i> 
@@ -600,15 +617,41 @@
 </div>
 
 <script>
+
+// PERBAIKAN: Fungsi navigasi Home yang mulus, tidak merusak sesi pesanan atau draft
+function klikMenuHome() {
+    tampilHalaman('home');
+    
+    // Jika user TIDAK SEDANG melacak pesanan aktif, pastikan kembali ke Step 1 (Pemilihan)
+    if (!localStorage.getItem("kodeAktifPelanggan")) {
+        currentStep = 1;
+        simpanDraft();
+        updateProgress();
+        showContent();
+        document.getElementById("heroLandingPage").style.display = "block"; // Munculkan kembali Hero
+        muatUlasanPublik();
+    }
+}
+
 function tampilHalaman(id) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
     
     if(id === 'home') {
-        muatUlasanPublik();
+        if (!localStorage.getItem("kodeAktifPelanggan")) muatUlasanPublik();
     } else {
         document.getElementById("publicReviewsSection").style.display = "none";
     }
+}
+
+// PERBAIKAN: Fungsi kembali ke awal yang benar-benar membersihkan seluruh cache form draft
+function kembaliKeAwal() { 
+    localStorage.removeItem("kodeAktifPelanggan"); 
+    localStorage.removeItem("kodeKonsultasiPelanggan"); 
+    localStorage.removeItem("draftFormServis"); // <--- INI KUNCI PERBAIKANNYA
+    kodeSaya = ""; 
+    currentStep = 1; 
+    location.reload(); 
 }
 
 window.buktiDPBase64 = "";
@@ -788,7 +831,6 @@ function hilangkanSkeleton() { document.querySelectorAll(".data-dinamis").forEac
 document.addEventListener("DOMContentLoaded", () => {
     inisialisasiOpsiMerek(); 
     
-    // FITUR BARU: Deteksi Status Order atau Status Konsultasi
     let aktifOrder = localStorage.getItem("kodeAktifPelanggan");
     let aktifKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
 
@@ -800,7 +842,6 @@ document.addEventListener("DOMContentLoaded", () => {
         cekStatus();
         aktifkanSistemChat();
     } else {
-        // Jika belum ada order, cek apakah sedang dalam sesi konsultasi
         if(aktifKonsul) {
             kodeSaya = aktifKonsul;
             document.getElementById("txtChatKode").textContent = "Konsultasi";
@@ -982,7 +1023,7 @@ function konfirmasiBayarDP() {
 }
 
 function tanyaKodeLacak() {
-    tampilHalaman('home');
+    klikMenuHome();
     Swal.fire({
         title: 'Lacak Pesanan',
         input: 'text',
@@ -1063,7 +1104,6 @@ function cekStatus() {
         if(!data) { kembaliKeAwal(); return; }
         hilangkanSkeleton();
         
-        // Peningkatan Manajemen Status Transaksi (Menunggu Persetujuan Tambahan)
         if(document.getElementById("boxKerusakanTambahan")) {
             if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "pending" && data.status !== "ditolak_pelanggan") {
                 document.getElementById("boxKerusakanTambahan").style.display = "block";
@@ -1156,14 +1196,6 @@ function isiDataFaktur(data) {
 }
 
 function bukaHalamanFaktur() { currentStep = 7; updateProgress(); showContent(); cekStatus(); }
-
-function kembaliKeAwal() { 
-    localStorage.removeItem("kodeAktifPelanggan"); 
-    localStorage.removeItem("kodeKonsultasiPelanggan"); 
-    kodeSaya = ""; 
-    currentStep = 1; 
-    location.reload(); 
-}
 
 function aktifkanSistemChat() { const w = document.getElementById("chatWidgetPelanggan"); if(w) w.style.display = "flex"; muatLogPesan(); }
 function toggleChatWidget() { document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); }
