@@ -717,16 +717,39 @@ let metodeBayar = "";
 let intervalChat = null;
 let nilaiRating = 0; 
 
+// MODIFIKASI: Menambahkan library sweetalert toast ke klien agar seragam dengan admin
+const Toast = Swal.mixin({
+    toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true,
+    didOpen: (toast) => { toast.onmouseenter = Swal.stopTimer; toast.onmouseleave = Swal.resumeTimer; }
+});
+
 const socket = io(window.location.origin);
 
+// MODIFIKASI: Menambahkan SweetAlert pada socket trigger Pelanggan
 socket.on("updateDataPelanggan", (kode) => {
     if(kode === kodeSaya) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Pembaruan Status!',
+            text: 'Status pesanan Anda telah diperbarui oleh Admin.',
+            confirmButtonColor: '#0ea5e9'
+        });
+        
         tampilkanSkeleton(); 
         setTimeout(() => cekStatus(), 600); 
     }
 });
-socket.on("chatBaruDiterima", (kodeChat) => {
-    if(kodeChat === kodeSaya) muatLogPesan();
+
+socket.on("chatBaruDiterima", (data) => {
+    const kodeChat = data.kode || data;
+    const pengirim = data.pengirim || 'admin';
+    
+    if(kodeChat === kodeSaya) {
+        if (pengirim === 'admin') {
+            Toast.fire({ icon: 'success', title: 'Admin membalas pesan Anda' });
+        }
+        muatLogPesan();
+    }
 });
 
 function simpanDraft() {
