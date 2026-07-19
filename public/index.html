@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <!-- Peningkatan SEO & Meta Data -->
-    <title>SF Tech - Servis HP & Elektronik Online Bergaransi</title>
-    <meta name="description" content="Layanan servis HP dan elektronik rumah tangga profesional. Panggil teknisi ke rumah atau workshop. Tersedia penggantian LCD, baterai Xiaomi, Oppo, Infinix, dll. Lacak progres secara real-time.">
-    <meta name="keywords" content="Servis HP, Servis Elektronik, Ganti LCD, Servis Panggilan, SF Tech">
+    <title>SF Tech - Servis HP, Laptop & Elektronik Bergaransi</title>
+    <meta name="description" content="Layanan servis HP, Laptop/PC, dan elektronik rumah tangga profesional. Panggil teknisi ke rumah atau workshop. Lacak progres secara real-time.">
+    <meta name="keywords" content="Servis HP, Servis Laptop, Servis Elektronik, Ganti LCD, Install OS, SF Tech">
     <meta property="og:title" content="SF Tech Service - Solusi Perbaikan Perangkat Anda">
     <meta property="og:description" content="Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time.">
     
@@ -67,21 +67,28 @@
         h3 {font-size: 1.2rem; margin-top: 1.5rem; color: #334155;}
 
         .kategori-wrapper { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 1.5rem 0;}
-        @media (min-width: 768px) { .kategori-wrapper { grid-template-columns: 1fr 1fr; } }
+        @media (min-width: 768px) { .kategori-wrapper { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } }
         .kategori-card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: all 0.3s ease; }
         .kategori-card:hover { border-color: #cbd5e1; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
         .kategori-card h4 { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; color: #0f172a; margin-bottom: 1.2rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem; }
+        
         .kategori-card.hp h4 i { color: #0ea5e9; font-size: 1.3rem; }
         .kategori-card.elektronik h4 i { color: #10b981; font-size: 1.3rem; }
+        .kategori-card.komputer h4 i { color: #8b5cf6; font-size: 1.3rem; }
         
         .layanan-item { display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; margin:0.6rem 0; border:1px solid #e2e8f0; border-radius:8px; cursor: pointer; transition: all 0.2s ease; background: #f8fafc; }
         .layanan-item:hover { border-color: #0ea5e9; background: #f0f9ff; }
         .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; background: #f0fdf4; }
+        .kategori-card.komputer .layanan-item:hover { border-color: #8b5cf6; background: #f5f3ff; }
+        
         .layanan-item label {cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; width: 100%; font-size: 0.9rem;}
         .layanan-item input[type="checkbox"] {width: 18px; height: 18px; accent-color: #0ea5e9;}
         .kategori-card.elektronik .layanan-item input[type="checkbox"] {accent-color: #10b981;}
+        .kategori-card.komputer .layanan-item input[type="checkbox"] {accent-color: #8b5cf6;}
+        
         .harga {font-weight:700; color:#0369a1; font-size: 0.85rem;}
         .kategori-card.elektronik .harga {color: #15803d;}
+        .kategori-card.komputer .harga {color: #6d28d9;}
         
         .info {padding:1rem; border-radius:8px; margin:1.2rem 0; font-size:0.9rem; font-weight: 500; display: flex; align-items: center; gap: 0.6rem;}
         .catatan {background:#f0f9ff; color:#075985; border-left: 4px solid #0ea5e9;}
@@ -164,6 +171,7 @@
         body.dark-mode .layanan-item, body.dark-mode .metode-item { border-color:#334155; background: #1e293b; }
         body.dark-mode .layanan-item:hover, body.dark-mode .metode-item:hover { background: #334155; border-color: #0ea5e9;}
         body.dark-mode .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; }
+        body.dark-mode .kategori-card.komputer .layanan-item:hover { border-color: #8b5cf6; }
         body.dark-mode .faktur { background: #0f172a; border-color: #3b82f6;}
         body.dark-mode .kategori-card { background: #0f172a; border-color: #334155; }
         body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
@@ -220,8 +228,8 @@
     
     <div id="page-home" class="page-content active">
         <div class="hero-section" id="heroLandingPage">
-            <h1>Servis HP & Elektronik Bergaransi</h1>
-            <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari smartphone Anda.</p>
+            <h1>Servis HP, Laptop & Elektronik Bergaransi</h1>
+            <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari perangkat Anda.</p>
         </div>
 
         <div class="container" id="mainOrderContainer">
@@ -241,21 +249,33 @@
                 <p style="margin-bottom: 1rem; color: #475569;">Pilih jenis layanan yang Anda butuhkan di bawah ini.</p>
                 
                 <div class="kategori-wrapper">
+                    <!-- Kategori HP -->
                     <div class="kategori-card hp">
                         <h4><i class="bi bi-phone-vibrate"></i> Layanan Smartphone</h4>
                         <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
                         <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
                         <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan Dalam (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
                         <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
                     </div>
                     
+                    <!-- Kategori Elektronik -->
                     <div class="kategori-card elektronik">
                         <h4><i class="bi bi-plug"></i> Elektronik Rumah Tangga</h4>
                         <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
                         <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker / Magic Com</label><span class="harga">Mulai Rp 50rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker</label><span class="harga">Mulai Rp 50rb</span></div>
                         <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
+                    </div>
+
+                    <!-- Kategori Baru: Komputer & Laptop -->
+                    <div class="kategori-card komputer">
+                        <h4><i class="bi bi-laptop"></i> Komputer & Laptop</h4>
+                        <div class="layanan-item" onclick="document.getElementById('l10').click(); event.stopPropagation();"><label><input type="checkbox" id="l10" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Install OS / Software</label><span class="harga">Mulai Rp 100rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l11').click(); event.stopPropagation();"><label><input type="checkbox" id="l11" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Keyboard / Baterai</label><span class="harga">Mulai Rp 200rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l12').click(); event.stopPropagation();"><label><input type="checkbox" id="l12" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Upgrade SSD / RAM</label><span class="harga">Mulai Rp 150rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l13').click(); event.stopPropagation();"><label><input type="checkbox" id="l13" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Mati Total / No Display</label><span class="harga">Mulai Rp 250rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l14').click(); event.stopPropagation();"><label><input type="checkbox" id="l14" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Cleaning & Thermal Paste</label><span class="harga">Mulai Rp 150rb</span></div>
                     </div>
                 </div>
 
@@ -300,6 +320,17 @@
                         <option value="iPhone">Apple / iPhone</option>
                         <option value="Asus">Asus / ROG</option>
                     </optgroup>
+                    <optgroup id="optgroup-komputer" label="💻 Kategori Komputer & Laptop">
+                        <option value="Asus PC/Laptop">Asus / ROG Laptop</option>
+                        <option value="Acer">Acer / Predator</option>
+                        <option value="Lenovo">Lenovo / ThinkPad</option>
+                        <option value="HP">HP / Compaq</option>
+                        <option value="Dell">Dell / Alienware</option>
+                        <option value="Apple Mac">Apple / MacBook / iMac</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Axioo/Zyrex">Axioo / Zyrex</option>
+                        <option value="Rakitan">PC Rakitan / Custom</option>
+                    </optgroup>
                     <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
                         <option value="Miyako">Miyako</option>
                         <option value="Cosmos">Cosmos</option>
@@ -319,7 +350,7 @@
                 <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
                 
                 <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-                <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12 / Rice Cooker CRJ-3301" oninput="simpanDraft()">
+                <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12 / Lenovo ThinkPad T480" oninput="simpanDraft()">
                 <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
                 
                 <label>Kerusakan / Keluhan</label>
@@ -553,7 +584,7 @@
     <div id="page-about" class="page-content container">
         <div class="content-box active" style="display:block; margin-top: 2rem;">
             <h2>Tentang Kami</h2>
-            <p>SF Tech Service adalah penyedia layanan perbaikan smartphone dan alat elektronik rumah tangga profesional. Kami hadir untuk memberikan solusi cepat, transparan, dan bergaransi kepada seluruh pelanggan kami, baik melalui kunjungan ke rumah (Home Service) maupun pengerjaan di workshop kami.</p>
+            <p>SF Tech Service adalah penyedia layanan perbaikan smartphone, PC/Laptop, dan alat elektronik rumah tangga profesional. Kami hadir untuk memberikan solusi cepat, transparan, dan bergaransi kepada seluruh pelanggan kami, baik melalui kunjungan ke rumah (Home Service) maupun pengerjaan di workshop kami.</p>
             
             <h3 style="margin-top:2.5rem; text-align:center;"><i class="bi bi-signpost-split" style="color:#0ea5e9;"></i> Alur Pelayanan Kami</h3>
             <div class="alur-grid">
@@ -825,12 +856,14 @@ function dapatkanLokasiOtomatis() {
 
 let originalOptHP = null;
 let originalOptElek = null;
+let originalOptKomputer = null;
 let originalOptLainnya = null;
 
 function inisialisasiOpsiMerek() {
     if(!originalOptHP) {
         originalOptHP = document.getElementById("optgroup-hp").cloneNode(true);
         originalOptElek = document.getElementById("optgroup-elektronik").cloneNode(true);
+        originalOptKomputer = document.getElementById("optgroup-komputer").cloneNode(true);
         originalOptLainnya = document.querySelector('#merek optgroup[label="Lainnya"]').cloneNode(true);
     }
 }
@@ -839,12 +872,20 @@ function updateBrandOptions() {
     inisialisasiOpsiMerek(); 
     const isHP = Array.from(document.querySelectorAll('.kategori-card.hp input[type="checkbox"]')).some(cb => cb.checked);
     const isElek = Array.from(document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]')).some(cb => cb.checked);
+    const isKomputer = Array.from(document.querySelectorAll('.kategori-card.komputer input[type="checkbox"]')).some(cb => cb.checked);
+    
     const merekSelect = document.getElementById("merek");
     const currentValue = merekSelect.value;
     
     merekSelect.innerHTML = '<option value="">-- Silakan Pilih Kategori Merek --</option>';
-    if (isHP || (!isHP && !isElek)) merekSelect.appendChild(originalOptHP.cloneNode(true));
-    if (isElek || (!isHP && !isElek)) merekSelect.appendChild(originalOptElek.cloneNode(true));
+    
+    // Jika tidak ada yang diceklis, tampilkan semua kategori merek
+    const showAll = !isHP && !isElek && !isKomputer;
+    
+    if (isHP || showAll) merekSelect.appendChild(originalOptHP.cloneNode(true));
+    if (isElek || showAll) merekSelect.appendChild(originalOptElek.cloneNode(true));
+    if (isKomputer || showAll) merekSelect.appendChild(originalOptKomputer.cloneNode(true));
+    
     merekSelect.appendChild(originalOptLainnya.cloneNode(true));
     
     if (Array.from(merekSelect.options).some(opt => opt.value === currentValue)) merekSelect.value = currentValue;
