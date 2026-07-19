@@ -430,7 +430,7 @@
     </div>
 </div>
 
-<!-- MODAL KELOLA ORDER (TETAP SAMA LOGIKANYA, HANYA DIPERBAIKI UI DALAMNYA) -->
+<!-- MODAL KELOLA ORDER -->
 <div class="modal" id="modalKelola">
     <div class="modal-konten">
         <span class="tutup" aria-label="Tutup Modal Kelola" onclick="tutupModal()">&times;</span>
@@ -611,12 +611,23 @@ const Toast = Swal.mixin({
 
 const socket = io(window.location.origin);
 
+// MODIFIKASI: Notifikasi Socket Admin
 socket.on("updateDashboardAdmin", () => {
     muatData(); 
+    Toast.fire({ icon: 'info', title: 'Sistem: Ada pembaruan data pesanan/status.' });
     tambahNotifikasiSistem("Sistem: Ada pembaruan data pesanan/status.");
 });
 
-socket.on("chatBaruDiterima", (kodeChat) => {
+socket.on("chatBaruDiterima", (data) => {
+    // Menangkap struktur objek baru { kode, pengirim }
+    const kodeChat = data.kode || data;
+    const pengirim = data.pengirim || 'user';
+    
+    // Tampilkan Notifikasi ke Admin JIKA pengirimnya adalah user
+    if (pengirim === 'user') {
+        Toast.fire({ icon: 'success', title: `Pesan baru masuk dari pelanggan (${kodeChat})` });
+    }
+
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
     if(kodeChat === aktifKonsulKode) muatLogPesanKonsul();
     if(kodeChat.startsWith("KONSUL-")) muatDaftarKonsultasi(); 
