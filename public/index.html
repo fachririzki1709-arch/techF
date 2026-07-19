@@ -115,7 +115,6 @@
         .btn-danger {background:#ef4444; color:white;}
         .btn-pdf {background:#dc2626; color:white;}
         .btn-home {background:#475569; color:white;}
-        .btn-outline {background:#f8fafc; border:2px solid #0ea5e9; color:#0ea5e9;}
         .btn:disabled {background: #94a3b8 !important; cursor: not-allowed; transform: none !important; box-shadow: none !important;}
 
         .faktur {border:2px solid #1e40af; padding:2rem; border-radius:12px; margin-top:1.5rem; background:#ffffff; box-shadow: 0 10px 25px rgba(30, 64, 175, 0.05);}
@@ -128,20 +127,19 @@
         .alert-bahaya {background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:1.2rem; border-radius:8px; margin:1rem 0; font-size: 0.9rem;}
         .alert-warning-box {background:#fff7ed; color:#c2410c; border-left:4px solid #f97316; padding:1.2rem; border-radius:8px; margin:1rem 0;}
 
-        /* Modifikasi Z-Index dan Position agar bisa digeser */
+        /* CSS BARU: Penyesuaian Chat agar bisa di-drag dengan rapi */
         .chat-widget { position: fixed; bottom: 25px; right: 25px; width: 340px; max-width: calc(100vw - 50px); background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); z-index: 9999; border: 1px solid #e2e8f0; overflow: hidden; display: none; flex-direction: column; animation: chatSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transition: all 0.3s ease; }
         @keyframes chatSlide { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
         .chat-widget.minimized { width: 65px; height: 65px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4); display: flex; align-items: center; justify-content: center; flex-direction: row; }
-        .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; }
+        .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; cursor: pointer; }
         .chat-widget.minimized .chat-header-left span, .chat-widget.minimized .chat-toggle-btn { display: none; }
-        .chat-widget.minimized .chat-header-left i { font-size: 2rem; margin: 0; color: white; display: flex; align-items: center; justify-content: center; width:100%; height:100%; }
+        .chat-widget.minimized .chat-header-left i { font-size: 2rem; margin: 0; color: white; display: flex; align-items: center; justify-content: center; width:100%; height:100%; pointer-events: none;}
         .chat-widget.minimized .chat-messages, .chat-widget.minimized .chat-input-row {display: none !important;}
 
-        /* Ubah Cursor untuk Header agar user tau bisa digeser */
-        .chat-header {background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; cursor:grab;}
+        .chat-header {background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; cursor: grab;}
         .chat-header:active {cursor: grabbing;}
-        .chat-header-left { display: flex; align-items: center; gap: 0.5rem; width:100%; pointer-events: none;}
+        .chat-header-left { display: flex; align-items: center; gap: 0.5rem; width:100%; pointer-events: none; }
         .chat-toggle-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; padding: 0 0.2rem; display: flex; align-items: center; transition: transform 0.2rem; pointer-events: auto;}
         .chat-toggle-btn:hover { color: #38bdf8; }
 
@@ -253,12 +251,12 @@
                     </div>
                 </div>
 
-                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
+                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
                 
-                <div style="display: flex; gap: 10px; margin-top: 1rem; flex-direction: column;">
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
                     <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan ke Data Diri <i class="bi bi-arrow-right"></i></button>
-                    <!-- TOMBOL KONSULTASI -->
-                    <button class="btn btn-outline" onclick="mulaiKonsultasi()" style="width: 100%; justify-content: center;"><i class="bi bi-chat-dots"></i> Tanya/Konsultasi Teknisi via Live Chat</button>
+                    <!-- FITUR BARU: Tombol Konsultasi Sebelum Order -->
+                    <button type="button" class="btn" onclick="mulaiKonsultasi()" style="width: 100%; justify-content: center; background:#f8fafc; border:2px solid #0ea5e9; color:#0ea5e9;"><i class="bi bi-chat-dots"></i> Tanya Teknisi (Konsultasi via Live Chat)</button>
                 </div>
             </div>
 
@@ -364,7 +362,6 @@
                 </div>
             </div>
 
-            <!-- STEP 4 - 7 (DIPOTONG UNTUK EFISIENSI TAMPILAN, SAMA SEPERTI ASLINYA) -->
             <!-- STEP 4: JADWAL -->
             <div class="content-box" id="step-4">
                 <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
@@ -505,14 +502,12 @@
             </div>
         </div>
 
-        <!-- REVIEWS SECTION -->
         <div class="container" id="publicReviewsSection" style="margin-top:2rem; margin-bottom:2.5rem; display:none;">
             <h3 style="text-align:center; font-size:1.2rem; margin-bottom:0;"><i class="bi bi-chat-heart-fill" style="color:#ef4444;"></i> Ulasan Pelanggan Kami</h3>
             <div class="reviews-container" id="reviewList"></div>
         </div>
     </div>
 
-    <!-- TABS LAIN -->
     <div id="page-about" class="page-content container">
         <div class="content-box active" style="display:block; margin-top: 2rem;">
             <h2>Tentang Kami</h2>
@@ -520,10 +515,26 @@
             
             <h3 style="margin-top:2.5rem; text-align:center;"><i class="bi bi-signpost-split" style="color:#0ea5e9;"></i> Alur Pelayanan Kami</h3>
             <div class="alur-grid">
-                <div class="alur-item"><i class="bi bi-laptop"></i><h4 style="margin-bottom:0.5rem;">1. Input Data Online</h4><p style="font-size:0.85rem; color:#64748b;">Pilih jenis layanan, lengkapi data diri, dan jelaskan kendala perangkat Anda melalui website kami.</p></div>
-                <div class="alur-item"><i class="bi bi-wallet2"></i><h4 style="margin-bottom:0.5rem;">2. Bayar DP & Jadwal</h4><p style="font-size:0.85rem; color:#64748b;">Lakukan pembayaran uang muka agar sistem kami dapat mencarikan dan menjadwalkan teknisi untuk Anda.</p></div>
-                <div class="alur-item"><i class="bi bi-tools"></i><h4 style="margin-bottom:0.5rem;">3. Proses Perbaikan</h4><p style="font-size:0.85rem; color:#64748b;">Teknisi akan memeriksa & memperbaiki unit. Anda bisa melacak status secara real-time di website.</p></div>
-                <div class="alur-item"><i class="bi bi-check-circle"></i><h4 style="margin-bottom:0.5rem;">4. Selesai & Lunas</h4><p style="font-size:0.85rem; color:#64748b;">Setelah selesai, lunasi sisa tagihan, terima nota digital garansi 30 hari, dan nikmati kembali perangkat Anda.</p></div>
+                <div class="alur-item">
+                    <i class="bi bi-laptop"></i>
+                    <h4 style="margin-bottom:0.5rem;">1. Input Data Online</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Pilih jenis layanan, lengkapi data diri, dan jelaskan kendala perangkat Anda melalui website kami.</p>
+                </div>
+                <div class="alur-item">
+                    <i class="bi bi-wallet2"></i>
+                    <h4 style="margin-bottom:0.5rem;">2. Bayar DP & Jadwal</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Lakukan pembayaran uang muka agar sistem kami dapat mencarikan dan menjadwalkan teknisi untuk Anda.</p>
+                </div>
+                <div class="alur-item">
+                    <i class="bi bi-tools"></i>
+                    <h4 style="margin-bottom:0.5rem;">3. Proses Perbaikan</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Teknisi akan memeriksa & memperbaiki unit. Anda bisa melacak status secara real-time di website.</p>
+                </div>
+                <div class="alur-item">
+                    <i class="bi bi-check-circle"></i>
+                    <h4 style="margin-bottom:0.5rem;">4. Selesai & Lunas</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Setelah selesai, lunasi sisa tagihan, terima nota digital garansi 30 hari, dan nikmati kembali perangkat Anda.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -532,11 +543,21 @@
         <div class="content-box active" style="display:block; margin-top: 2rem;">
             <h2>Profil Perusahaan & Galeri Servis</h2>
             <p>Sejak didirikan, kami telah melayani ratusan pelanggan dan mengembalikan fungsi berbagai jenis perangkat dengan teknisi bersertifikat dan suku cadang berkualitas.</p>
+            
             <h3 style="margin-top:2.5rem;"><i class="bi bi-images" style="color:#10b981;"></i> Bukti Hasil Servis</h3>
             <div class="foto-grid">
-                <div class="foto-item"><i class="bi bi-camera" style="font-size:2.5rem; margin-bottom:10px;"></i><p>Foto Servis 1 (Placeholder)</p></div>
-                <div class="foto-item"><i class="bi bi-phone" style="font-size:2.5rem; margin-bottom:10px;"></i><p>Foto Servis 2 (Placeholder)</p></div>
-                <div class="foto-item"><i class="bi bi-motherboard" style="font-size:2.5rem; margin-bottom:10px;"></i><p>Foto Servis 3 (Placeholder)</p></div>
+                <div class="foto-item">
+                    <i class="bi bi-camera" style="font-size:2.5rem; margin-bottom:10px;"></i>
+                    <p>Foto Servis 1 (Placeholder)</p>
+                </div>
+                <div class="foto-item">
+                    <i class="bi bi-phone" style="font-size:2.5rem; margin-bottom:10px;"></i>
+                    <p>Foto Servis 2 (Placeholder)</p>
+                </div>
+                <div class="foto-item">
+                    <i class="bi bi-motherboard" style="font-size:2.5rem; margin-bottom:10px;"></i>
+                    <p>Foto Servis 3 (Placeholder)</p>
+                </div>
             </div>
         </div>
     </div>
@@ -553,8 +574,8 @@
 </footer>
 
 <div class="chat-widget minimized" id="chatWidgetPelanggan">
-    <!-- Header dibuat Draggable -->
-    <div class="chat-header" id="headerDragChat" title="Klik & Tahan untuk Menggeser">
+    <!-- FITUR BARU: ID headerDragChat diletakkan di sini untuk pointer geser -->
+    <div class="chat-header" id="headerDragChat">
         <div class="chat-header-left">
             <i class="bi bi-chat-dots-fill"></i> 
             <span>Chat <span id="txtChatKode">-</span></span>
@@ -661,20 +682,27 @@ function restoreDraft() {
 function dapatkanLokasiOtomatis() {
     const btn = document.getElementById("btnLokasiGPS");
     const inputShareloc = document.getElementById("shareloc");
-    if (!navigator.geolocation) return Swal.fire('Tidak Mendukung', 'Browser Anda tidak mendukung fitur lokasi.', 'error');
+    
+    if (!navigator.geolocation) {
+        return Swal.fire('Tidak Mendukung', 'Browser Anda tidak mendukung fitur lokasi.', 'error');
+    }
+    
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Membaca GPS...';
     btn.disabled = true;
     
     navigator.geolocation.getCurrentPosition(
         (position) => {
-            const lat = position.coords.latitude; const lng = position.coords.longitude;
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
             inputShareloc.value = `https://maps.google.com/?q=${lat},${lng}`;
             simpanDraft();
             btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Berhasil';
             setTimeout(() => { btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini'; btn.disabled = false; }, 3000);
         },
         (error) => {
-            console.error(error); btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini'; btn.disabled = false;
+            console.error(error);
+            btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini';
+            btn.disabled = false;
             let pesanError = 'Tidak dapat mengambil lokasi.';
             if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda. Mohon izinkan pada browser.';
             Swal.fire('Gagal', pesanError, 'error');
@@ -683,7 +711,9 @@ function dapatkanLokasiOtomatis() {
     );
 }
 
-let originalOptHP = null; let originalOptElek = null; let originalOptLainnya = null;
+let originalOptHP = null;
+let originalOptElek = null;
+let originalOptLainnya = null;
 
 function inisialisasiOpsiMerek() {
     if(!originalOptHP) {
@@ -711,10 +741,13 @@ function updateBrandOptions() {
 }
 
 function muatUlasanPublik() {
-    fetch(`${API_URL}/reviews`).then(res => res.json()).then(data => {
+    fetch(`${API_URL}/reviews`)
+    .then(res => res.json())
+    .then(data => {
         if(data.length > 0) {
             document.getElementById("publicReviewsSection").style.display = "block";
-            const list = document.getElementById("reviewList"); list.innerHTML = "";
+            const list = document.getElementById("reviewList");
+            list.innerHTML = "";
             data.forEach(rev => {
                 let stars = "";
                 for(let i=0; i<5; i++) stars += i < rev.rating ? '<i class="bi bi-star-fill" style="color:#f59e0b;"></i>' : '<i class="bi bi-star" style="color:#cbd5e1;"></i>';
@@ -732,9 +765,11 @@ function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const icon = document.getElementById('iconDark');
     if(document.body.classList.contains('dark-mode')) {
-        icon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill'); localStorage.setItem('tema', 'gelap');
+        icon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+        localStorage.setItem('tema', 'gelap');
     } else {
-        icon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill'); localStorage.setItem('tema', 'terang');
+        icon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+        localStorage.setItem('tema', 'terang');
     }
 }
 if(localStorage.getItem('tema') === 'gelap') { toggleDarkMode(); }
@@ -745,6 +780,7 @@ function hilangkanSkeleton() { document.querySelectorAll(".data-dinamis").forEac
 document.addEventListener("DOMContentLoaded", () => {
     inisialisasiOpsiMerek(); 
     
+    // FITUR BARU: Deteksi Status Order atau Status Konsultasi
     let aktifOrder = localStorage.getItem("kodeAktifPelanggan");
     let aktifKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
 
@@ -752,14 +788,17 @@ document.addEventListener("DOMContentLoaded", () => {
         kodeSaya = aktifOrder;
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
+        document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         cekStatus();
         aktifkanSistemChat();
     } else {
+        // Jika belum ada order, cek apakah sedang dalam sesi konsultasi
         if(aktifKonsul) {
             kodeSaya = aktifKonsul;
             document.getElementById("txtChatKode").textContent = "Konsultasi";
             aktifkanSistemChat();
         }
+        
         restoreDraft();
         updateProgress();
         showContent();
@@ -771,9 +810,11 @@ document.addEventListener("DOMContentLoaded", () => {
         star.addEventListener('click', function() {
             nilaiRating = parseInt(this.getAttribute('data-val'));
             document.querySelectorAll('#starContainer i').forEach(s => {
-                s.classList.replace('bi-star-fill', 'bi-star'); s.classList.remove('active');
+                s.classList.replace('bi-star-fill', 'bi-star');
+                s.classList.remove('active');
                 if(parseInt(s.getAttribute('data-val')) <= nilaiRating) {
-                    s.classList.replace('bi-star', 'bi-star-fill'); s.classList.add('active');
+                    s.classList.replace('bi-star', 'bi-star-fill');
+                    s.classList.add('active');
                 }
             });
         });
@@ -800,8 +841,11 @@ function toggleMerekLainnya() {
 
 function validasiInputRealTime(element, errId) {
     const errSpan = document.getElementById(errId);
-    if (!element.value.trim()) { element.classList.add('input-error'); if(errSpan) errSpan.style.display = 'block'; return false; }
-    else { element.classList.remove('input-error'); if(errSpan) errSpan.style.display = 'none'; return true; }
+    if (!element.value.trim()) {
+        element.classList.add('input-error'); if(errSpan) errSpan.style.display = 'block'; return false;
+    } else {
+        element.classList.remove('input-error'); if(errSpan) errSpan.style.display = 'none'; return true;
+    }
 }
 
 function pasangListenerValidasiRealTime() {
@@ -840,7 +884,8 @@ function kirimPesanan() {
     const isWaValid = validasiInputRealTime(document.getElementById("wa"), 'errWa');
     const isMerekValid = validasiInputRealTime(document.getElementById("merek"), 'errMerek');
     const isTipeValid = validasiInputRealTime(document.getElementById("tipe"), 'errTipe');
-    let isMerekLainnyaValid = true; let merekFinal = document.getElementById("merek").value;
+    let isMerekLainnyaValid = true;
+    let merekFinal = document.getElementById("merek").value;
     if (merekFinal === "Lainnya") {
         isMerekLainnyaValid = validasiInputRealTime(document.getElementById("merekLainnya"), 'errMerekLainnya');
         merekFinal = document.getElementById("merekLainnya").value.trim();
@@ -856,6 +901,8 @@ function kirimPesanan() {
 
     const layananTerpilih = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.parentElement.textContent.trim()).join(", ");
     const generatedKode = "HS-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.floor(Math.random()*900+100);
+    
+    // FITUR BARU: Ambil kode konsultasi jika ada untuk dilempar ke backend (migrasi chat)
     const kodeKonsulLama = localStorage.getItem("kodeKonsultasiPelanggan") || "";
 
     const data = {
@@ -874,7 +921,7 @@ function kirimPesanan() {
         kodeSaya = generatedKode;
         localStorage.setItem("kodeAktifPelanggan", kodeSaya);
         localStorage.removeItem("draftFormServis");
-        localStorage.removeItem("kodeKonsultasiPelanggan"); // hapus status konsul
+        localStorage.removeItem("kodeKonsultasiPelanggan"); // hapus status konsul karena sudah jadi order
         
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
@@ -915,10 +962,13 @@ function pilihMetodeDP(metode) {
 
 function konfirmasiBayarDP() {
     if(!metodeDP) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih metode transfer DP!', confirmButtonColor: '#0ea5e9' });
+
     fetch(`${API_URL}/orders/${kodeSaya}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ metodeDP: metodeDP, dpTerbayar: true, buktiDP: window.buktiDPBase64 })
-    }).then(res => res.json()).then(() => {
+    })
+    .then(res => res.json())
+    .then(() => {
         Swal.fire({ icon: 'success', title: 'Terkirim', text: 'Bukti DP tersimpan. Tunggu verifikasi.', confirmButtonColor: '#10b981' });
         cekStatus();
     }).catch(err => Swal.fire('Gagal!', 'Gagal konfirmasi DP.', 'error'));
@@ -958,17 +1008,23 @@ function tanyaKodeLacak() {
 function responsTambahan(setuju) {
     let payload = setuju ? { statusPersetujuanTambahan: "disetujui" } : { statusPersetujuanTambahan: "ditolak", status: "ditolak_pelanggan" };
     fetch(`${API_URL}/orders/${kodeSaya}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-    .then(() => { Swal.fire(setuju ? 'Disetujui!' : 'Ditolak!', setuju ? 'Tambahan disetujui.' : 'Servis dibatalkan.', setuju ? 'success' : 'error'); cekStatus(); });
+    .then(() => {
+        Swal.fire(setuju ? 'Disetujui!' : 'Ditolak!', setuju ? 'Tambahan disetujui.' : 'Servis dibatalkan.', setuju ? 'success' : 'error');
+        cekStatus();
+    });
 }
 
 function pilihMetodeBayar(metode) {
     metodeBayar = metode;
     document.querySelectorAll(".pilihan-bayar").forEach(el => el.classList.remove("aktif"));
     document.getElementById(`bayar-${metode}`).classList.add("aktif");
+    
     const infoBox = document.getElementById("infoRekening");
-    if(metode === "Tunai") { infoBox.style.display = "none"; document.getElementById("metodeDipilih").textContent = "Tunai / Cash"; } 
-    else {
-        infoBox.style.display = "block"; document.getElementById("namaBank").textContent = metode;
+    if(metode === "Tunai") {
+        infoBox.style.display = "none"; document.getElementById("metodeDipilih").textContent = "Tunai / Cash";
+    } else {
+        infoBox.style.display = "block";
+        document.getElementById("namaBank").textContent = metode;
         document.getElementById("noRek").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
         document.getElementById("metodeDipilih").textContent = "Transfer " + metode;
     }
@@ -988,12 +1044,15 @@ function kirimRatingUlasan() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: nilaiRating, ulasan: document.getElementById("ulasanPelanggan").value.trim() })
     }).then(() => {
-        Swal.fire('Terima Kasih', 'Ulasan & Rating Anda telah kami terima!', 'success'); document.getElementById("boxBeriRating").style.display = "none";
+        Swal.fire('Terima Kasih', 'Ulasan & Rating Anda telah kami terima!', 'success');
+        document.getElementById("boxBeriRating").style.display = "none";
     });
 }
 
 function cekStatus() {
+    // Abaikan jika kodeSaya masih bentuk Konsultasi
     if(!kodeSaya || kodeSaya.startsWith("KONSUL-")) return; 
+    
     fetch(`${API_URL}/orders/${kodeSaya}`).then(res => res.json()).then(data => {
         if(!data) { kembaliKeAwal(); return; }
         hilangkanSkeleton();
@@ -1042,7 +1101,8 @@ function cekStatus() {
             document.getElementById("tampilJadwal").style.display = "block"; document.getElementById("infoJadwal").style.display = "none";
         }
         else if (data.status === "diproses") {
-            targetStep = 5; document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
+            targetStep = 5;
+            document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
             document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
             sinkronBiayaTampil(data);
         }
@@ -1070,9 +1130,11 @@ function sinkronBiayaTampil(data) {
 }
 
 function isiDataFaktur(data) {
-    document.getElementById("fakturKode").textContent = data.kode; document.getElementById("fakturNama").textContent = data.nama;
+    document.getElementById("fakturKode").textContent = data.kode;
+    document.getElementById("fakturNama").textContent = data.nama;
     document.getElementById("fakturMerekTipe").textContent = `${data.merek.toUpperCase()} ${data.tipe}`;
-    document.getElementById("fakturKerusakan").textContent = data.kerusakan; document.getElementById("fakturLayanan").textContent = data.layanan;
+    document.getElementById("fakturKerusakan").textContent = data.kerusakan;
+    document.getElementById("fakturLayanan").textContent = data.layanan;
     document.getElementById("fakturTeknisi").textContent = data.teknisi || "Belum ada teknisi";
     document.getElementById("noFaktur").textContent = "INV-" + data.kode.replace("HS-", "");
     document.getElementById("fakturTanggal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : new Date().toLocaleString("id-ID");
@@ -1087,14 +1149,20 @@ function isiDataFaktur(data) {
 
 function bukaHalamanFaktur() { currentStep = 7; updateProgress(); showContent(); cekStatus(); }
 
-function kembaliKeAwal() { localStorage.removeItem("kodeAktifPelanggan"); localStorage.removeItem("kodeKonsultasiPelanggan"); kodeSaya = ""; currentStep = 1; location.reload(); }
+function kembaliKeAwal() { 
+    localStorage.removeItem("kodeAktifPelanggan"); 
+    localStorage.removeItem("kodeKonsultasiPelanggan"); 
+    kodeSaya = ""; 
+    currentStep = 1; 
+    location.reload(); 
+}
 
 function aktifkanSistemChat() { const w = document.getElementById("chatWidgetPelanggan"); if(w) w.style.display = "flex"; muatLogPesan(); }
 function toggleChatWidget() { document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); }
 
-// FUNGSI MULAI KONSULTASI SEBELUM ORDER
+// FITUR BARU: Memulai Chat Konsultasi
 function mulaiKonsultasi() {
-    if(!kodeSaya) {
+    if(!localStorage.getItem("kodeAktifPelanggan")) {
         let kodeKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
         if(!kodeKonsul) {
             kodeKonsul = "KONSUL-" + new Date().getTime().toString().slice(-6);
@@ -1103,8 +1171,13 @@ function mulaiKonsultasi() {
         kodeSaya = kodeKonsul;
         document.getElementById("txtChatKode").textContent = "Konsultasi";
     }
+    
     aktifkanSistemChat();
-    document.getElementById("chatWidgetPelanggan").classList.remove("minimized");
+    const widget = document.getElementById("chatWidgetPelanggan");
+    if(widget.classList.contains("minimized")) {
+        widget.classList.remove("minimized");
+    }
+    document.getElementById("inputPesanPelanggan").focus();
 }
 
 function kirimChatPelanggan() {
@@ -1144,36 +1217,35 @@ function unduhPDF() {
     try {
         const { jsPDF } = window.jspdf; if (!jsPDF) return Swal.fire('Error', 'Library PDF belum termuat.', 'error');
         const doc = new jsPDF(); const getText = (id) => document.getElementById(id) ? document.getElementById(id).textContent : "-";
-        // ... (Kode PDF sama persis dengan aslinya)
+
         doc.setFontSize(22); doc.setTextColor(30, 64, 175); doc.text("FAKTUR SERVIS", 105, 20, { align: 'center' });
         doc.setFontSize(10); doc.setTextColor(100); doc.text("SF Tech Service Center", 105, 28, { align: 'center' });
         doc.setDrawColor(30, 64, 175); doc.line(10, 40, 200, 40);
         doc.setFontSize(11); doc.setTextColor(0);
         doc.text(`No. Faktur  : ${getText("noFaktur")}`, 15, 50); doc.text(`Tgl Servis  : ${getText("fakturTanggal")}`, 15, 56);
         doc.text(`Pelanggan   : ${getText("fakturNama")}`, 15, 62); doc.text(`Perangkat   : ${getText("fakturMerekTipe")}`, 15, 68);
+
         doc.autoTable({
             startY: 75, head: [['Keterangan', 'Biaya']],
             body: [ ['Biaya Suku Cadang', getText("fakturSuku")], ['Biaya Jasa Servis', getText("fakturJasa")], ['Biaya Kerusakan Tambahan', getText("fakturTambahan")], ['Potongan DP (Uang Muka)', '- Rp 50.000'] ],
             theme: 'striped', headStyles: { fillColor: [30, 64, 175] }
         });
+
         doc.setFont("helvetica", "bold"); doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
         doc.save(`Invoice_${getText("fakturKode")}.pdf`);
     } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
 }
 
-// REVISI TOTAL LOGIKA DRAGGABLE (Ditingkatkan)
+// FITUR BARU: LOGIKA DRAGGABLE YANG DIPERBAIKI (TIDAK MENGGANGGU KLIK)
 const widgetChat = document.getElementById("chatWidgetPelanggan");
 const headerChat = document.getElementById("headerDragChat");
 let isDragging = false, isMoving = false, startX, startY, initLeft, initTop;
 
 function onDragStart(e) {
-    // Jika user klik tombol minimize, jangan lakukan drag
-    if(e.target.closest('.chat-toggle-btn')) return;
-    
+    if(e.target.closest('.chat-toggle-btn')) return; // Abaikan jika kena tombol toggle
     isDragging = true;
     isMoving = false; 
     
-    // Ambil posisi awal
     if(e.type === 'touchstart') {
         startX = e.touches[0].clientX; startY = e.touches[0].clientY;
     } else {
@@ -1191,7 +1263,7 @@ function onDragMove(e) {
     let currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
     let currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
     
-    // Hanya anggap sebagai gerakan (bukan klik) jika bergeser > 5px
+    // Hanya anggap bergeser jika mouse pindah lebih dari 5 pixel (threshold)
     if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
         isMoving = true;
         widgetChat.style.bottom = 'auto'; 
@@ -1205,18 +1277,15 @@ function onDragMove(e) {
 
 function onDragEnd(e) {
     if(!isDragging) return;
-    
-    // Jika HANYA KLIK (tidak ada gerakan drag), maka toggle
+    // Jika tidak ada pergerakan, berarti ini hanya "klik" biasa
     if(!isMoving) {
         toggleChatWidget();
     }
-    
     isDragging = false;
     isMoving = false;
     widgetChat.style.transition = 'all 0.3s ease'; 
 }
 
-// Event Listeners
 headerChat.addEventListener('mousedown', onDragStart);
 document.addEventListener('mousemove', onDragMove);
 document.addEventListener('mouseup', onDragEnd);
@@ -1224,31 +1293,6 @@ headerChat.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
 
-// FITUR KONSULTASI (Pastikan fungsi ini ada di index.html Anda)
-function mulaiKonsultasi() {
-    // 1. Inisialisasi kode konsultasi
-    if(!localStorage.getItem("kodeAktifPelanggan")) {
-        let kodeKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
-        if(!kodeKonsul) {
-            kodeKonsul = "KONSUL-" + new Date().getTime().toString().slice(-6);
-            localStorage.setItem("kodeKonsultasiPelanggan", kodeKonsul);
-        }
-        kodeSaya = kodeKonsul;
-        document.getElementById("txtChatKode").textContent = "Konsultasi";
-    }
-    
-    // 2. Aktifkan sistem chat
-    aktifkanSistemChat();
-    
-    // 3. Pastikan widget chat terbuka (bukan minimized)
-    const widget = document.getElementById("chatWidgetPelanggan");
-    if(widget.classList.contains("minimized")) {
-        widget.classList.remove("minimized");
-    }
-    
-    // 4. Fokuskan ke input chat
-    document.getElementById("inputPesanPelanggan").focus();
-}
 </script>
 </body>
 </html>
