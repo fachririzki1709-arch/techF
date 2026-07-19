@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servis HP & Elektronik Online</title>
+    <!-- Peningkatan SEO & Meta Data -->
+    <title>SF Tech - Servis HP & Elektronik Online Bergaransi</title>
+    <meta name="description" content="Layanan servis HP dan elektronik rumah tangga profesional. Panggil teknisi ke rumah atau workshop. Tersedia penggantian LCD, baterai Xiaomi, Oppo, Infinix, dll. Lacak progres secara real-time.">
+    <meta name="keywords" content="Servis HP, Servis Elektronik, Ganti LCD, Servis Panggilan, SF Tech">
+    <meta property="og:title" content="SF Tech Service - Solusi Perbaikan Perangkat Anda">
+    <meta property="og:description" content="Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time.">
+    
     <!-- Import Font Premium & Ikon Modern -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,7 +133,6 @@
         .alert-bahaya {background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:1.2rem; border-radius:8px; margin:1rem 0; font-size: 0.9rem;}
         .alert-warning-box {background:#fff7ed; color:#c2410c; border-left:4px solid #f97316; padding:1.2rem; border-radius:8px; margin:1rem 0;}
 
-        /* CSS BARU: Penyesuaian Chat agar bisa di-drag dengan rapi */
         .chat-widget { position: fixed; bottom: 25px; right: 25px; width: 340px; max-width: calc(100vw - 50px); background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); z-index: 9999; border: 1px solid #e2e8f0; overflow: hidden; display: none; flex-direction: column; animation: chatSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transition: all 0.3s ease; }
         @keyframes chatSlide { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
@@ -202,7 +207,7 @@
         <img src="Full Horizon_1.png" alt="SF Service Logo" style="height: 40px; width: auto; vertical-align: middle;">
     </div>
     <nav style="display:flex; align-items:center;">
-        <button onclick="toggleDarkMode()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
+        <button onclick="toggleDarkMode()" aria-label="Ganti Tema Tampilan" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
         <a onclick="tampilHalaman('home'); kembaliKeAwal();"><i class="bi bi-house"></i> Home</a>
         <a onclick="tampilHalaman('about')"><i class="bi bi-info-circle"></i> About Us</a>
         <a onclick="tampilHalaman('profile')"><i class="bi bi-images"></i> Profile</a>
@@ -280,19 +285,20 @@
                 <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi / Google Maps (Opsional)</label>
                 <div style="display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;">
                     <input type="url" id="shareloc" placeholder="Link Google Maps atau klik tombol di samping ->" oninput="simpanDraft()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-                    <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin: 0; white-space: nowrap;"><i class="bi bi-crosshair"></i> Lokasi Saat Ini</button>
+                    <button type="button" class="btn" aria-label="Dapatkan Lokasi GPS" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin: 0; white-space: nowrap;"><i class="bi bi-crosshair"></i> Lokasi Saat Ini</button>
                 </div>
                 
                 <label>Merek Perangkat <span style="color:red;">*</span></label>
                 <select id="merek" onchange="toggleMerekLainnya()">
                     <option value="">-- Silakan Pilih Kategori Merek --</option>
                     <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
-                        <option value="Samsung">Samsung</option>
+                        <!-- Peningkatan Spesifikasi Hardware: Menguraikan merek untuk estimasi ketersediaan parts LCD/Baterai -->
                         <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
                         <option value="OPPO">OPPO / Realme</option>
+                        <option value="Infinix">Infinix / Tecno</option>
+                        <option value="Samsung">Samsung</option>
                         <option value="Vivo">Vivo</option>
                         <option value="iPhone">Apple / iPhone</option>
-                        <option value="Infinix">Infinix / Tecno</option>
                         <option value="Asus">Asus / ROG</option>
                     </optgroup>
                     <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
@@ -314,14 +320,14 @@
                 <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
                 
                 <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-                <input type="text" id="tipe" placeholder="Contoh: Galaxy A54 / Rice Cooker CRJ-3301" oninput="simpanDraft()">
+                <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12 / Rice Cooker CRJ-3301" oninput="simpanDraft()">
                 <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
                 
                 <label>Kerusakan / Keluhan</label>
                 <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
 
                 <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
-                <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
+                <input type="file" id="fileKondisi" accept="image/*,video/*" aria-label="Upload File Kondisi Perangkat" onchange="tampilPratinjau()">
                 <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file: 5MB</p>
                 <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
 
@@ -334,7 +340,7 @@
             <!-- STEP 3: BAYAR DP -->
             <div class="content-box" id="step-3">
                 <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP)</h3>
-                <p>Kode Pesanan: <strong id="kodePesananDP">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
+                <p>Kode Pesanan: <strong id="kodePesananDP">-</strong> <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
                 <p style="margin-top:0.5rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
                 
                 <div class="alert-bahaya">
@@ -357,7 +363,7 @@
                 <p style="margin: 1rem 0;">Metode DP dipilih: <strong id="metodeDPDipilih">-</strong></p>
                 <button class="btn btn-success" id="btnKonfirmasiDP" onclick="konfirmasiBayarDP()"><i class="bi bi-check-circle"></i> Konfirmasi Bayar DP</button>
                 <label>Upload Bukti Transfer DP:</label>
-                <input type="file" id="fileBuktiDP" accept="image/*" onchange="previewBukti(this, 'pratinjauDP')">
+                <input type="file" id="fileBuktiDP" accept="image/*" aria-label="Upload Bukti Transfer DP" onchange="previewBukti(this, 'pratinjauDP')">
                 <div class="pratinjau" id="pratinjauDP" style="display:none;"></div>
                 <div class="info catatan" id="infoValidasiDP" style="display:none; margin-top:1rem; background: #fff7ed; border-left-color: #d97706; color: #92400e;">
                     <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu verifikasi pembayaran DP oleh admin. Penjadwalan teknisi akan dibuka setelah DP valid...</strong></span>
@@ -367,7 +373,7 @@
             <!-- STEP 4: JADWAL -->
             <div class="content-box" id="step-4">
                 <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
-                <p>Kode Pesanan: <strong id="kodePesanan">-</strong> <button onclick="salinKode()" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
+                <p>Kode Pesanan: <strong id="kodePesanan">-</strong> <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem; margin-left:8px;"><i class="bi bi-copy"></i> Salin</button></p>
                 <div id="infoJadwal" style="margin-top: 1rem;">
                     <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
                 </div>
@@ -395,8 +401,8 @@
                     </div>
                     
                     <div style="margin-top:1rem;" id="aksiTambahan">
-                        <button class="btn btn-success" onclick="responsTambahan(true)"><i class="bi bi-hand-thumbs-up"></i> Setuju & Lanjutkan</button>
-                        <button class="btn btn-danger" onclick="responsTambahan(false)"><i class="bi bi-x-circle"></i> Tolak (Batalkan Servis)</button>
+                        <button class="btn btn-success" aria-label="Setujui Biaya Tambahan" onclick="responsTambahan(true)"><i class="bi bi-hand-thumbs-up"></i> Setuju & Lanjutkan</button>
+                        <button class="btn btn-danger" aria-label="Tolak Biaya Tambahan" onclick="responsTambahan(false)"><i class="bi bi-x-circle"></i> Tolak (Batalkan Servis)</button>
                     </div>
                 </div>
 
@@ -446,7 +452,7 @@
                     <p><strong>Bank:</strong> <span id="namaBank">-</span></p>
                 </div>
                 <label>Upload Bukti Transfer Pelunasan:</label>
-                <input type="file" id="fileBuktiPelunasan" accept="image/*" onchange="previewBukti(this, 'pratinjauPelunasan')">
+                <input type="file" id="fileBuktiPelunasan" accept="image/*" aria-label="Upload Bukti Transfer Pelunasan" onchange="previewBukti(this, 'pratinjauPelunasan')">
                 <div class="pratinjau" id="pratinjauPelunasan" style="display:none;"></div>
                 
                 <p style="margin:1rem 0;">Metode dipilih: <strong id="metodeDipilih">-</strong></p>
@@ -494,12 +500,12 @@
                         <i class="bi bi-star" data-val="5"></i>
                     </div>
                     <textarea id="ulasanPelanggan" rows="2" placeholder="Tuliskan ulasan Anda mengenai hasil servis..." style="margin-top:10px;"></textarea>
-                    <button class="btn btn-success" onclick="kirimRatingUlasan()">Kirim Ulasan</button>
+                    <button class="btn btn-success" aria-label="Kirim Ulasan" onclick="kirimRatingUlasan()">Kirim Ulasan</button>
                 </div>
 
                 <div class="tombol-faktur">
-                    <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
-                    <button class="btn btn-home" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
+                    <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()" aria-label="Unduh PDF Faktur"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
+                    <button class="btn btn-home" aria-label="Kembali ke Beranda" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
                 </div>
             </div>
         </div>
@@ -568,9 +574,9 @@
 
 <footer class="footer-section">
     <div style="display:flex; justify-content:center; gap: 15px; margin-bottom:1rem;">
-        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-facebook"></i></a>
-        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-instagram"></i></a>
-        <a href="#" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-whatsapp"></i></a>
+        <a href="#" aria-label="Facebook SF Tech" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-facebook"></i></a>
+        <a href="#" aria-label="Instagram SF Tech" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-instagram"></i></a>
+        <a href="#" aria-label="WhatsApp SF Tech" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-whatsapp"></i></a>
     </div>
     <p>&copy; 2026 SF Tech Service. Semua Hak Dilindungi.</p>
 </footer>
@@ -582,14 +588,14 @@
             <i class="bi bi-chat-dots-fill"></i> 
             <span>Chat <span id="txtChatKode">-</span></span>
         </div>
-        <button class="chat-toggle-btn" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
+        <button class="chat-toggle-btn" aria-label="Minimize Chat" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
             <i class="bi bi-dash-lg"></i>
         </button>
     </div>
     <div class="chat-messages" id="boxPesanPelanggan"></div>
     <div class="chat-input-row">
-        <input type="text" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()">
-        <button onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
+        <input type="text" aria-label="Ketik pesan chat" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()">
+        <button aria-label="Kirim Chat" onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
     </div>
 </div>
 
@@ -904,7 +910,6 @@ function kirimPesanan() {
     const layananTerpilih = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.parentElement.textContent.trim()).join(", ");
     const generatedKode = "HS-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.floor(Math.random()*900+100);
     
-    // FITUR BARU: Ambil kode konsultasi jika ada untuk dilempar ke backend (migrasi chat)
     const kodeKonsulLama = localStorage.getItem("kodeKonsultasiPelanggan") || "";
 
     const data = {
@@ -923,7 +928,7 @@ function kirimPesanan() {
         kodeSaya = generatedKode;
         localStorage.setItem("kodeAktifPelanggan", kodeSaya);
         localStorage.removeItem("draftFormServis");
-        localStorage.removeItem("kodeKonsultasiPelanggan"); // hapus status konsul karena sudah jadi order
+        localStorage.removeItem("kodeKonsultasiPelanggan"); 
         
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
@@ -1052,12 +1057,13 @@ function kirimRatingUlasan() {
 }
 
 function cekStatus() {
-    // Abaikan jika kodeSaya masih bentuk Konsultasi
     if(!kodeSaya || kodeSaya.startsWith("KONSUL-")) return; 
     
     fetch(`${API_URL}/orders/${kodeSaya}`).then(res => res.json()).then(data => {
         if(!data) { kembaliKeAwal(); return; }
         hilangkanSkeleton();
+        
+        // Peningkatan Manajemen Status Transaksi (Menunggu Persetujuan Tambahan)
         if(document.getElementById("boxKerusakanTambahan")) {
             if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "pending" && data.status !== "ditolak_pelanggan") {
                 document.getElementById("boxKerusakanTambahan").style.display = "block";
@@ -1162,7 +1168,6 @@ function kembaliKeAwal() {
 function aktifkanSistemChat() { const w = document.getElementById("chatWidgetPelanggan"); if(w) w.style.display = "flex"; muatLogPesan(); }
 function toggleChatWidget() { document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); }
 
-// FITUR BARU: Memulai Chat Konsultasi
 function mulaiKonsultasi() {
     if(!localStorage.getItem("kodeAktifPelanggan")) {
         let kodeKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
@@ -1238,7 +1243,6 @@ function unduhPDF() {
     } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
 }
 
-// PERBAIKAN LOGIKA DRAG & CLICK (Threshold 5px)
 const widgetChat = document.getElementById("chatWidgetPelanggan");
 const headerChat = document.getElementById("headerDragChat");
 let isDragging = false, isMoving = false, startX, startY;
@@ -1247,34 +1251,25 @@ function onDragStart(e) {
     if(e.target.closest('.chat-toggle-btn')) return;
     
     isDragging = true;
-    isMoving = false; // Reset status gerak
-    
-    // Ambil posisi awal (support touch & mouse)
+    isMoving = false;
     const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
     const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
     
     startX = clientX; 
     startY = clientY;
-    
     widgetChat.style.transition = 'none'; 
 }
 
 function onDragMove(e) {
     if(!isDragging) return;
-    
     const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
     const currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-    
-    // threshold 5px: hanya dianggap "geser" jika jari bergerak lebih dari 5 pixel
     if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
         isMoving = true; 
-        
-        // Update posisi
         widgetChat.style.bottom = 'auto'; 
         widgetChat.style.right = 'auto';
         widgetChat.style.left = (widgetChat.offsetLeft + (currentX - startX)) + 'px';
         widgetChat.style.top = (widgetChat.offsetTop + (currentY - startY)) + 'px';
-        
         startX = currentX;
         startY = currentY;
     }
@@ -1282,18 +1277,12 @@ function onDragMove(e) {
 
 function onDragEnd(e) {
     if(!isDragging) return;
-    
-    // JIKA TIDAK ADA PERGERAKAN (isMoving false), berarti ini KLIK/TAP
-    if(!isMoving) {
-        toggleChatWidget(); 
-    }
-    
+    if(!isMoving) { toggleChatWidget(); }
     isDragging = false;
     isMoving = false;
     widgetChat.style.transition = 'all 0.3s ease'; 
 }
 
-// Pasang Event Listeners
 headerChat.addEventListener('mousedown', onDragStart);
 document.addEventListener('mousemove', onDragMove);
 document.addEventListener('mouseup', onDragEnd);
