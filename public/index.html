@@ -1161,16 +1161,18 @@ function unduhPDF() {
     } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
 }
 
-// LOGIKA DRAGGABLE UNTUK CHAT WIDGET
+/ REVISI LOGIKA DRAGGABLE (Lebih Stabil & Support Click)
 const widgetChat = document.getElementById("chatWidgetPelanggan");
 const headerChat = document.getElementById("headerDragChat");
-let isDragging = false, startX, startY, initLeft, initTop;
+let isDragging = false, isMoving = false, startX, startY, initLeft, initTop;
 
 function onDragStart(e) {
-    // Jangan drag jika yang diklik adalah tombol minimize (toggle)
+    // Jangan drag jika yang diklik adalah tombol toggle (karena tombol punya fungsi klik sendiri)
     if(e.target.closest('.chat-toggle-btn')) return;
     
     isDragging = true;
+    isMoving = false; // Indikator apakah sedang bergeser atau tidak
+    
     if(e.type === 'touchstart') {
         startX = e.touches[0].clientX; startY = e.touches[0].clientY;
     } else {
@@ -1179,43 +1181,50 @@ function onDragStart(e) {
     
     const rect = widgetChat.getBoundingClientRect();
     initLeft = rect.left; initTop = rect.top;
-    
-    // Matikan bottom dan right constraint css
-    widgetChat.style.bottom = 'auto'; 
-    widgetChat.style.right = 'auto';
-    widgetChat.style.margin = '0';
-    widgetChat.style.transition = 'none'; // Matikan animasi css sementara digeser
+    widgetChat.style.transition = 'none'; // Matikan animasi saat dipegang
 }
 
 function onDragMove(e) {
     if(!isDragging) return;
-    e.preventDefault(); // Mencegah scrolling browser pada touch
     
     let currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
     let currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
     
-    let dx = currentX - startX; 
-    let dy = currentY - startY;
-    
-    widgetChat.style.left = `${initLeft + dx}px`;
-    widgetChat.style.top = `${initTop + dy}px`;
+    // Threshold: Hanya anggap drag jika sudah bergeser lebih dari 5px
+    if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
+        isMoving = true;
+        
+        // Hapus posisi bottom/right agar bisa bebas diatur dengan left/top
+        widgetChat.style.bottom = 'auto'; 
+        widgetChat.style.right = 'auto';
+        widgetChat.style.margin = '0';
+        
+        widgetChat.style.left = `${initLeft + (currentX - startX)}px`;
+        widgetChat.style.top = `${initTop + (currentY - startY)}px`;
+    }
 }
 
-function onDragEnd() {
+function onDragEnd(e) {
     if(!isDragging) return;
+    
+    // Jika tidak ada pergerakan (isMoving false), maka anggap sebagai klik
+    if(!isMoving) {
+        // Panggil fungsi toggle chat secara manual jika tidak sedang drag
+        toggleChatWidget();
+    }
+    
     isDragging = false;
-    widgetChat.style.transition = 'all 0.3s ease'; // Hidupkan animasi lagi
+    isMoving = false;
+    widgetChat.style.transition = 'all 0.3s ease'; // Kembalikan animasi
 }
 
-// Mouse events
+// Event Listeners (Tetap sama)
 headerChat.addEventListener('mousedown', onDragStart);
 document.addEventListener('mousemove', onDragMove);
 document.addEventListener('mouseup', onDragEnd);
-// Touch events untuk HP
 headerChat.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
-
 </script>
 </body>
 </html>
