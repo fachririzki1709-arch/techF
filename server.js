@@ -218,7 +218,8 @@ app.post('/api/chats', async (req, res) => {
     try {
         const chatBaru = new Chat(req.body);
         await chatBaru.save();
-        io.emit("chatBaruDiterima", chatBaru.kode);
+        // MODIFIKASI: Mengirim data pengirim agar frontend bisa membedakan pop-up alert
+        io.emit("chatBaruDiterima", { kode: chatBaru.kode, pengirim: chatBaru.pengirim });
         res.status(201).json({ message: "Chat terkirim" });
     } catch (error) { res.status(500).json({ error: "Gagal kirim chat" }); }
 });
