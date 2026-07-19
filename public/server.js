@@ -6,6 +6,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken'); 
 const path = require('path'); 
 const http = require('http');
+const fs = require('fs');
+const bcrypt = require('bcryptjs');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -13,17 +15,53 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // --- MIDDLEWARE ---
+// Limit tetap 50mb untuk menerima payload base64 dari client sebelum di-convert
 app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
+
+// Tambahan Fitur: Middleware Anti-Cache untuk semua route API agar tidak ada delay/bug di beda perangkat (mobile)
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
 
 // --- WEBSOCKET ---
 io.on('connection', (socket) => {
     console.log("🟢 Klien terhubung ke WebSocket");
 });
 
-// --- KONFIGURASI FOLDER FRONTEND ---
+// --- KONFIGURASI FOLDER FRONTEND & UPLOADS ---
 const publicPath = path.join(__dirname, 'public');
+const uploadPath = path.join(publicPath, 'uploads');
 app.use(express.static(publicPath));
+
+// Otomatis buat folder uploads jika belum ada
+if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+}
+
+// --- FUNGSI HELPER: KONVERSI BASE64 KE FILE FISIK ---
+function simpanBase64KeFile(base64String, prefix) {
+    if (!base64String || !base64String.startsWith('data:')) return base64String;
+    try {
+        const matches = base64String.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) return "";
+        let ext = matches[1].split('/')[1] || 'png';
+        if (ext === 'jpeg') ext = 'jpg';
+        
+        const buffer = Buffer.from(matches[2], 'base64');
+        const filename = `${prefix}_${Date.now()}.${ext}`;
+        const filepath = path.join(uploadPath, filename);
+        
+        fs.writeFileSync(filepath, buffer);
+        return `/uploads/${filename}`; // Kembalikan URL lokal untuk disimpan di DB
+    } catch (err) {
+        console.error("Gagal simpan file:", err);
+        return "";
+    }
+}
 
 // --- KONEKSI MONGODB ---
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/db_servis_hp"; 
@@ -52,7 +90,7 @@ const OrderSchema = new mongoose.Schema({
     adaKerusakanTambahan: { type: Boolean, default: false },
     infoKerusakanTambahan: String,
     biayaSukuTambahan: { type: Number, default: 0 },
-    statusPersetujuanTambahan: { type: String, default: "pending" },
+    statusPersetujuanTambahan: { type: String, default: "pending" }, // pending, disetujui, ditolak
     kondisiHP: String,
     tipeKondisi: { type: String, default: "" }
 });
@@ -63,23 +101,11 @@ const ChatSchema = new mongoose.Schema({
 });
 const Chat = mongoose.model('Chat', ChatSchema, 'chats');
 
-// --- FUNGSI WA GATEWAY ---
-async function kirimWhatsAppGateway(nomor, pesan) {
-    let nomorFormatted = nomor.trim();
-    if (nomorFormatted.startsWith("0")) nomorFormatted = "62" + nomorFormatted.slice(1);
-    const API_URL_GATEWAY = "https://api.providerwagateway.com/send-message"; 
-    const API_TOKEN = "ISI_DENGAN_TOKEN_GATEWAY_ANDA"; 
-    try {
-        await fetch(API_URL_GATEWAY, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_TOKEN}` },
-            body: JSON.stringify({ target: nomorFormatted, message: pesan })
-        });
-    } catch (err) { console.error("❌ Gagal mengirim WA:", err.message); }
-}
-
 // --- ROUTE API ---
 const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
+
+// Hash Password Default Admin (Lebih aman dari hardcode teks biasa)
+const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
 
 function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -93,7 +119,8 @@ function verifyAdmin(req, res, next) {
 
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
-    if (username === "admin" && password === "admin123") {
+    // Pengecekan bcrypt
+    if (username === "admin" && bcrypt.compareSync(password, ADMIN_HASH)) {
         const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ token, message: "Login Berhasil" });
     } else {
@@ -103,19 +130,32 @@ app.post('/api/admin/login', (req, res) => {
 
 app.get('/api/orders', verifyAdmin, async (req, res) => {
     try {
-        const dataOrders = await Order.find();
+        // Implementasi limit opsional untuk efisiensi jika data sudah ribuan
+        const limit = parseInt(req.query.limit) || 2000; 
+        const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
         const ordersObject = {};
         dataOrders.forEach(order => { if (order.kode) ordersObject[order.kode] = order; });
         res.json(ordersObject);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat" }); }
+    } catch (error) { res.status(500).json({ error: "Gagal memuat data pesanan" }); }
 });
 
 app.post('/api/orders', async (req, res) => {
     try {
-        const dataBaru = new Order(req.body);
+        // Validasi Sederhana
+        if (!req.body.nama || !req.body.wa || !req.body.merek) {
+            return res.status(400).json({ error: "Data wajib tidak lengkap" });
+        }
+
+        const dataOrder = req.body;
+        
+        // Konversi file kondisi perangkat dari base64 ke file fisik
+        if (dataOrder.kondisiHP && dataOrder.kondisiHP.startsWith('data:')) {
+            dataOrder.kondisiHP = simpanBase64KeFile(dataOrder.kondisiHP, 'KONDISI_' + dataOrder.kode);
+        }
+
+        const dataBaru = new Order(dataOrder);
         await dataBaru.save();
         
-        // MIGRASI CHAT KONSULTASI KE CHAT ORDER (Jika sebelumnya konsultasi)
         if(req.body.kodeKonsultasi) {
             await Chat.updateMany(
                 { kode: req.body.kodeKonsultasi },
@@ -131,13 +171,30 @@ app.post('/api/orders', async (req, res) => {
 app.get('/api/orders/:kode', async (req, res) => {
     try {
         const pesanan = await Order.findOne({ kode: req.params.kode });
+        if(!pesanan) return res.status(404).json({ error: "Pesanan tidak ditemukan" });
         res.json(pesanan);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat" }); }
+    } catch (error) { res.status(500).json({ error: "Gagal memuat pesanan" }); }
 });
 
 app.put('/api/orders/:kode', async (req, res) => {
     try {
-        const updateData = await Order.findOneAndUpdate({ kode: req.params.kode }, { $set: req.body }, { new: true });
+        const dataUpdate = req.body;
+
+        // Konversi Bukti DP jika ada payload base64
+        if (dataUpdate.buktiDP && dataUpdate.buktiDP.startsWith('data:')) {
+            dataUpdate.buktiDP = simpanBase64KeFile(dataUpdate.buktiDP, 'DP_' + req.params.kode);
+        }
+        // Konversi Bukti Pelunasan jika ada payload base64
+        if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) {
+            dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
+        }
+
+        const updateData = await Order.findOneAndUpdate(
+            { kode: req.params.kode }, 
+            { $set: dataUpdate }, 
+            { new: true }
+        );
+        
         io.emit("updateDataPelanggan", updateData.kode);
         io.emit("updateDashboardAdmin");
         res.json({ message: "Update berhasil" });
@@ -146,13 +203,13 @@ app.put('/api/orders/:kode', async (req, res) => {
 
 app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
     try {
+        // Opsional: Hapus file fisik juga jika diperlukan (fs.unlinkSync)
         await Order.findOneAndDelete({ kode: req.params.kode });
         io.emit("updateDashboardAdmin");
         res.json({ message: "Hapus berhasil" });
     } catch (error) { res.status(500).json({ error: "Gagal hapus" }); }
 });
 
-// ROUTE BARU: Ambil Daftar Chat Konsultasi Saja (Untuk Admin)
 app.get('/api/chats/konsultasi/list', verifyAdmin, async (req, res) => {
     try {
         const chats = await Chat.find({ kode: { $regex: '^KONSUL-' } }).sort({ _id: 1 });
@@ -169,7 +226,8 @@ app.post('/api/chats', async (req, res) => {
     try {
         const chatBaru = new Chat(req.body);
         await chatBaru.save();
-        io.emit("chatBaruDiterima", chatBaru.kode);
+        // MODIFIKASI: Mengirim data pengirim agar frontend bisa membedakan pop-up alert
+        io.emit("chatBaruDiterima", { kode: chatBaru.kode, pengirim: chatBaru.pengirim });
         res.status(201).json({ message: "Chat terkirim" });
     } catch (error) { res.status(500).json({ error: "Gagal kirim chat" }); }
 });
