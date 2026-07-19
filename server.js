@@ -19,6 +19,14 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
 
+// Tambahan Fitur: Middleware Anti-Cache untuk semua route API agar tidak ada delay/bug di beda perangkat (mobile)
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
+
 // --- WEBSOCKET ---
 io.on('connection', (socket) => {
     console.log("🟢 Klien terhubung ke WebSocket");
