@@ -253,7 +253,7 @@
                     </div>
                 </div>
 
-                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
+                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 1rem; flex-direction: column;">
                     <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan ke Data Diri <i class="bi bi-arrow-right"></i></button>
@@ -1161,18 +1161,19 @@ function unduhPDF() {
     } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
 }
 
-/ REVISI LOGIKA DRAGGABLE (Lebih Stabil & Support Click)
+// REVISI TOTAL LOGIKA DRAGGABLE (Ditingkatkan)
 const widgetChat = document.getElementById("chatWidgetPelanggan");
 const headerChat = document.getElementById("headerDragChat");
 let isDragging = false, isMoving = false, startX, startY, initLeft, initTop;
 
 function onDragStart(e) {
-    // Jangan drag jika yang diklik adalah tombol toggle (karena tombol punya fungsi klik sendiri)
+    // Jika user klik tombol minimize, jangan lakukan drag
     if(e.target.closest('.chat-toggle-btn')) return;
     
     isDragging = true;
-    isMoving = false; // Indikator apakah sedang bergeser atau tidak
+    isMoving = false; 
     
+    // Ambil posisi awal
     if(e.type === 'touchstart') {
         startX = e.touches[0].clientX; startY = e.touches[0].clientY;
     } else {
@@ -1181,7 +1182,7 @@ function onDragStart(e) {
     
     const rect = widgetChat.getBoundingClientRect();
     initLeft = rect.left; initTop = rect.top;
-    widgetChat.style.transition = 'none'; // Matikan animasi saat dipegang
+    widgetChat.style.transition = 'none'; 
 }
 
 function onDragMove(e) {
@@ -1190,41 +1191,64 @@ function onDragMove(e) {
     let currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
     let currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
     
-    // Threshold: Hanya anggap drag jika sudah bergeser lebih dari 5px
+    // Hanya anggap sebagai gerakan (bukan klik) jika bergeser > 5px
     if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
         isMoving = true;
-        
-        // Hapus posisi bottom/right agar bisa bebas diatur dengan left/top
         widgetChat.style.bottom = 'auto'; 
         widgetChat.style.right = 'auto';
         widgetChat.style.margin = '0';
         
-        widgetChat.style.left = `${initLeft + (currentX - startX)}px`;
-        widgetChat.style.top = `${initTop + (currentY - startY)}px`;
+        widgetChat.style.left = (initLeft + (currentX - startX)) + 'px';
+        widgetChat.style.top = (initTop + (currentY - startY)) + 'px';
     }
 }
 
 function onDragEnd(e) {
     if(!isDragging) return;
     
-    // Jika tidak ada pergerakan (isMoving false), maka anggap sebagai klik
+    // Jika HANYA KLIK (tidak ada gerakan drag), maka toggle
     if(!isMoving) {
-        // Panggil fungsi toggle chat secara manual jika tidak sedang drag
         toggleChatWidget();
     }
     
     isDragging = false;
     isMoving = false;
-    widgetChat.style.transition = 'all 0.3s ease'; // Kembalikan animasi
+    widgetChat.style.transition = 'all 0.3s ease'; 
 }
 
-// Event Listeners (Tetap sama)
+// Event Listeners
 headerChat.addEventListener('mousedown', onDragStart);
 document.addEventListener('mousemove', onDragMove);
 document.addEventListener('mouseup', onDragEnd);
 headerChat.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
+
+// FITUR KONSULTASI (Pastikan fungsi ini ada di index.html Anda)
+function mulaiKonsultasi() {
+    // 1. Inisialisasi kode konsultasi
+    if(!localStorage.getItem("kodeAktifPelanggan")) {
+        let kodeKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
+        if(!kodeKonsul) {
+            kodeKonsul = "KONSUL-" + new Date().getTime().toString().slice(-6);
+            localStorage.setItem("kodeKonsultasiPelanggan", kodeKonsul);
+        }
+        kodeSaya = kodeKonsul;
+        document.getElementById("txtChatKode").textContent = "Konsultasi";
+    }
+    
+    // 2. Aktifkan sistem chat
+    aktifkanSistemChat();
+    
+    // 3. Pastikan widget chat terbuka (bukan minimized)
+    const widget = document.getElementById("chatWidgetPelanggan");
+    if(widget.classList.contains("minimized")) {
+        widget.classList.remove("minimized");
+    }
+    
+    // 4. Fokuskan ke input chat
+    document.getElementById("inputPesanPelanggan").focus();
+}
 </script>
 </body>
 </html>
