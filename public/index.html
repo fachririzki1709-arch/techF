@@ -207,6 +207,30 @@
         .foto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
         .foto-item { background: #e2e8f0; height: 200px; border-radius: 12px; display: flex; flex-direction:column; align-items: center; justify-content: center; color: #64748b; font-weight: bold; border: 2px dashed #cbd5e1; }
         body.dark-mode .foto-item { background: #334155; border-color: #475569; color: #94a3b8;}
+
+        /* FITUR WORKSHOP TRACKING & MOBILE CSS */
+        .ws-step { font-size: 0.85rem; padding: 0.8rem 1rem; border-radius: 8px; background: #f1f5f9; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: all 0.3s ease; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        .ws-step.aktif { background: #0ea5e9; color: white; border-color: #0ea5e9; transform: scale(1.02); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2); }
+        .ws-step.selesai { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        body.dark-mode .ws-step { background: #1e293b; color: #f8fafc; border-color: #334155; }
+        body.dark-mode .ws-step.selesai { background: rgba(22, 101, 52, 0.2); color: #4ade80; border-color: rgba(22, 101, 52, 0.3); }
+        
+        @media (max-width: 768px) {
+            .container { margin: 1.5rem auto; padding: 0 4%; }
+            .content-box { padding: 1.5rem; }
+            .hero-section { padding: 2.5rem 1rem; }
+            .hero-section h1 { font-size: 1.8rem; }
+            .step-item { min-width: 65px; }
+            .step-text { font-size: 0.65rem; }
+            .metode-bayar { grid-template-columns: 1fr; }
+            .btn { width: 100%; justify-content: center; margin-bottom: 0.5rem; margin-right: 0; }
+            .faktur { padding: 1.5rem; margin-top: 1rem; }
+            header { padding: 1rem; flex-direction: column; gap: 12px; }
+            nav { width: 100%; justify-content: center; flex-wrap: wrap; gap: 15px; }
+            nav a { margin-left: 0; font-size: 0.95rem; }
+            .chat-widget { width: 100%; bottom: 0; right: 0; border-radius: 16px 16px 0 0; }
+            .chat-widget.minimized { width: 60px; height: 60px; bottom: 20px; right: 20px; border-radius: 50%; }
+        }
     </style>
 </head>
 <body>
@@ -463,6 +487,29 @@
                         <button class="btn btn-success" aria-label="Setujui Biaya Tambahan" onclick="responsTambahan('disetujui')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-check-circle-fill"></i> Setuju & Lanjutkan Perbaikan Tambahan</button>
                         <button class="btn btn-secondary" aria-label="Tolak Tambahan Tapi Lanjut" onclick="responsTambahan('ditolak_lanjut')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-tools"></i> Tolak Tambahan (Lanjutkan Servis Awal Saja)</button>
                         <button class="btn btn-danger" aria-label="Tolak Biaya Tambahan" onclick="responsTambahan('ditolak_batal')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-x-circle"></i> Batalkan Semua Servis (DP Hangus)</button>
+                    </div>
+                </div>
+
+                <!-- INFO ESTIMASI & SPAREPART -->
+                <div id="boxInfoEstimasi" style="display:none; background:#f0f9ff; border-left:4px solid #0ea5e9; padding:1.2rem; border-radius:8px; margin-bottom:1rem;">
+                    <h4 style="color:#0369a1; font-size:1rem; margin-bottom:5px;"><i class="bi bi-calendar2-check"></i> Estimasi Pengerjaan</h4>
+                    <p>Perkiraan selesai pada: <strong id="lblEstimasiSelesai" class="data-dinamis" style="color:#0f172a;">-</strong></p>
+                    
+                    <div id="alertInden" style="display:none; margin-top:8px; background:#fff7ed; padding:8px 12px; border-radius:6px; color:#c2410c; font-size:0.85rem; font-weight:600;">
+                        <i class="bi bi-box-seam-fill"></i> Sparepart berstatus INDEN (Pre-Order). Waktu perbaikan mungkin lebih lama karena menunggu pengiriman suku cadang.
+                    </div>
+                </div>
+
+                <!-- TRACKING MIKRO WORKSHOP -->
+                <div id="boxTrackingWorkshop" style="display:none; margin: 1.5rem 0; padding: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem; color:#0f172a;"><i class="bi bi-building-gear"></i> Status Unit di Workshop</h4>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                        <div class="ws-step data-dinamis" id="ws-antrean"><i class="bi bi-1-circle"></i> Masuk Antrean Workshop</div>
+                        <div class="ws-step data-dinamis" id="ws-pengecekan"><i class="bi bi-2-circle"></i> Pengecekan Detail (QC Awal)</div>
+                        <div class="ws-step data-dinamis" id="ws-tunggu_part"><i class="bi bi-3-circle"></i> Menunggu Sparepart Inden</div>
+                        <div class="ws-step data-dinamis" id="ws-perbaikan"><i class="bi bi-4-circle"></i> Sedang Diperbaiki Teknisi</div>
+                        <div class="ws-step data-dinamis" id="ws-qc_akhir"><i class="bi bi-5-circle"></i> Quality Control (Testing Akhir)</div>
+                        <div class="ws-step data-dinamis" id="ws-siap"><i class="bi bi-6-circle"></i> Unit Siap Diambil/Dikirim</div>
                     </div>
                 </div>
 
@@ -1324,6 +1371,39 @@ function cekStatus() {
             targetStep = 5;
             document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
             document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
+            
+            // --- FITUR BARU: LOGIKA TAMPILAN ESTIMASI & WORKSHOP ---
+            const boxEstimasi = document.getElementById("boxInfoEstimasi");
+            if(data.estimasiSelesai) {
+                boxEstimasi.style.display = "block";
+                document.getElementById("lblEstimasiSelesai").textContent = new Date(data.estimasiSelesai).toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                
+                if(data.statusSparepart === "inden") {
+                    document.getElementById("alertInden").style.display = "block";
+                } else {
+                    document.getElementById("alertInden").style.display = "none";
+                }
+            } else {
+                boxEstimasi.style.display = "none";
+            }
+
+            const boxWorkshop = document.getElementById("boxTrackingWorkshop");
+            if(data.lokasiServis === "workshop") {
+                boxWorkshop.style.display = "block";
+                const urutan = ["antrean", "pengecekan", "tunggu_part", "perbaikan", "qc_akhir", "siap"];
+                const indexSaatIni = urutan.indexOf(data.subStatusWorkshop || "antrean");
+                
+                urutan.forEach((step, idx) => {
+                    const el = document.getElementById("ws-" + step);
+                    el.className = "ws-step data-dinamis"; // reset
+                    if (idx < indexSaatIni) el.classList.add("selesai");
+                    else if (idx === indexSaatIni) el.classList.add("aktif");
+                });
+            } else {
+                boxWorkshop.style.display = "none";
+            }
+            // --------------------------------------------------------
+
             sinkronBiayaTampil(data);
         }
         else if (data.status === "selesai_servis") { targetStep = 6; sinkronBiayaTampil(data); }
