@@ -92,7 +92,11 @@ const OrderSchema = new mongoose.Schema({
     biayaSukuTambahan: { type: Number, default: 0 },
     statusPersetujuanTambahan: { type: String, default: "pending" }, // pending, disetujui, ditolak
     kondisiHP: String,
-    tipeKondisi: { type: String, default: "" }
+    tipeKondisi: { type: String, default: "" },
+    // --- FITUR BARU: TRACKING WORKSHOP & ESTIMASI ---
+    subStatusWorkshop: { type: String, default: "antrean" }, // antrean, pengecekan, tunggu_part, perbaikan, qc_akhir, siap
+    estimasiSelesai: { type: String, default: "" }, // Format: YYYY-MM-DD
+    statusSparepart: { type: String, default: "ready" } // ready, inden
 });
 const Order = mongoose.model('Order', OrderSchema, 'orders');
 
