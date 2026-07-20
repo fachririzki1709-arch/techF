@@ -467,10 +467,42 @@
                 <div id="wrapperPenjadwalan">
                     <h4 style="font-size:1rem; font-weight:800; margin-bottom:5px; color:var(--teks-utama);">📅 Langkah 2: Atur Penjadwalan Teknisi</h4>
                     <label style="font-weight:600; margin-top:10px; display:block;">Lokasi Perbaikan:</label>
-                    <select id="lokasiServis" class="kunci-target">
+                    <select id="lokasiServis" class="kunci-target" onchange="toggleBoxWorkshopAdmin()">
                         <option value="home_service">Service di Rumah Pelanggan (On-Site)</option>
                         <option value="workshop">Barang Dibawa oleh Teknisi (Ke Workshop)</option>
                     </select>
+                    
+                    <!-- FITUR BARU: ESTIMASI & STATUS WORKSHOP -->
+                    <div style="background:var(--bg-utama); border:1px solid var(--border-line); padding:1.2rem; border-radius:8px; margin-top:1rem; margin-bottom:1rem;">
+                        <h4 style="font-size:0.95rem; font-weight:800; color:var(--teks-utama); margin-bottom:10px;"><i class="bi bi-stopwatch"></i> Estimasi & Detail Workshop</h4>
+                        
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:10px;">
+                            <div>
+                                <label style="font-weight:600;">Estimasi Selesai (Tgl)</label>
+                                <input type="date" id="estimasiSelesai" class="kunci-target">
+                            </div>
+                            <div>
+                                <label style="font-weight:600;">Ketersediaan Sparepart</label>
+                                <select id="statusSparepart" class="kunci-target">
+                                    <option value="ready">Tersedia (Ready)</option>
+                                    <option value="inden">Harus Dipesan (Inden)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown ini hanya tampil jika lokasiServis == 'workshop' -->
+                        <div id="boxSubStatusWorkshop" style="display:none; background:rgba(14, 165, 233, 0.05); padding:10px; border-radius:6px; border:1px solid #bae6fd;">
+                            <label style="font-weight:600; color:#0ea5e9;"><i class="bi bi-search"></i> Progres Detail di Workshop:</label>
+                            <select id="subStatusWorkshop" class="kunci-target">
+                                <option value="antrean">1. Masuk Antrean Workshop</option>
+                                <option value="pengecekan">2. Pengecekan Detail (QC Awal)</option>
+                                <option value="tunggu_part">3. Menunggu Sparepart Inden</option>
+                                <option value="perbaikan">4. Sedang Diperbaiki Teknisi</option>
+                                <option value="qc_akhir">5. Quality Control (Testing Akhir)</option>
+                                <option value="siap">6. Unit Siap Diambil/Dikirim</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div style="background:var(--bg-utama); border: 1px solid var(--border-line); padding:0.8rem; border-radius:8px; margin: 0.5rem 0 1.2rem;">
                         <p style="font-size:0.85rem; margin:0;"><strong>Maps URL:</strong> <span id="linkShareloc">-</span></p>
@@ -1165,6 +1197,13 @@ function bukaModal(kode) {
         document.getElementById("keluhanAdmin").value = d.kerusakan || "Tidak ada deskripsi keluhan.";
         document.getElementById("txtMetodeDP").textContent = d.metodeDP || "Belum Memilih";
         document.getElementById("lokasiServis").value = d.lokasiServis || "home_service";
+        
+        // --- FITUR BARU WORKSHOP ---
+        document.getElementById("estimasiSelesai").value = d.estimasiSelesai || "";
+        document.getElementById("statusSparepart").value = d.statusSparepart || "ready";
+        document.getElementById("subStatusWorkshop").value = d.subStatusWorkshop || "antrean";
+        toggleBoxWorkshopAdmin();
+        // ---------------------------
 
         document.getElementById("chkAdaTambahan").checked = d.adaKerusakanTambahan || false;
         document.getElementById("infoTambahan").value = d.infoKerusakanTambahan || "";
@@ -1252,7 +1291,10 @@ function simpanPerubahan() {
         lokasiServis: document.getElementById("lokasiServis").value, etaTeknisi: document.getElementById("etaUpdate").value.trim(), 
         adaKerusakanTambahan: checkedTambahan, infoKerusakanTambahan: document.getElementById("infoTambahan").value.trim(),
         biayaSukuTambahan: parseInt(document.getElementById("biayaTambahan").value) || 0,
-        biayaSuku: parseInt(document.getElementById("biayaSuku").value) || 0, biayaJasa: parseInt(document.getElementById("biayaJasa").value) || 0
+        biayaSuku: parseInt(document.getElementById("biayaSuku").value) || 0, biayaJasa: parseInt(document.getElementById("biayaJasa").value) || 0,
+        estimasiSelesai: document.getElementById("estimasiSelesai").value,
+        statusSparepart: document.getElementById("statusSparepart").value,
+        subStatusWorkshop: document.getElementById("subStatusWorkshop").value
     };
 
     fetch(`${API_URL}/orders/${kode}`, {
@@ -1305,6 +1347,12 @@ function toggleFormTambahan() {
     const chk = document.getElementById("chkAdaTambahan").checked;
     document.getElementById("subFormTambahan").style.display = chk ? "block" : "none";
     hitungTotal(); validasiStatusKeTambahan();
+}
+
+function toggleBoxWorkshopAdmin() {
+    const val = document.getElementById("lokasiServis").value;
+    const box = document.getElementById("boxSubStatusWorkshop");
+    if(box) box.style.display = (val === "workshop") ? "block" : "none";
 }
 
 function tutupModal() { document.getElementById("modalKelola").style.display = "none"; aktifMembukaKode = ""; }
