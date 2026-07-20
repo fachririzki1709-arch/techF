@@ -180,6 +180,47 @@
             #printArea .flex { display: flex; justify-content: space-between; margin-bottom: 3px; }
             #printArea .line { border-bottom: 1px dashed black; margin: 8px 0; }
         }
+
+        /* --- FITUR MOBILE RESPONSIVE ADMIN --- */
+        .btn-mobile-menu { display: none; background: none; border: none; color: var(--teks-utama); font-size: 1.5rem; cursor: pointer; margin-right: 15px; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 90; backdrop-filter: blur(2px); }
+        .sidebar-overlay.aktif { display: block; animation: fadeIn 0.3s; }
+        
+        @media (max-width: 768px) {
+            .btn-mobile-menu { display: block; }
+            .sidebar { transform: translateX(-100%); z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
+            .sidebar.aktif { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; }
+            
+            .header-actions { gap: 0.5rem; }
+            header { padding: 1rem; justify-content: flex-start; }
+            header > div:first-child { flex: 1; display: flex; align-items: center; }
+            .header-actions .btn { padding: 0.5rem; font-size: 0; } /* Sembunyikan teks tombol di header mobile */
+            .header-actions .btn i { font-size: 1.2rem; margin: 0; }
+            
+            .container { padding: 1rem 4%; }
+            .ringkasan { grid-template-columns: 1fr; gap: 1rem; }
+            
+            .kontrol-fitur { flex-direction: column; align-items: stretch; gap: 1rem; padding: 1rem; }
+            .filter-grup { flex-direction: column; align-items: stretch; width: 100%; gap: 0.5rem; }
+            .filter-grup select, .filter-grup input[type="date"], .filter-grup input[type="text"] { width: 100%; }
+            
+            .modal-konten { width: 95%; padding: 1.2rem; margin: 5% auto; max-height: 90vh; overflow-y: auto;}
+            .tutup { top: 0.8rem; right: 0.8rem; }
+            #wrapperGridUtama { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+            
+            #menuKonsultasiPelanggan > div { flex-direction: column !important; height: auto !important; }
+            #listKonsultasi { min-width: 100%; height: 250px !important; }
+            #menuKonsultasiPelanggan > div > div:nth-child(2) { min-width: 100%; height: 500px; }
+            
+            .admin-chart-box { height: auto; min-height: 300px; }
+            
+            .bulk-actions-bar { flex-direction: column; gap: 10px; text-align: center; }
+            .tab-menu-modal { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+            .tab-btn-modal { font-size: 0.85rem; padding: 0.6rem 1rem; }
+            
+            table { min-width: 800px; } /* Pastikan tabel tetap bisa digeser secara horizontal */
+        }
     </style>
 </head>
 <body>
@@ -219,6 +260,7 @@
 </div>
 
 <div id="mainPanelWrapper">
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="app-container">
         <!-- SIDEBAR NAVIGATION -->
         <aside class="sidebar">
@@ -238,7 +280,8 @@
         <!-- MAIN CONTENT -->
         <main class="main-content">
             <header>
-                <div style="font-weight: 600; color: var(--teks-utama); font-size: 1.1rem;">
+                <div style="font-weight: 600; color: var(--teks-utama); font-size: 1.1rem; display: flex; align-items: center;">
+                    <button class="btn-mobile-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
                     Admin Panel
                 </div>
                 <div class="header-actions">
@@ -694,6 +737,11 @@ function tambahNotifikasiSistem(pesan) {
 }
 
 // LOGIKA SIDEBAR & TEMPLATE CHAT
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('aktif');
+    document.querySelector('.sidebar-overlay').classList.toggle('aktif');
+}
+
 function pindahSidebarMenu(tabIdTarget, btnElem) {
     document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("aktif"));
     btnElem.classList.add("aktif");
@@ -704,6 +752,10 @@ function pindahSidebarMenu(tabIdTarget, btnElem) {
     document.getElementById(tabIdTarget).classList.add("aktif");
     
     if(tabIdTarget === 'menuLaporanEkstra') renderGrafikEkstra();
+    
+    if(window.innerWidth <= 768) {
+        toggleSidebar();
+    }
 }
 
 function isiTemplateChat(teks, idTargetInput) {
