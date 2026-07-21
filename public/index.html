@@ -917,9 +917,33 @@ function inisialisasiOpsiMerek() {
 
 function updateBrandOptions() {
     inisialisasiOpsiMerek(); 
-    const isHP = Array.from(document.querySelectorAll('.kategori-card.hp input[type="checkbox"]')).some(cb => cb.checked);
-    const isElek = Array.from(document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]')).some(cb => cb.checked);
-    const isKomputer = Array.from(document.querySelectorAll('.kategori-card.komputer input[type="checkbox"]')).some(cb => cb.checked);
+    const cbHP = document.querySelectorAll('.kategori-card.hp input[type="checkbox"]');
+    const cbElek = document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]');
+    const cbKomputer = document.querySelectorAll('.kategori-card.komputer input[type="checkbox"]');
+
+    const isHP = Array.from(cbHP).some(cb => cb.checked);
+    const isElek = Array.from(cbElek).some(cb => cb.checked);
+    const isKomputer = Array.from(cbKomputer).some(cb => cb.checked);
+    
+    // --- TAMBAHAN LOGIKA EKSKLUSIVITAS KATEGORI ---
+    const toggleState = (cbs, disable) => {
+        cbs.forEach(cb => {
+            cb.disabled = disable && !cb.checked;
+            const parentDiv = cb.closest('.layanan-item');
+            if (disable && !cb.checked) {
+                parentDiv.style.opacity = '0.5';
+                parentDiv.style.pointerEvents = 'none'; // Cegah event klik dari div membocorkan trigger checkbox
+            } else {
+                parentDiv.style.opacity = '1';
+                parentDiv.style.pointerEvents = 'auto';
+            }
+        });
+    };
+
+    toggleState(cbHP, isElek || isKomputer);
+    toggleState(cbElek, isHP || isKomputer);
+    toggleState(cbKomputer, isHP || isElek);
+    // ----------------------------------------------
     
     const merekSelect = document.getElementById("merek");
     const currentValue = merekSelect.value;
