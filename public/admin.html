@@ -9,6 +9,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- FITUR BARU: Import Leaflet CSS untuk Peta Interaktif -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
@@ -407,7 +412,7 @@
                         </div>
                     </div>
 
-                    <!-- TABLE AREA DENGAN CUSTOM PAGINATION -->
+                    <!-- TABLE AREA DENGAN CUSTOM PAGINATION SERVER-SIDE -->
                     <div class="table-responsive">
                         <table id="tabelPesananUtama">
                             <thead>
@@ -567,6 +572,8 @@
 
                     <div style="background:var(--bg-utama); border: 1px solid var(--border-line); padding:0.8rem; border-radius:8px; margin: 0.5rem 0 1.2rem;">
                         <p style="font-size:0.85rem; margin:0;"><strong>Maps URL:</strong> <span id="linkShareloc">-</span></p>
+                        <!-- FITUR BARU: Pratinjau Peta Leaflet untuk Admin -->
+                        <div id="adminMapContainer" style="height: 150px; width: 100%; border-radius: 6px; margin-top: 10px; display: none;"></div>
                     </div>
 
                     <label style="font-weight:600;">Status Progres Kerja</label>
@@ -578,8 +585,14 @@
                         <option value="ditolak_pelanggan">Dibatalkan (Pelanggan Tolak Biaya Tambahan)</option>
                         <option value="selesai">Lunas & Selesai Sepenuhnya</option>
                     </select>
+                    
+                    <!-- FITUR BARU: Audit Trail -->
+                    <div id="boxRiwayatStatus" style="margin-top: 1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <h5 style="margin-bottom: 0.5rem; color: #475569; font-size: 0.85rem;"><i class="bi bi-clock-history"></i> Log Riwayat Status (Audit Trail)</h5>
+                        <ul id="listRiwayatStatus" style="font-size: 0.8rem; color: #64748b; padding-left: 1.2rem; margin: 0;"></ul>
+                    </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
                         <div>
                             <label style="font-weight:600;">Teknisi PIC</label>
                             <select id="teknisi" class="kunci-target">
@@ -693,9 +706,10 @@ let chartInstance = null;
 window.semuaPesananGlobal = {}; 
 window.dataTampilFilter = [];
 
-// Variabel Pagination Custom
+// FITUR BARU: Variabel Server Pagination
 let halamanSkrg = 1;
 const barisPerHalaman = 15;
+let adminLeafletMap, adminMapMarker; // Untuk preview map
 
 const Toast = Swal.mixin({
     toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
@@ -704,7 +718,6 @@ const Toast = Swal.mixin({
 
 const socket = io(window.location.origin);
 
-// MODIFIKASI: Notifikasi Socket Admin
 socket.on("updateDashboardAdmin", () => {
     muatData(); 
     Toast.fire({ icon: 'info', title: 'Sistem: Ada pembaruan data pesanan/status.' });
@@ -712,11 +725,9 @@ socket.on("updateDashboardAdmin", () => {
 });
 
 socket.on("chatBaruDiterima", (data) => {
-    // Menangkap struktur objek baru { kode, pengirim }
     const kodeChat = data.kode || data;
     const pengirim = data.pengirim || 'user';
     
-    // Tampilkan Notifikasi ke Admin JIKA pengirimnya adalah user
     if (pengirim === 'user') {
         Toast.fire({ icon: 'success', title: `Pesan baru masuk dari pelanggan (${kodeChat})` });
     }
@@ -814,6 +825,8 @@ function pindahTabModal(tabIdTarget) {
         document.getElementById("tabKananLengkap").classList.remove("aktif");
         document.getElementById(tabIdTarget).classList.add("aktif");
     }
+    // Update Map Size when changing tabs
+    if(adminLeafletMap) setTimeout(() => adminLeafletMap.invalidateSize(), 200);
 }
 
 function getAuthHeader() {
@@ -824,7 +837,6 @@ function getAuthHeader() {
 document.addEventListener("DOMContentLoaded", () => {
     if (sessionStorage.getItem("adminToken")) tampilkanDashboardUtama();
     
-    // Klik di luar dropdown notif akan menutupnya
     document.addEventListener('click', function(event) {
         const notifWrapper = document.querySelector('.notif-wrapper');
         if (notifWrapper && !notifWrapper.contains(event.target)) {
@@ -876,20 +888,21 @@ function handleApiError(res) {
 let timeoutCari;
 function debounceMuatData() {
     clearTimeout(timeoutCari);
-    timeoutCari = setTimeout(() => { muatData(); }, 350); 
+    timeoutCari = setTimeout(() => { halamanSkrg = 1; muatData(); }, 350); 
 }
 
+// FITUR BARU: Server-Side Pagination Integration
 function muatData() {
     if (!sessionStorage.getItem("adminToken")) return;
 
-    fetch(`${API_URL}/orders?limit=2000&_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
+    fetch(`${API_URL}/orders?page=${halamanSkrg}&limit=${barisPerHalaman}&_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(handleApiError)
-    .then(semua => {
-        window.semuaPesananGlobal = semua; 
+    .then(response => {
+        // Menggunakan meta data jika ada (berkat backend Pagination)
+        const semua = response.data || response;
+        const meta = response.meta || { total: Object.keys(semua).length, page: 1, limit: barisPerHalaman, totalPages: 1 };
         
-        const currentDataString = JSON.stringify(semua);
-        if (currentDataString === cacheStringData && !document.getElementById("cariKode").value) return; 
-
+        window.semuaPesananGlobal = semua; 
         const tglMulai = document.getElementById("filterTglMulai").value; 
         const tglAkhir = document.getElementById("filterTglAkhir").value; 
         const filterCari = document.getElementById("cariKode") ? document.getElementById("cariKode").value.toLowerCase() : "";
@@ -907,7 +920,7 @@ function muatData() {
         urutanKunci.forEach(kode => {
             const d = semua[kode];
             
-            // Smart Filter Check
+            // Smart Filter Check Local (Tambahan perlindungan)
             if (filterCari && !kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
             if (tglMulai && d.tanggalInput < tglMulai) return;
             if (tglAkhir && d.tanggalInput > tglAkhir) return;
@@ -947,268 +960,97 @@ function muatData() {
         document.getElementById("lblTotalPendapatan").textContent = "Rp " + pendapatanMurni.toLocaleString("id-ID");
         document.getElementById("lblTotalPiutang").textContent = "Rp " + piutangBerjalan.toLocaleString("id-ID");
         
-        // Panggil render tabel dengan logika pagination custom
-        renderTabelHalamanSkrg();
-
+        // Render dari data server
+        renderTabelDariServer(meta);
         renderGrafikAdmin(baru, jadwal, proses, validasi);
-        renderGrafikEkstra(); 
-
-        if(!filterCari) cacheStringData = currentDataString; 
     })
-    .catch(err => console.warn("Koneksi admin ke server bermasalah.", err));
+    .catch(err => console.error("Gagal muat:", err));
 }
 
-// LOGIKA PAGINATION & RENDERING TABEL
-function renderTabelHalamanSkrg() {
+function renderTabelDariServer(meta) {
     const tbody = document.getElementById("tbodyPesanan");
     tbody.innerHTML = "";
-    document.getElementById("chkSemua").checked = false;
-    batalkanPilihanBulk();
     
-    const totalData = window.dataTampilFilter.length;
-    const totalHalaman = Math.ceil(totalData / barisPerHalaman);
-    
-    if (halamanSkrg > totalHalaman) halamanSkrg = totalHalaman;
-    if (halamanSkrg < 1) halamanSkrg = 1;
-    
-    const startIdx = (halamanSkrg - 1) * barisPerHalaman;
-    const endIdx = startIdx + barisPerHalaman;
-    const dataHalamanIni = window.dataTampilFilter.slice(startIdx, endIdx);
+    // Server Pagination Variables
+    const dataHalaman = window.dataTampilFilter; // Anggap backend sudah memfilter/memotong (atau kita pakai full jika local mode)
 
-    dataHalamanIni.forEach(d => {
-        let teksDP = "BELUM DP"; let kelasDP = "belum_dp";
-        if (d.dpValid) { teksDP = "DP LUNAS ✅"; kelasDP = "selesai"; }
-        else if (d.dpTerbayar) { teksDP = "PERLU CEK ⏳"; kelasDP = "menunggu_validasi"; }
+    if(dataHalaman.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 2rem; color: #94a3b8;'><i class='bi bi-inbox' style='font-size: 2rem; display:block; margin-bottom: 10px;'></i>Tidak ada pesanan yang sesuai filter.</td></tr>";
+        document.getElementById("boxTombolHalaman").innerHTML = "";
+        document.getElementById("lblInfoHalaman").textContent = "Menampilkan 0 data";
+        return;
+    }
 
-        let isLocked = (d.pembayaranValid || d.status === "selesai" || d.status === "ditolak_pelanggan");
-        let kelasStatus = isLocked ? "selesai" : d.status === "ditolak_pelanggan" ? "batal" : d.pembayaranDikonfirmasi ? "menunggu_validasi" : d.status;
+    dataHalaman.forEach(d => {
+        let labelStatus = getStatusText(d);
+        let badgeClass = getBadgeClass(d);
         
-        let dropdownStatusUI = "";
-        if (isLocked) {
-            dropdownStatusUI = `<span class="status ${kelasStatus}">${ubahNamaStatus(d)}</span>`;
-        } else {
-            dropdownStatusUI = `
-            <select class="quick-status" onchange="updateStatusCepatDropdown('${d.kode}', this.value)" style="border-color: ${d.status === 'baru' ? '#0ea5e9' : d.status === 'dijadwalkan' ? '#f59e0b' : '#10b981'};">
-                <option value="baru" ${d.status === 'baru' ? 'selected' : ''}>Baru Masuk</option>
-                <option value="dijadwalkan" ${d.status === 'dijadwalkan' ? 'selected' : ''}>Dijadwalkan</option>
-                <option value="diproses" ${d.status === 'diproses' ? 'selected' : ''}>Diproses</option>
-                <option value="selesai_servis" ${d.status === 'selesai_servis' ? 'selected' : ''}>Selesai Servis</option>
-            </select>`;
+        // Cek Pembayaran Pelunasan yang Butuh Validasi
+        if(d.pembayaranDikonfirmasi && !d.pembayaranValid) {
+            labelStatus = "VALIDASI PELUNASAN";
+            badgeClass = "menunggu_validasi";
         }
-        
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td style="text-align: center;"><input type="checkbox" class="chk-tabel chk-item" value="${d.kode}" onchange="cekStatusBulkAction()"></td>
-            <td>
-                <strong style="color: #0ea5e9; font-size:1.05rem;">${d.kode}</strong><br>
-                <span style="font-size:0.8rem; color:#64748b;"><i class="bi bi-clock"></i> ${d.tanggalInput}</span>
-            </td>
-            <td>
-                <strong style="font-size:0.95rem;">${d.nama}</strong><br>
-                <span style="font-size:0.8rem; background: var(--bg-utama); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:3px; border:1px solid var(--border-line);">${d.merek ? d.merek.toUpperCase() : ''} ${d.tipe || ''}</span>
-            </td>
-            <td><span class="status ${kelasDP}">${teksDP}</span></td>
-            <td>${dropdownStatusUI}</td>
-            <td>
-                <div class="aksi-group" style="justify-content: center;">
-                    <button class="btn btn-edit" aria-label="Kelola Order" onclick="bukaModal('${d.kode}')"><i class="bi bi-gear-fill"></i> Kelola</button>
-                    <button class="btn btn-hapus" aria-label="Hapus Order" onclick="hapusPesanan('${d.kode}')"><i class="bi bi-trash-fill"></i></button>
-                </div>
-            </td>
+
+        let opsiStatusSelect = `
+            <select class="quick-status" onchange="ubahStatusCepat('${d.kode}', this.value)" ${d.pembayaranValid ? 'disabled' : ''}>
+                <option value="baru" ${d.status === 'baru' ? 'selected' : ''}>Baru</option>
+                <option value="dijadwalkan" ${d.status === 'dijadwalkan' ? 'selected' : ''}>Jadwal</option>
+                <option value="diproses" ${d.status === 'diproses' ? 'selected' : ''}>Proses</option>
+                <option value="selesai_servis" ${d.status === 'selesai_servis' ? 'selected' : ''}>Selesai (Nunggu Lunas)</option>
+                ${d.pembayaranValid ? '<option value="selesai" selected>Lunas & Selesai</option>' : ''}
+                <option value="batal" ${d.status === 'batal' || d.status === 'ditolak_pelanggan' ? 'selected' : ''}>Dibatalkan</option>
+            </select>
         `;
-        tbody.appendChild(tr);
+
+        let dpBadge = d.dpValid ? '<span style="color:#10b981; font-weight:bold;"><i class="bi bi-check-circle"></i> Valid</span>' : (d.dpTerbayar ? '<span style="color:#f59e0b; font-weight:bold;"><i class="bi bi-hourglass"></i> Cek Mutasi</span>' : '<span style="color:#ef4444;"><i class="bi bi-x-circle"></i> Belum</span>');
+
+        tbody.innerHTML += `
+            <tr id="baris-${d.kode}">
+                <td style="text-align:center;"><input type="checkbox" class="chk-tabel row-check" value="${d.kode}" onchange="cekPilihanBulk()"></td>
+                <td><strong style="color:#0ea5e9;">${d.kode}</strong><br><span style="font-size:0.75rem; color:#64748b;">${new Date(d.tanggalInput).toLocaleDateString("id-ID")}</span></td>
+                <td><strong>${d.nama}</strong><br><span style="font-size:0.8rem; color:#64748b;">${d.merek} ${d.tipe}</span></td>
+                <td>${dpBadge}</td>
+                <td>
+                    <div style="margin-bottom: 5px;"><span class="status ${badgeClass}" id="badge-${d.kode}">${labelStatus}</span></div>
+                    ${opsiStatusSelect}
+                </td>
+                <td style="text-align: center;">
+                    <div class="aksi-group">
+                        <button class="btn btn-edit" aria-label="Kelola Pesanan" onclick="bukaModalKelola('${d.kode}')"><i class="bi bi-pencil-square"></i> Detail</button>
+                        <button class="btn btn-hapus" aria-label="Hapus Pesanan" onclick="hapusOrder('${d.kode}')"><i class="bi bi-trash3-fill"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
     });
 
-    // Update Label & Tombol Navigasi
-    const lblInfo = document.getElementById("lblInfoHalaman");
-    if(totalData === 0) {
-        lblInfo.innerText = "Tidak ada data yang ditemukan berdasarkan filter.";
-    } else {
-        lblInfo.innerText = `Menampilkan ${startIdx + 1} - ${Math.min(endIdx, totalData)} dari total ${totalData} pesanan`;
-    }
-
-    const boxTombol = document.getElementById("boxTombolHalaman");
-    let htmlTombol = `
-        <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="gantiHalaman(${halamanSkrg - 1})" ${halamanSkrg <= 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>
-        <span style="padding: 0.4rem 0.8rem; font-weight: bold; background: var(--bg-utama); border:1px solid var(--border-line); border-radius:6px;">Hal ${halamanSkrg} / ${totalHalaman || 1}</span>
-        <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="gantiHalaman(${halamanSkrg + 1})" ${halamanSkrg >= totalHalaman || totalHalaman === 0 ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>
-    `;
-    boxTombol.innerHTML = htmlTombol;
+    renderPagination(meta);
 }
 
-function gantiHalaman(halBaru) {
-    halamanSkrg = halBaru;
-    renderTabelHalamanSkrg();
-}
+function renderPagination(meta) {
+    const totalPages = meta.totalPages || 1;
+    const box = document.getElementById("boxTombolHalaman");
+    box.innerHTML = "";
+    document.getElementById("lblInfoHalaman").textContent = `Menampilkan hal ${meta.page} dari ${totalPages} (Total ${meta.total} data)`;
 
-// LOGIKA BULK ACTIONS
-function togglePilihSemuaTabel(el) {
-    const chks = document.querySelectorAll(".chk-item");
-    chks.forEach(chk => chk.checked = el.checked);
-    cekStatusBulkAction();
-}
-
-function cekStatusBulkAction() {
-    const checked = document.querySelectorAll('.chk-item:checked');
-    const bulkBar = document.getElementById("bulkActionBar");
-    if (checked.length > 0) {
-        bulkBar.style.display = "flex";
-        document.getElementById("lblBulkCount").innerText = checked.length;
-    } else {
-        bulkBar.style.display = "none";
-        document.getElementById("chkSemua").checked = false;
-    }
-}
-
-function batalkanPilihanBulk() {
-    document.querySelectorAll(".chk-item").forEach(c => c.checked = false);
-    document.getElementById("chkSemua").checked = false;
-    cekStatusBulkAction();
-}
-
-let aktifKonsulKode = "";
-function muatDaftarKonsultasi() {
-    fetch(`${API_URL}/chats/konsultasi/list?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
-    .then(handleApiError).then(data => {
-        const list = document.getElementById("listKonsultasi");
-        list.innerHTML = ""; let count = 0;
-        for (const kode in data) {
-            count++; const msgs = data[kode]; const lastMsg = msgs[msgs.length - 1];
-            let activeStyle = aktifKonsulKode === kode ? 'background: rgba(14,165,233,0.1); border-left: 4px solid #0ea5e9;' : '';
-            list.innerHTML += `
-                <div style="padding:1.2rem 1rem; border-bottom:1px solid var(--border-line); cursor:pointer; transition: 0.2s; ${activeStyle}" onclick="bukaChatKonsul('${kode}')">
-                    <strong style="color:var(--teks-utama); font-size:0.95rem;">${kode}</strong><br>
-                    <span style="font-size:0.8rem; color:#64748b;">${lastMsg.pengirim === 'admin' ? '<i class="bi bi-check2-all" style="color:#10b981;"></i> Anda' : 'Pelanggan'}: ${lastMsg.teks.substring(0, 35)}...</span>
-                </div>`;
-        }
-        if(count === 0) list.innerHTML = `<div style="padding:2rem 1rem; text-align:center; color:#94a3b8; font-style:italic;">Belum ada antrean konsultasi</div>`;
+    if (totalPages > 1) {
+        if(meta.page > 1) box.innerHTML += `<button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="gantiHalaman(${meta.page - 1})"><i class="bi bi-chevron-left"></i></button>`;
         
-        const badge = document.getElementById("badgeKonsul");
-        if(count > 0) { badge.style.display = "inline-block"; badge.textContent = count; }
-        else { badge.style.display = "none"; }
-    });
-}
-
-function bukaChatKonsul(kode) {
-    aktifKonsulKode = kode;
-    document.getElementById("lblChatKonsulAktif").textContent = kode;
-    document.getElementById("inputPesanKonsul").disabled = false;
-    document.getElementById("btnKirimKonsul").disabled = false;
-    muatDaftarKonsultasi(); 
-    muatLogPesanKonsul();
-}
-
-function muatLogPesanKonsul() {
-    if(!aktifKonsulKode) return;
-    fetch(`${API_URL}/chats/${aktifKonsulKode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
-    .then(handleApiError).then(chatData => {
-        const box = document.getElementById("boxPesanKonsul"); let htmlStr = "";
-        chatData.forEach(msg => {
-            let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
-            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda' : '📱 Pelanggan';
-            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right; margin-top:5px;">${msg.waktu}</span></div>`;
-        });
-        if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
-    });
-}
-
-function kirimChatKonsul() {
-    const inp = document.getElementById("inputPesanKonsul"); const teks = inp.value.trim();
-    if(!teks || !aktifKonsulKode) return;
-    fetch(`${API_URL}/chats`, {
-        method: "POST", headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ kode: aktifKonsulKode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) })
-    }).then(() => { inp.value = ""; muatLogPesanKonsul(); });
-}
-
-function renderGrafikAdmin(cBaru, cJadwal, cProses, cValidasi) {
-    const ctx = document.getElementById('grafikAdmin').getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    
-    chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Baru', 'Dijadwalkan', 'Diproses', 'Perlu Validasi Lunas'],
-            datasets: [{
-                label: 'Jumlah Transaksi',
-                data: [cBaru, cJadwal, cProses, cValidasi],
-                backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7'],
-                borderRadius: 8,
-                barThickness: 40
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-    });
-}
-
-function renderGrafikEkstra() {
-    let kerusakanCount = {}; let teknisiRev = {};
-    
-    window.dataTampilFilter.forEach(d => {
-        if(d.layanan) {
-            d.layanan.split(', ').forEach(l => {
-                if(l !== "Belum dipilih" && l.trim() !== "") kerusakanCount[l] = (kerusakanCount[l] || 0) + 1;
-            });
+        let startPage = Math.max(1, meta.page - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            let activeStyle = i === meta.page ? "background: #0ea5e9; color: white;" : "";
+            box.innerHTML += `<button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; ${activeStyle}" onclick="gantiHalaman(${i})">${i}</button>`;
         }
-        if(d.status === "selesai_servis" || d.status === "selesai" || d.pembayaranValid) {
-            const tName = d.teknisi || "Tanpa Teknisi";
-            teknisiRev[tName] = (teknisiRev[tName] || 0) + (d.biayaSuku || 0) + (d.biayaJasa || 0);
-        }
-    });
-
-    const sortedKerusakan = Object.entries(kerusakanCount).sort((a,b) => b[1] - a[1]).slice(0, 5);
-    
-    const ctxK = document.getElementById('grafikKerusakan').getContext('2d');
-    if(window.chartKerusakan) window.chartKerusakan.destroy();
-    window.chartKerusakan = new Chart(ctxK, {
-        type: 'doughnut',
-        data: { labels: sortedKerusakan.map(k => k[0]), datasets: [{ data: sortedKerusakan.map(k => k[1]), backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7', '#ef4444'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-    });
-
-    const ctxT = document.getElementById('grafikTeknisi').getContext('2d');
-    if(window.chartTeknisi) window.chartTeknisi.destroy();
-    window.chartTeknisi = new Chart(ctxT, {
-        type: 'bar',
-        data: { labels: Object.keys(teknisiRev), datasets: [{ label: 'Pendapatan (Rp)', data: Object.values(teknisiRev), backgroundColor: '#10b981', borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
+        
+        if(meta.page < totalPages) box.innerHTML += `<button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="gantiHalaman(${meta.page + 1})"><i class="bi bi-chevron-right"></i></button>`;
+    }
 }
 
-function exportCSV() {
-    if(window.dataTampilFilter.length === 0) return Swal.fire('Kosong', 'Tidak ada data pada filter ini.', 'info');
-    let csvContent = "data:text/csv;charset=utf-8,Kode,Tanggal Input,Nama,WA,Merek,Tipe,Layanan,Teknisi,Biaya Jasa,Biaya Sparepart,Tambahan,Total Biaya,Status,Pembayaran\n";
-    
-    window.dataTampilFilter.forEach(d => {
-        const jasa = d.biayaJasa || 0, suku = d.biayaSuku || 0;
-        const tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
-        const total = jasa + suku + tamb;
-        const statLunas = (d.pembayaranValid || d.status === 'selesai') ? 'LUNAS' : 'BELUM LUNAS';
-        csvContent += `${d.kode},${d.tanggalInput},"${d.nama}","${d.wa}",${d.merek},${d.tipe},"${d.layanan || '-'}",${d.teknisi||'-'},${jasa},${suku},${tamb},${total},${d.status},${statLunas}\n`;
-    });
-    const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `Laporan_SFTech_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link); link.click(); link.remove();
-}
-
-function cetakNotaFisik() {
-    const kode = document.getElementById("kodePesanan").value;
-    const d = window.semuaPesananGlobal[kode];
-    if(!d) return Swal.fire('Error', 'Pilih pesanan terlebih dahulu', 'error');
-
-    document.getElementById("pKode").textContent = kode;
-    document.getElementById("pTgl").textContent = new Date().toLocaleDateString('id-ID');
-    document.getElementById("pNama").textContent = d.nama;
-    document.getElementById("pUnit").textContent = `${d.merek} ${d.tipe}`;
-    document.getElementById("pLayanan").textContent = "Rp " + (d.biayaJasa || 0).toLocaleString("id-ID");
-    document.getElementById("pSuku").textContent = "Rp " + (d.biayaSuku || 0).toLocaleString("id-ID");
-    
-    let tamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
-    document.getElementById("pTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
-    
-    document.getElementById("pTotal").textContent = "Rp " + ((d.biayaJasa||0) + (d.biayaSuku||0) + tamb).toLocaleString("id-ID");
-    document.getElementById("pMetode").textContent = d.metodePembayaran || "Tunai";
-    window.print();
+function gantiHalaman(hal) {
+    halamanSkrg = hal;
+    muatData();
 }
 
 function resetFilterKalender() {
@@ -1216,254 +1058,603 @@ function resetFilterKalender() {
     document.getElementById("filterTglAkhir").value = "";
     document.getElementById("filterStatus").value = "semua";
     document.getElementById("cariKode").value = "";
+    halamanSkrg = 1;
     muatData();
-    Toast.fire({ icon: 'info', title: 'Filter direset' });
 }
 
-function ubahNamaStatus(d) {
+function getStatusText(d) {
     if(d.pembayaranValid || d.status === "selesai") return "LUNAS & SELESAI";
-    if(d.status === "ditolak_pelanggan") return "BATAL/DITOLAK";
-    if(d.pembayaranDikonfirmasi) return "VALIDASI LUNAS";
-    if(d.status === "baru") return "BARU MASUK";
-    if(d.status === "dijadwalkan") return "DIJADWALKAN";
-    if(d.status === "diproses") return "DIPROSES";
-    if(d.status === "selesai_servis") return "SELESAI SERVIS";
-    return d.status ? d.status.toUpperCase() : "BARU";
+    if(d.status === "ditolak_pelanggan") return "BATAL (Ditolak User)";
+    const map = { "baru": "BARU MASUK", "dijadwalkan": "DIJADWALKAN", "diproses": "SEDANG DIPROSES", "selesai_servis": "SELESAI SERVIS", "batal": "DIBATALKAN" };
+    return map[d.status] || "TIDAK DIKETAHUI";
+}
+
+function getBadgeClass(d) {
+    if(d.pembayaranValid || d.status === "selesai") return "selesai";
+    if(d.status === "ditolak_pelanggan") return "batal";
+    return d.status || "baru";
+}
+
+// FITUR BARU: BULK ACTIONS LOGIC
+function togglePilihSemuaTabel(source) {
+    const checkboxes = document.querySelectorAll(".row-check");
+    checkboxes.forEach(cb => cb.checked = source.checked);
+    cekPilihanBulk();
+}
+
+function cekPilihanBulk() {
+    const selected = document.querySelectorAll(".row-check:checked").length;
+    const bar = document.getElementById("bulkActionBar");
+    if(selected > 0) {
+        bar.style.display = "flex";
+        document.getElementById("lblBulkCount").innerText = selected;
+    } else {
+        bar.style.display = "none";
+        document.getElementById("chkSemua").checked = false;
+    }
+}
+
+function batalkanPilihanBulk() {
+    document.querySelectorAll(".chk-tabel").forEach(cb => cb.checked = false);
+    cekPilihanBulk();
+}
+
+function ubahStatusCepat(kode, statusBaru) {
+    fetch(`${API_URL}/orders/${kode}`, {
+        method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        body: JSON.stringify({ status: statusBaru })
+    }).then(handleApiError).then(() => {
+        Toast.fire({ icon: 'success', title: 'Status diupdate cepat!' });
+        socket.emit("adminUpdate", kode); 
+        muatData();
+    });
+}
+
+// LOGIKA RENDER GRAFIK
+function renderGrafikAdmin(baru, jadwal, proses, validasi) {
+    const ctx = document.getElementById('grafikAdmin').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+    
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Baru', 'Dijadwalkan', 'Diproses', 'Validasi'],
+            datasets: [{ label: 'Jumlah Pesanan Berjalan', data: [baru, jadwal, proses, validasi], backgroundColor: 'rgba(14, 165, 233, 0.2)', borderColor: '#0ea5e9', borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#0ea5e9', pointRadius: 5, fill: true, tension: 0.4 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: document.body.classList.contains('dark-mode') ? '#334155' : '#e2e8f0' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+    });
+}
+
+function renderGrafikEkstra() {
+    fetch(`${API_URL}/orders?limit=1000`, { headers: getAuthHeader() })
+    .then(handleApiError)
+    .then(res => {
+        let semua = res.data || res;
+        
+        let mapKerusakan = {};
+        let mapTeknisi = {};
+
+        Object.values(semua).forEach(d => {
+            if (d.pembayaranValid || d.status === 'selesai') {
+                // Kalkulasi Kerusakan
+                let ker = d.layanan ? d.layanan.split(',')[0].trim() : 'Lainnya';
+                mapKerusakan[ker] = (mapKerusakan[ker] || 0) + 1;
+                
+                // Kalkulasi Pendapatan Teknisi (Asumsi Jasa + Tambahan = Hak Teknisi)
+                if (d.teknisi) {
+                    let totalJasa = (d.biayaJasa || 0);
+                    if(d.statusPersetujuanTambahan === 'disetujui') totalJasa += (d.biayaSukuTambahan || 0); // simplifikasi
+                    mapTeknisi[d.teknisi] = (mapTeknisi[d.teknisi] || 0) + totalJasa;
+                }
+            }
+        });
+
+        // Sort Top 5 Kerusakan
+        let sortedKerusakan = Object.entries(mapKerusakan).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        let labelsKer = sortedKerusakan.map(x=>x[0]);
+        let dataKer = sortedKerusakan.map(x=>x[1]);
+
+        let ctxKer = document.getElementById('grafikKerusakan').getContext('2d');
+        if(window.chartKerusakan) window.chartKerusakan.destroy();
+        window.chartKerusakan = new Chart(ctxKer, {
+            type: 'doughnut',
+            data: { labels: labelsKer, datasets: [{ data: dataKer, backgroundColor: ['#0ea5e9','#10b981','#f59e0b','#a855f7','#ef4444'] }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Teknisi
+        let labelsTek = Object.keys(mapTeknisi);
+        let dataTek = Object.values(mapTeknisi);
+        
+        let ctxTek = document.getElementById('grafikTeknisi').getContext('2d');
+        if(window.chartTeknisi) window.chartTeknisi.destroy();
+        window.chartTeknisi = new Chart(ctxTek, {
+            type: 'bar',
+            data: { labels: labelsTek, datasets: [{ label: 'Pendapatan (Rp)', data: dataTek, backgroundColor: '#10b981' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+    });
+}
+
+function validasiDP(isApprove) {
+    const kode = document.getElementById("kodePesanan").value;
+    fetch(`${API_URL}/orders/${kode}`, {
+        method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        body: JSON.stringify({ dpValid: isApprove, dpTerbayar: isApprove, status: isApprove ? "baru" : "belum_dp" })
+    }).then(handleApiError).then(() => {
+        Swal.fire(isApprove ? 'DP Disetujui' : 'DP Ditolak', isApprove ? 'Penjadwalan dibuka.' : 'User harus upload ulang.', isApprove ? 'success' : 'error');
+        bukaModalKelola(kode); 
+        socket.emit("adminUpdate", kode); 
+        muatData();
+    });
+}
+
+function bukaModalKelola(kode) {
+    aktifMembukaKode = kode;
+    fetch(`${API_URL}/orders/${kode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
+    .then(handleApiError).then(data => {
+        document.getElementById("modalKelola").style.display = "block";
+        document.getElementById("txtKodeHeader").textContent = kode;
+        document.getElementById("kodePesanan").value = kode;
+        
+        // Reset Tab ke Kiri
+        document.querySelectorAll(".tab-btn-modal")[0].click();
+
+        // CEK STATUS TERKUNCI
+        const isLocked = data.pembayaranValid || data.status === "selesai";
+        document.getElementById("bannerTerkunci").style.display = isLocked ? "block" : "none";
+        
+        const kunciElements = document.querySelectorAll(".kunci-target");
+        const btnSimpan = document.getElementById("btnSimpanPerubahan");
+        
+        if (isLocked) {
+            kunciElements.forEach(el => el.disabled = true);
+            btnSimpan.disabled = true;
+            btnSimpan.classList.add("btn-locked");
+            btnSimpan.innerHTML = '<i class="bi bi-lock-fill"></i> Data Terkunci (Read-Only)';
+            document.getElementById("chkAdaTambahan").disabled = true;
+        } else {
+            kunciElements.forEach(el => el.disabled = false);
+            btnSimpan.disabled = false;
+            btnSimpan.classList.remove("btn-locked");
+            btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data';
+        }
+
+        // TAMPILAN DP
+        document.getElementById("txtMetodeDP").textContent = data.metodeDP || "Belum dipilih";
+        if(data.buktiDP) {
+            document.getElementById("displayBuktiDP").innerHTML = `<a href="${data.buktiDP}" target="_blank"><img src="${data.buktiDP}"></a>`;
+            if(!data.dpValid && data.dpTerbayar && !isLocked) {
+                document.getElementById("btnApproveDP").style.display = "inline-flex";
+                document.getElementById("btnTolakDP").style.display = "inline-flex";
+            } else {
+                document.getElementById("btnApproveDP").style.display = "none";
+                document.getElementById("btnTolakDP").style.display = "none";
+            }
+        } else {
+            document.getElementById("displayBuktiDP").innerHTML = "Belum ada bukti (Menunggu User)";
+            document.getElementById("btnApproveDP").style.display = "none";
+            document.getElementById("btnTolakDP").style.display = "none";
+        }
+
+        // TAMPILAN PELUNASAN
+        document.getElementById("metodeBayarTampil").textContent = data.metodePembayaran || "Belum Lunas";
+        if (data.buktiPelunasan) {
+            document.getElementById("displayBuktiPelunasan").innerHTML = `<a href="${data.buktiPelunasan}" target="_blank"><img src="${data.buktiPelunasan}"></a>`;
+        } else { document.getElementById("displayBuktiPelunasan").innerHTML = "Belum ada bukti / Belum Lunas"; }
+
+        if (data.pembayaranDikonfirmasi && !data.pembayaranValid && !isLocked) {
+            document.getElementById("btnValidasi").style.display = "flex";
+        } else { document.getElementById("btnValidasi").style.display = "none"; }
+
+        // ISIAN FORM
+        document.getElementById("lokasiServis").value = data.lokasiServis || "home_service";
+        document.getElementById("statusPesanan").value = data.status || "baru";
+        document.getElementById("teknisi").value = data.teknisi || "";
+        document.getElementById("jadwal").value = data.jadwal || "";
+        document.getElementById("etaUpdate").value = data.etaTeknisi || "";
+        document.getElementById("estimasiSelesai").value = data.estimasiSelesai || "";
+        document.getElementById("statusSparepart").value = data.statusSparepart || "ready";
+        document.getElementById("subStatusWorkshop").value = data.subStatusWorkshop || "antrean";
+        
+        toggleBoxWorkshopAdmin();
+        
+        document.getElementById("biayaSuku").value = data.biayaSuku || "";
+        document.getElementById("biayaJasa").value = data.biayaJasa || "";
+        
+        // TAMBAHAN KERUSAKAN ADMIN SIDE
+        const chkTambahan = document.getElementById("chkAdaTambahan");
+        const subForm = document.getElementById("subFormTambahan");
+        
+        if (data.adaKerusakanTambahan) {
+            chkTambahan.checked = true;
+            subForm.style.display = "block";
+            document.getElementById("infoTambahan").value = data.infoKerusakanTambahan || "";
+            document.getElementById("biayaTambahan").value = data.biayaSukuTambahan || "";
+            
+            const txtRespon = document.getElementById("txtResponPelanggan");
+            const alertPending = document.getElementById("peringatanTambahanPending");
+            
+            if (data.statusPersetujuanTambahan === 'pending') {
+                txtRespon.innerHTML = "<span style='color:#f59e0b;'>PENDING (Menunggu Keputusan User)</span>";
+                alertPending.style.display = "block";
+            } else if (data.statusPersetujuanTambahan === 'disetujui') {
+                txtRespon.innerHTML = "<span style='color:#10b981;'>DISETUJUI</span>";
+                alertPending.style.display = "none";
+                if(isLocked) document.getElementById("biayaTambahan").disabled = true;
+            } else {
+                txtRespon.innerHTML = "<span style='color:#ef4444;'>DITOLAK USER</span>";
+                alertPending.style.display = "none";
+            }
+        } else {
+            chkTambahan.checked = false;
+            subForm.style.display = "none";
+            document.getElementById("infoTambahan").value = "";
+            document.getElementById("biayaTambahan").value = "";
+        }
+
+        hitungTotal();
+
+        // KANAN: MEDIA & CHAT
+        const imgKondisi = data.kondisiHP ? (data.kondisiHP.endsWith('.mp4') || data.tipeKondisi.startsWith("video/") ? `<video src="${data.kondisiHP}" controls></video>` : `<a href="${data.kondisiHP}" target="_blank"><img src="${data.kondisiHP}"></a>`) : 'Tidak Ada File';
+        document.getElementById("tampilKondisiAdmin").innerHTML = imgKondisi;
+        document.getElementById("keluhanAdmin").value = data.kerusakan || "Tidak ada keluhan tertulis.";
+
+        // Link Shareloc
+        if(data.shareloc) {
+            document.getElementById("linkShareloc").innerHTML = `<a href="${data.shareloc}" target="_blank" style="color:#0ea5e9; font-weight:bold;"><i class="bi bi-box-arrow-up-right"></i> Buka Bawaan Map Pelanggan</a>`;
+        } else {
+            document.getElementById("linkShareloc").innerHTML = "Tidak ada link.";
+        }
+
+        // FITUR BARU: Pratinjau Peta Leaflet di Admin Panel
+        const mapContainer = document.getElementById("adminMapContainer");
+        if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
+            mapContainer.style.display = "block";
+            
+            setTimeout(() => {
+                const mapCenter = [parseFloat(data.koordinat.lat), parseFloat(data.koordinat.lng)];
+                
+                if(!adminLeafletMap) {
+                    adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(adminLeafletMap);
+                    
+                    adminMapMarker = L.marker(mapCenter).addTo(adminLeafletMap)
+                        .bindPopup(`<b>Lokasi Pelanggan:</b><br>${data.nama}`)
+                        .openPopup();
+                } else {
+                    adminLeafletMap.setView(mapCenter, 15);
+                    adminMapMarker.setLatLng(mapCenter)
+                        .bindPopup(`<b>Lokasi Pelanggan:</b><br>${data.nama}`)
+                        .openPopup();
+                    adminLeafletMap.invalidateSize();
+                }
+            }, 300);
+        } else {
+            mapContainer.style.display = "none";
+        }
+
+        // FITUR BARU: Render Riwayat Status (Audit Trail)
+        renderRiwayatStatus(data.riwayatStatus);
+
+        muatLogPesanAdmin();
+    });
+}
+
+function renderRiwayatStatus(riwayat) {
+    const list = document.getElementById("listRiwayatStatus");
+    list.innerHTML = "";
+    
+    if(!riwayat || riwayat.length === 0) {
+        list.innerHTML = "<li>Belum ada riwayat tercatat.</li>";
+        return;
+    }
+
+    riwayat.forEach(row => {
+        list.innerHTML += `<li style="margin-bottom: 4px;">
+            <strong style="color: #0ea5e9;">[${new Date(row.waktu).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}]</strong> 
+            <span style="font-weight: 600;">${row.status.toUpperCase()}</span> 
+            ${row.keterangan ? `- <i>${row.keterangan}</i>` : ''}
+        </li>`;
+    });
+}
+
+function toggleBoxWorkshopAdmin() {
+    const loc = document.getElementById("lokasiServis").value;
+    document.getElementById("boxSubStatusWorkshop").style.display = (loc === "workshop") ? "block" : "none";
+}
+
+function toggleFormTambahan() {
+    const chk = document.getElementById("chkAdaTambahan");
+    const subForm = document.getElementById("subFormTambahan");
+    subForm.style.display = chk.checked ? "block" : "none";
+    
+    if(!chk.checked) {
+        document.getElementById("infoTambahan").value = "";
+        document.getElementById("biayaTambahan").value = "";
+    }
+    hitungTotal();
 }
 
 function validasiStatusKeTambahan() {
     const status = document.getElementById("statusPesanan").value;
-    const chk = document.getElementById("chkAdaTambahan").checked;
-    const respon = document.getElementById("txtResponPelanggan").textContent.toUpperCase();
+    const chkAda = document.getElementById("chkAdaTambahan").checked;
     
-    if (chk && respon === "PENDING" && status === "selesai_servis") {
-        document.getElementById("peringatanTambahanPending").style.display = "block";
-    } else {
-        document.getElementById("peringatanTambahanPending").style.display = "none";
+    if (chkAda && (status === 'selesai_servis' || status === 'selesai')) {
+        const txtRespon = document.getElementById("txtResponPelanggan").innerText;
+        if (txtRespon.includes("PENDING")) {
+            Swal.fire('Tidak Diizinkan!', 'Anda tidak bisa mengubah status menjadi Selesai Servis karena Persetujuan Biaya Tambahan masih PENDING oleh pelanggan.', 'warning');
+            document.getElementById("statusPesanan").value = "diproses";
+        }
     }
 }
 
-function bukaModal(kode) {
-    if (!sessionStorage.getItem("adminToken")) return;
-    aktifMembukaKode = kode;
+function hitungTotal() {
+    let suku = parseFloat(document.getElementById("biayaSuku").value) || 0;
+    let jasa = parseFloat(document.getElementById("biayaJasa").value) || 0;
+    
+    let isTambahanActive = document.getElementById("chkAdaTambahan").checked;
+    let tamb = 0;
+    
+    const txtRespon = document.getElementById("txtResponPelanggan") ? document.getElementById("txtResponPelanggan").innerText : "";
+    
+    if (isTambahanActive && txtRespon.includes("DISETUJUI")) {
+        tamb = parseFloat(document.getElementById("biayaTambahan").value) || 0;
+        document.getElementById("rowTampilTambahanAdmin").style.display = "flex";
+    } else {
+        document.getElementById("rowTampilTambahanAdmin").style.display = "none";
+    }
 
-    fetch(`${API_URL}/orders/${kode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' }).then(handleApiError).then(d => {
-        document.getElementById("kodePesanan").value = kode;
-        document.getElementById("txtKodeHeader").textContent = kode;
-        document.getElementById("statusPesanan").value = d.status || "baru";
-        document.getElementById("teknisi").value = d.teknisi || "";
-        document.getElementById("jadwal").value = d.jadwal || "";
-        
-        document.getElementById("displayBuktiDP").innerHTML = d.buktiDP 
-            ? `<img src="${d.buktiDP}" style="max-height:150px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);" onclick="window.open('${d.buktiDP}')">` : "Belum ada bukti yang dilampirkan";
-            
-        document.getElementById("displayBuktiPelunasan").innerHTML = d.buktiPelunasan 
-            ? `<img src="${d.buktiPelunasan}" style="max-height:150px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);" onclick="window.open('${d.buktiPelunasan}')">` : "Belum ada bukti pelunasan";
-        
-        document.getElementById("etaUpdate").value = d.etaTeknisi || "";
-        document.getElementById("biayaSuku").value = d.biayaSuku || 0;
-        document.getElementById("biayaJasa").value = d.biayaJasa || 0;
-        document.getElementById("metodeBayarTampil").textContent = d.metodePembayaran || "Menunggu Pembayaran";
-        document.getElementById("keluhanAdmin").value = d.kerusakan || "Tidak ada deskripsi keluhan.";
-        document.getElementById("txtMetodeDP").textContent = d.metodeDP || "Belum Memilih";
-        document.getElementById("lokasiServis").value = d.lokasiServis || "home_service";
-        
-        // --- FITUR BARU WORKSHOP ---
-        document.getElementById("estimasiSelesai").value = d.estimasiSelesai || "";
-        document.getElementById("statusSparepart").value = d.statusSparepart || "ready";
-        document.getElementById("subStatusWorkshop").value = d.subStatusWorkshop || "antrean";
-        toggleBoxWorkshopAdmin();
-        // ---------------------------
-
-        document.getElementById("chkAdaTambahan").checked = d.adaKerusakanTambahan || false;
-        document.getElementById("infoTambahan").value = d.infoKerusakanTambahan || "";
-        document.getElementById("biayaTambahan").value = d.biayaSukuTambahan || 0;
-        
-        let txtRespon = (d.statusPersetujuanTambahan || "pending").toUpperCase();
-        if(txtRespon === 'DITOLAK_LANJUT') txtRespon = 'DITOLAK (LANJUT SERVIS AWAL)';
-        if(txtRespon === 'DITOLAK_BATAL') txtRespon = 'DITOLAK (BATAL TOTAL)';
-        document.getElementById("txtResponPelanggan").textContent = txtRespon;
-        
-        toggleFormTambahan(); validasiStatusKeTambahan();
-
-        const boxShareloc = document.getElementById("linkShareloc");
-        if(boxShareloc) {
-            boxShareloc.innerHTML = d.shareloc ? `<a href="${d.shareloc}" target="_blank" style="color:#0ea5e9; font-weight:bold; text-decoration:none;"><i class="bi bi-geo-alt-fill"></i> Buka Titik Maps Google</a>` : "<em>Tidak ada link lokasi disematkan</em>";
-        }
-
-        const tampilKondisi = document.getElementById("tampilKondisiAdmin");
-        if(tampilKondisi) {
-            tampilKondisi.innerHTML = d.kondisiHP ? (d.kondisiHP.endsWith(".mp4") || (d.tipeKondisi && d.tipeKondisi.startsWith("video/")) ? `<video src="${d.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>` : `<img src="${d.kondisiHP}" style="max-width:100%; border-radius:8px;">`) : "<em>Tidak ada dokumen yang dilampirkan pelanggan</em>";
-        }
-
-        const wrapperJadwal = document.getElementById("wrapperPenjadwalan");
-        if (d.dpValid) {
-            if(wrapperJadwal) { wrapperJadwal.style.opacity = "1"; wrapperJadwal.style.pointerEvents = "auto"; }
-            document.getElementById("btnApproveDP").disabled = true; document.getElementById("btnTolakDP").disabled = true;
-        } else {
-            if(wrapperJadwal) { wrapperJadwal.style.opacity = "0.4"; wrapperJadwal.style.pointerEvents = "none"; }
-            document.getElementById("btnApproveDP").disabled = !d.dpTerbayar; document.getElementById("btnTolakDP").disabled = !d.dpTerbayar;
-        }
-
-        hitungTotal(); 
-        
-        const isLocked = (d.pembayaranValid || d.status === "selesai");
-        const lockBanner = document.getElementById("bannerTerkunci");
-        const btnSimpan = document.getElementById("btnSimpanPerubahan");
-        const formInputs = document.querySelectorAll(".kunci-target");
-        
-        if (isLocked) {
-            if(lockBanner) lockBanner.style.display = "block";
-            if(btnSimpan) btnSimpan.style.display = "none";
-            formInputs.forEach(inp => inp.disabled = true);
-            document.getElementById("btnValidasi").disabled = true;
-            document.getElementById("btnApproveDP").disabled = true;
-            document.getElementById("btnTolakDP").disabled = true;
-            document.getElementById("btnValidasi").classList.add("btn-locked");
-        } else {
-            if(lockBanner) lockBanner.style.display = "none";
-            if(btnSimpan) btnSimpan.style.display = "inline-flex";
-            formInputs.forEach(inp => inp.disabled = false);
-            document.getElementById("btnValidasi").disabled = !d.pembayaranDikonfirmasi || d.pembayaranValid;
-            document.getElementById("btnValidasi").classList.remove("btn-locked");
-        }
-
-        document.getElementById("modalKelola").querySelectorAll(".tab-btn-modal")[0].click();
-        document.getElementById("modalKelola").style.display = "block";
-        muatLogPesanAdmin(); 
-    });
+    document.getElementById("totalTampilPokok").textContent = (suku + jasa).toLocaleString("id-ID");
+    document.getElementById("totalTampilTambahan").textContent = tamb.toLocaleString("id-ID");
+    
+    let total = (suku + jasa + tamb) - 50000;
+    if (total < 0) total = 0;
+    document.getElementById("totalTampil").textContent = total.toLocaleString("id-ID");
 }
 
-function validasiDP(isApproved) {
-    const kode = document.getElementById("kodePesanan").value;
-    let payload = isApproved ? { dpValid: true } : { dpTerbayar: false, dpValid: false, metodeDP: "" };
-
-    fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT", headers: { ...getAuthHeader(), "Content-Type": "application/json" }, body: JSON.stringify(payload)
-    }).then(handleApiError).then(() => {
-        Toast.fire({ icon: isApproved ? 'success' : 'info', title: isApproved ? 'DP Tervalidasi. Form Jadwal Terbuka!' : 'DP Ditolak, Menunggu konfirmasi ulang.' });
-        bukaModal(kode); 
-    });
+function tutupModal() { 
+    document.getElementById("modalKelola").style.display = "none"; 
+    aktifMembukaKode = ""; 
 }
 
 function simpanPerubahan() {
     const kode = document.getElementById("kodePesanan").value;
-    const checkedTambahan = document.getElementById("chkAdaTambahan").checked;
-    const status = document.getElementById("statusPesanan").value;
-    const respon = document.getElementById("txtResponPelanggan").textContent.toUpperCase();
+    
+    const chkTambahan = document.getElementById("chkAdaTambahan").checked;
+    const infoTamb = document.getElementById("infoTambahan").value;
+    const biayaTamb = parseFloat(document.getElementById("biayaTambahan").value) || 0;
+    
+    const txtRespon = document.getElementById("txtResponPelanggan") ? document.getElementById("txtResponPelanggan").innerText : "";
+    let statusPersetujuanLama = "pending";
+    if (txtRespon.includes("DISETUJUI")) statusPersetujuanLama = "disetujui";
+    else if (txtRespon.includes("DITOLAK")) statusPersetujuanLama = "ditolak_lanjut";
 
-    if (checkedTambahan && respon === "PENDING" && status === "selesai_servis") {
-        return Swal.fire('Tahan Validasi', 'Persetujuan bagian tambahan part masih PENDING. Anda tidak dapat memproses invoice ke tahap pelunasan.', 'warning');
-    }
+    if (chkTambahan && !infoTamb) return Swal.fire('Peringatan', 'Deskripsi komponen tambahan harus diisi!', 'warning');
 
-    const payload = {
-        status: status, teknisi: document.getElementById("teknisi").value, jadwal: document.getElementById("jadwal").value,
-        lokasiServis: document.getElementById("lokasiServis").value, etaTeknisi: document.getElementById("etaUpdate").value.trim(), 
-        adaKerusakanTambahan: checkedTambahan, infoKerusakanTambahan: document.getElementById("infoTambahan").value.trim(),
-        biayaSukuTambahan: parseInt(document.getElementById("biayaTambahan").value) || 0,
-        biayaSuku: parseInt(document.getElementById("biayaSuku").value) || 0, biayaJasa: parseInt(document.getElementById("biayaJasa").value) || 0,
+    const updateData = {
+        status: document.getElementById("statusPesanan").value,
+        lokasiServis: document.getElementById("lokasiServis").value,
+        teknisi: document.getElementById("teknisi").value,
+        jadwal: document.getElementById("jadwal").value,
+        etaTeknisi: document.getElementById("etaUpdate").value,
+        biayaSuku: parseFloat(document.getElementById("biayaSuku").value) || 0,
+        biayaJasa: parseFloat(document.getElementById("biayaJasa").value) || 0,
+        
         estimasiSelesai: document.getElementById("estimasiSelesai").value,
         statusSparepart: document.getElementById("statusSparepart").value,
-        subStatusWorkshop: document.getElementById("subStatusWorkshop").value
+        subStatusWorkshop: document.getElementById("subStatusWorkshop").value,
+        
+        adaKerusakanTambahan: chkTambahan,
+        infoKerusakanTambahan: infoTamb,
+        biayaSukuTambahan: biayaTamb,
+        statusPersetujuanTambahan: chkTambahan ? statusPersetujuanLama : null 
     };
 
+    const btnSimpan = document.getElementById("btnSimpanPerubahan");
+    btnSimpan.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...'; btnSimpan.disabled = true;
+
     fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT", headers: { ...getAuthHeader(), "Content-Type": "application/json" }, body: JSON.stringify(payload)
-    }).then(handleApiError).then(() => { Toast.fire({ icon: 'success', title: 'Data Order Berhasil Disimpan' }); tutupModal(); });
+        method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() }, body: JSON.stringify(updateData)
+    }).then(handleApiError).then(() => {
+        Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Perubahan data berhasil disimpan.', confirmButtonColor: '#10b981' });
+        btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false;
+        socket.emit("adminUpdate", kode); 
+        muatData();
+        bukaModalKelola(kode); // Refresh audit trail
+    }).catch(() => {
+        btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false;
+    });
 }
 
 function validasiPembayaranPelunasan() {
     const kode = document.getElementById("kodePesanan").value;
     Swal.fire({
-        title: 'Validasi Lunas & Kunci Invoice?',
-        text: "Setelah dikonfirmasi, data akan Read-Only dan masuk ke Laporan Pendapatan Bersih.",
-        icon: 'warning', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#94a3b8', confirmButtonText: 'Ya, Validasi & Tutup!'
+        title: 'Konfirmasi Pelunasan & Kunci?',
+        text: "Setelah validasi, status menjadi Selesai & Lunas. Semua field akan TERKUNCI (Read-Only) permanen untuk laporan keuangan.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981', cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Ya, Validasi & Kunci!'
     }).then((result) => {
         if (result.isConfirmed) {
             fetch(`${API_URL}/orders/${kode}`, {
-                method: "PUT", headers: { ...getAuthHeader(), "Content-Type": "application/json" }, body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
-            }).then(handleApiError).then(() => { Swal.fire('Invoice Terkunci!', 'Transaksi selesai sepenuhnya.', 'success'); tutupModal(); });
+                method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
+                body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
+            }).then(handleApiError).then(() => {
+                Swal.fire('Tervalidasi!', 'Nota telah dikunci permanen.', 'success');
+                bukaModalKelola(kode); 
+                socket.emit("adminUpdate", kode); 
+                muatData();
+            });
         }
     });
-}
-
-function hapusPesanan(kode) {
-    Swal.fire({
-        title: 'Konfirmasi Penghapusan',
-        text: `Yakin menghapus pesanan ${kode} secara permanen dari sistem?`,
-        icon: 'error', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'Ya, Hapus Data!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`${API_URL}/orders/${kode}`, { method: "DELETE", headers: getAuthHeader() })
-            .then(handleApiError).then(() => { Toast.fire({ icon: 'success', title: 'Pesanan terhapus permanen dari sistem' }); });
-        }
-    });
-}
-
-function hitungTotal() {
-    const suku = parseInt(document.getElementById("biayaSuku").value) || 0;
-    const jasa = parseInt(document.getElementById("biayaJasa").value) || 0;
-    const txtResponRaw = document.getElementById("txtResponPelanggan").textContent;
-    const isDisetujui = txtResponRaw === 'DISETUJUI';
-    const tamb = (document.getElementById("chkAdaTambahan").checked && isDisetujui) ? (parseInt(document.getElementById("biayaTambahan").value) || 0) : 0;
-    
-    document.getElementById("totalTampilPokok").textContent = (suku + jasa).toLocaleString("id-ID");
-    document.getElementById("totalTampilTambahan").textContent = tamb.toLocaleString("id-ID");
-    const sisaBersih = (suku + jasa + tamb) - 50000;
-    document.getElementById("totalTampil").textContent = sisaBersih < 0 ? 0 : sisaBersih.toLocaleString("id-ID");
-}
-
-function toggleFormTambahan() {
-    const chk = document.getElementById("chkAdaTambahan").checked;
-    document.getElementById("subFormTambahan").style.display = chk ? "block" : "none";
-    hitungTotal(); validasiStatusKeTambahan();
-}
-
-function toggleBoxWorkshopAdmin() {
-    const val = document.getElementById("lokasiServis").value;
-    const box = document.getElementById("boxSubStatusWorkshop");
-    if(box) box.style.display = (val === "workshop") ? "block" : "none";
-}
-
-function tutupModal() { document.getElementById("modalKelola").style.display = "none"; aktifMembukaKode = ""; }
-
-function aksiEnterChatAdmin(event) { if (event.key === "Enter") kirimChatAdmin(); }
-
-function kirimChatAdmin() {
-    const inp = document.getElementById("inputPesanAdmin");
-    const teks = inp.value.trim();
-    if(!teks || !aktifMembukaKode) return;
-
-    fetch(`${API_URL}/chats`, {
-        method: "POST", headers: { ...getAuthHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ kode: aktifMembukaKode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) })
-    }).then(handleApiError).then(() => { inp.value = ""; });
 }
 
 function muatLogPesanAdmin() {
-    if(!aktifMembukaKode) return;
+    const kode = document.getElementById("kodePesanan").value;
+    if(!kode) return;
     const box = document.getElementById("boxPesanAdmin");
-    if(!box) return;
     
-    fetch(`${API_URL}/chats/${aktifMembukaKode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' }).then(handleApiError).then(chatData => {
+    fetch(`${API_URL}/chats/${kode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' }).then(res => res.json()).then(chatData => {
         let htmlStr = "";
         chatData.forEach(msg => {
             let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
-            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda (SF Tech)' : '📱 Pelanggan';
-            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right; margin-top:5px;">${msg.waktu}</span></div>`;
+            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda (Admin)' : '📱 Pelanggan';
+            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.8; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
+        
+        if (chatData.length === 0) { htmlStr = "<div style='text-align:center; color:#94a3b8; font-style:italic; margin-top:20px;'>Belum ada percakapan dengan pelanggan ini.</div>"; }
+        
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
     });
 }
 
-function updateStatusCepatDropdown(kode, statusBaru) {
-    fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT", headers: { ...getAuthHeader(), "Content-Type": "application/json" }, body: JSON.stringify({ status: statusBaru })
-    }).then(handleApiError).then(() => {
-        Toast.fire({ icon: 'success', title: `Progres diperbarui ke ${statusBaru.toUpperCase()}` });
-    }).catch(err => Swal.fire('Error', 'Gagal update status langsung.', 'error'));
+function kirimChatAdmin() {
+    const kode = document.getElementById("kodePesanan").value;
+    const inp = document.getElementById("inputPesanAdmin"); const teks = inp.value.trim();
+    if(!teks || !kode) return;
+    
+    fetch(`${API_URL}/chats`, { 
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeader() }, 
+        body: JSON.stringify({ kode: kode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) 
+    }).then(() => {
+        inp.value = ""; muatLogPesanAdmin();
+        socket.emit("adminChatBaru", kode); 
+    });
+}
+
+function aksiEnterChatAdmin(event) { if (event.key === "Enter") kirimChatAdmin(); }
+
+function hapusOrder(kode) {
+    Swal.fire({
+        title: 'Yakin hapus pesanan?', text: "Data tidak bisa dikembalikan!", icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${API_URL}/orders/${kode}`, { method: "DELETE", headers: getAuthHeader() })
+            .then(handleApiError).then(() => {
+                Toast.fire({ icon: 'success', title: 'Data Terhapus' });
+                socket.emit("adminUpdate", kode); 
+                muatData();
+            });
+        }
+    });
+}
+
+// CETAK NOTA THERMAL FISIK
+function cetakNotaFisik() {
+    const kode = document.getElementById("kodePesanan").value;
+    fetch(`${API_URL}/orders/${kode}`, { headers: getAuthHeader() }).then(res => res.json()).then(data => {
+        document.getElementById("pKode").textContent = data.kode;
+        document.getElementById("pTgl").textContent = new Date().toLocaleDateString("id-ID");
+        document.getElementById("pNama").textContent = data.nama;
+        document.getElementById("pUnit").textContent = `${data.merek} ${data.tipe}`;
+        document.getElementById("pLayanan").textContent = data.layanan.substring(0, 15) + "..";
+        
+        let suku = data.biayaSuku || 0; let jasa = data.biayaJasa || 0; 
+        let tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+        
+        document.getElementById("pSuku").textContent = (suku + jasa).toLocaleString("id-ID");
+        document.getElementById("pTambahan").textContent = tamb.toLocaleString("id-ID");
+        document.getElementById("pTotal").textContent = (suku + jasa + tamb).toLocaleString("id-ID");
+        document.getElementById("pMetode").textContent = data.metodePembayaran || "Belum Lunas";
+        
+        window.print();
+    });
+}
+
+// LOGIKA KONSULTASI LIVE CHAT KEPADA PELANGGAN BELUM ORDER
+let aktifKonsulKode = "";
+
+function muatDaftarKonsultasi() {
+    fetch(`${API_URL}/chats`, { headers: getAuthHeader(), cache: 'no-store' }).then(res=>res.json()).then(data => {
+        const arrChat = Object.values(data);
+        const listK = document.getElementById("listKonsultasi");
+        listK.innerHTML = "";
+        
+        let jumlahBadge = 0;
+        const konsulItems = arrChat.filter(c => c.kode.startsWith("KONSUL-")).sort((a,b) => new Date(b.lastUpdate) - new Date(a.lastUpdate));
+        
+        if (konsulItems.length === 0) { listK.innerHTML = "<div style='padding:1rem; text-align:center; color:#94a3b8;'>Belum ada konsultasi masuk.</div>"; }
+        
+        konsulItems.forEach(chat => {
+            const terakhir = chat.messages[chat.messages.length - 1];
+            if(terakhir && terakhir.pengirim === 'user') jumlahBadge++;
+            
+            const div = document.createElement("div");
+            div.style.padding = "1rem"; div.style.borderBottom = "1px solid var(--border-line)"; div.style.cursor = "pointer";
+            div.style.transition = "0.2s";
+            if (aktifKonsulKode === chat.kode) div.style.background = "rgba(14, 165, 233, 0.1)";
+            
+            div.innerHTML = `<strong style="color:var(--teks-utama);"><i class="bi bi-person-fill"></i> ${chat.kode}</strong><br><span style="font-size:0.8rem; color:#64748b;">${terakhir ? terakhir.teks.substring(0,30) + '...' : 'Belum ada pesan'}</span>`;
+            div.onclick = () => bukaChatKonsultasi(chat.kode);
+            listK.appendChild(div);
+        });
+
+        const bdg = document.getElementById("badgeKonsul");
+        if(jumlahBadge > 0) { bdg.style.display = "inline-block"; bdg.textContent = jumlahBadge; } 
+        else { bdg.style.display = "none"; }
+    });
+}
+
+function bukaChatKonsultasi(kode) {
+    aktifKonsulKode = kode;
+    document.getElementById("lblChatKonsulAktif").textContent = "ID: " + kode;
+    document.getElementById("inputPesanKonsul").disabled = false;
+    document.getElementById("btnKirimKonsul").disabled = false;
+    muatLogPesanKonsul();
+    muatDaftarKonsultasi(); 
+}
+
+function muatLogPesanKonsul() {
+    if(!aktifKonsulKode) return;
+    const box = document.getElementById("boxPesanKonsul");
+    
+    fetch(`${API_URL}/chats/${aktifKonsulKode}?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' }).then(res => res.json()).then(chatData => {
+        let htmlStr = "";
+        chatData.forEach(msg => {
+            let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
+            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda (Admin)' : '📱 Pelanggan Potensial';
+            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.8; display:block; text-align:right;">${msg.waktu}</span></div>`;
+        });
+        
+        if (chatData.length === 0) { htmlStr = "<div style='text-align:center; color:#94a3b8; font-style:italic; margin-top:20px;'>Mulai percakapan dengan pelanggan potensial.</div>"; }
+        
+        if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
+    });
+}
+
+function kirimChatKonsul() {
+    const inp = document.getElementById("inputPesanKonsul"); const teks = inp.value.trim();
+    if(!teks || !aktifKonsulKode) return;
+    
+    fetch(`${API_URL}/chats`, { 
+        method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeader() }, 
+        body: JSON.stringify({ kode: aktifKonsulKode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) 
+    }).then(() => {
+        inp.value = ""; muatLogPesanKonsul();
+        socket.emit("adminChatBaru", aktifKonsulKode); 
+    });
+}
+
+function exportCSV() {
+    fetch(`${API_URL}/orders?limit=1000`, { headers: getAuthHeader() }).then(res => res.json()).then(res => {
+        const data = res.data || res;
+        let csv = "Kode,Tanggal,Nama,Merek,Tipe,Status,DP_Valid,Total_Bayar,Metode\n";
+        Object.values(data).forEach(d => {
+            let total = (d.biayaSuku || 0) + (d.biayaJasa || 0) + ((d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0);
+            csv += `"${d.kode}","${d.tanggalInput}","${d.nama}","${d.merek}","${d.tipe}","${d.status}","${d.dpValid}","${total}","${d.metodePembayaran || '-'}"\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'Laporan_Servis.csv');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
 }
 </script>
-
 </body>
 </html>
