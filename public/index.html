@@ -7,9 +7,6 @@
     <!-- Peningkatan SEO & Meta Data -->
     <title>SF Tech - Servis HP, Laptop & Elektronik Bergaransi</title>
     <meta name="description" content="Layanan servis HP, Laptop/PC, dan elektronik rumah tangga profesional. Panggil teknisi ke rumah atau workshop. Lacak progres secara real-time.">
-    <meta name="keywords" content="Servis HP, Servis Laptop, Servis Elektronik, Ganti LCD, Install OS, SF Tech">
-    <meta property="og:title" content="SF Tech Service - Solusi Perbaikan Perangkat Anda">
-    <meta property="og:description" content="Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time.">
     
     <!-- Import Font Premium & Ikon Modern -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,10 +14,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- Import Library PDF & SweetAlert2 untuk Notifikasi Premium -->
+    <!-- Import Library PDF, SweetAlert2, & QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <!-- IMPORT SOCKET.IO UNTUK REAL-TIME NOTIF -->
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
@@ -47,6 +45,20 @@
         
         .main-content {flex: 1;}
         .container {max-width:900px; margin:2.5rem auto; padding:0 5%;}
+
+        /* FITUR BARU: Kolom Lacak Besar di Atas */
+        .lacak-cepat-container {
+            background: white; padding: 2rem; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); margin: -3.5rem auto 2.5rem;
+            position: relative; z-index: 10; max-width: 800px; text-align: center; border: 1px solid #e2e8f0;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .lacak-cepat-container h3 { color: #0f172a; margin-bottom: 0.5rem; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .lacak-input-group { display: flex; gap: 10px; margin-top: 1rem; }
+        .lacak-input-group input { flex: 1; padding: 1rem 1.2rem; font-size: 1.05rem; border-radius: 8px; border: 2px solid #cbd5e1; margin: 0; background: #f8fafc; font-weight: 600; color: #1e293b; text-align: center;}
+        .lacak-input-group input:focus { border-color: #0ea5e9; background: white; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); outline: none;}
+        .lacak-input-group button { padding: 1rem 2rem; font-size: 1.05rem; border-radius: 8px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .lacak-input-group button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
 
         .progress-container {display:flex; justify-content:space-between; background:white; padding:1.5rem 1.2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2.5rem; overflow-x:auto;}
         .step-item {text-align:center; flex:1; min-width:80px; position:relative;}
@@ -131,11 +143,17 @@
         .btn-home {background:#475569; color:white;}
         .btn:disabled {background: #94a3b8 !important; cursor: not-allowed; transform: none !important; box-shadow: none !important;}
 
+        /* PEMBARUAN LAYOUT FAKTUR / NOTA */
         .faktur {border:2px solid #1e40af; padding:2rem; border-radius:12px; margin-top:1.5rem; background:#ffffff; box-shadow: 0 10px 25px rgba(30, 64, 175, 0.05);}
-        .faktur h4 {text-align:center; margin-bottom:1.5rem; color:#1e40af; font-size:1.4rem; font-weight: 700;}
+        .faktur-header {display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 1rem; margin-bottom: 1.5rem;}
+        .faktur-header h4 {color:#1e40af; font-size:1.3rem; font-weight: 800; margin: 0; text-align: left; text-transform: uppercase;}
+        .faktur-qr-box {width: 75px; height: 75px; background: white; padding: 4px; border: 2px solid #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center;}
+        
         .faktur .baris {display:flex; justify-content:space-between; margin:0.6rem 0; padding:0.4rem 0; border-bottom:1px dotted #e2e8f0; font-size: 0.95rem;}
         .faktur .total {font-weight:700; font-size:1.2rem; color: #1e40af; margin-top:1.5rem; padding-top:1rem; border-top:2px solid #cbd5e1;}
         .faktur .catatan {margin-top:1.5rem; text-align:center; font-size:0.9rem; color:#64748b; font-style: italic;}
+        .faktur .brand-watermark {font-size: 0.8rem; font-weight: 800; color: #94a3b8; display: block; margin-top: 5px; font-style: normal;}
+        
         .tombol-faktur {display:flex; gap:1rem; margin-top:2rem; justify-content:center; flex-wrap:wrap;}
         
         .alert-bahaya {background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:1.2rem; border-radius:8px; margin:1rem 0; font-size: 0.9rem;}
@@ -167,7 +185,10 @@
 
         body.dark-mode { background:#0f172a; color:#f8fafc; }
         body.dark-mode .content-box, body.dark-mode .progress-container, body.dark-mode .chat-widget, body.dark-mode .chat-input-row input, body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background:#1e293b; color:#f8fafc; border-color:#334155; }
-        body.dark-mode h2, body.dark-mode h3, body.dark-mode .step-text, body.dark-mode label, body.dark-mode .faktur h4, body.dark-mode .faktur .total { color:#f8fafc; }
+        body.dark-mode .lacak-cepat-container { background:#1e293b; border-color:#334155;}
+        body.dark-mode .lacak-cepat-container h3 { color: #f8fafc; }
+        body.dark-mode .lacak-input-group input { background: #0f172a; border-color: #334155; color: #f8fafc;}
+        body.dark-mode h2, body.dark-mode h3, body.dark-mode .step-text, body.dark-mode label, body.dark-mode .faktur-header h4, body.dark-mode .faktur .total { color:#f8fafc; }
         body.dark-mode .layanan-item, body.dark-mode .metode-item { border-color:#334155; background: #1e293b; }
         body.dark-mode .layanan-item:hover, body.dark-mode .metode-item:hover { background: #334155; border-color: #0ea5e9;}
         body.dark-mode .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; }
@@ -182,7 +203,7 @@
         body.dark-mode .swal2-title, body.dark-mode .swal2-html-container { color: #f8fafc !important; }
         body.dark-mode .swal2-input { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
         
-        .hero-section { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 4rem 2rem; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); margin-bottom: 2rem;}
+        .hero-section { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 4rem 2rem 5rem; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); margin-bottom: 2rem;}
         .hero-section h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;}
         .hero-section p { font-size: 1.1rem; max-width: 600px; margin: 0 auto; opacity: 0.9;}
         
@@ -208,7 +229,6 @@
         .foto-item { background: #e2e8f0; height: 200px; border-radius: 12px; display: flex; flex-direction:column; align-items: center; justify-content: center; color: #64748b; font-weight: bold; border: 2px dashed #cbd5e1; }
         body.dark-mode .foto-item { background: #334155; border-color: #475569; color: #94a3b8;}
 
-        /* FITUR WORKSHOP TRACKING & MOBILE CSS */
         .ws-step { font-size: 0.85rem; padding: 0.8rem 1rem; border-radius: 8px; background: #f1f5f9; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: all 0.3s ease; margin-bottom: 8px; border: 1px solid #e2e8f0; }
         .ws-step.aktif { background: #0ea5e9; color: white; border-color: #0ea5e9; transform: scale(1.02); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2); }
         .ws-step.selesai { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
@@ -218,13 +238,17 @@
         @media (max-width: 768px) {
             .container { margin: 1.5rem auto; padding: 0 4%; }
             .content-box { padding: 1.5rem; }
-            .hero-section { padding: 2.5rem 1rem; }
+            .hero-section { padding: 2.5rem 1rem 4rem; }
             .hero-section h1 { font-size: 1.8rem; }
+            .lacak-cepat-container { margin: -2.5rem 4% 2rem; padding: 1.5rem 1rem; }
+            .lacak-input-group { flex-direction: column; }
             .step-item { min-width: 65px; }
             .step-text { font-size: 0.65rem; }
             .metode-bayar { grid-template-columns: 1fr; }
             .btn { width: 100%; justify-content: center; margin-bottom: 0.5rem; margin-right: 0; }
             .faktur { padding: 1.5rem; margin-top: 1rem; }
+            .faktur-header { flex-direction: column; text-align: center; gap: 1rem; }
+            .faktur-header h4 { text-align: center; }
             header { padding: 1rem; flex-direction: column; gap: 12px; }
             nav { width: 100%; justify-content: center; flex-wrap: wrap; gap: 15px; }
             nav a { margin-left: 0; font-size: 0.95rem; }
@@ -244,7 +268,7 @@
         <a onclick="klikMenuHome();"><i class="bi bi-house"></i> Home</a>
         <a onclick="tampilHalaman('about')"><i class="bi bi-info-circle"></i> About Us</a>
         <a onclick="tampilHalaman('profile')"><i class="bi bi-images"></i> Profile</a>
-        <a onclick="tanyaKodeLacak()"><i class="bi bi-search"></i> Lacak Pesanan</a>
+        <a onclick="fokusLacakPesanan()"><i class="bi bi-search"></i> Lacak Pesanan</a>
     </nav>
 </header>
 
@@ -254,6 +278,16 @@
         <div class="hero-section" id="heroLandingPage">
             <h1>Servis HP, Laptop & Elektronik Bergaransi</h1>
             <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari perangkat Anda.</p>
+        </div>
+
+        <!-- FITUR BARU: Kolom Lacak Pesanan (Search Bar Besar) -->
+        <div class="lacak-cepat-container" id="lacakCepatBox">
+            <h3><i class="bi bi-upc-scan" style="color: #0ea5e9;"></i> Lacak Pesanan / Cek Faktur</h3>
+            <p style="font-size: 0.9rem; color: #64748b; margin-top: 5px;">Masukkan Kode Pesanan Anda untuk melihat progres servis atau nota tagihan.</p>
+            <div class="lacak-input-group">
+                <input type="text" id="inputLacakCepat" placeholder="Contoh: HS-2026..." onkeypress="if(event.key === 'Enter') prosesLacakCepat()">
+                <button onclick="prosesLacakCepat()"><i class="bi bi-search"></i> Lacak Status</button>
+            </div>
         </div>
 
         <div class="container" id="mainOrderContainer">
@@ -385,7 +419,6 @@
                 <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file video 5MB. Foto otomatis dikompres.</p>
                 <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
 
-                <!-- PERLINDUNGAN HUKUM: Checkbox S&K -->
                 <div style="margin-top: 1.5rem; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
                     <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
                         <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
@@ -410,7 +443,6 @@
                 <p style="margin-top: 0.5rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                     Kode Pesanan: <strong id="kodePesananDP" style="color: #0ea5e9;">-</strong> 
                     <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem;"><i class="bi bi-copy"></i> Salin</button>
-                    <!-- TOMBOL WA BARU -->
                     <button onclick="bagikanKeWA()" class="btn btn-success" style="font-size:0.8rem; padding: 0.3rem 0.6rem; margin: 0;"><i class="bi bi-whatsapp"></i> Simpan ke WA</button>
                 </p>
                 
@@ -453,7 +485,6 @@
                 <p style="margin-top: 0.5rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                     Kode Pesanan: <strong id="kodePesanan" style="color: #0ea5e9;">-</strong> 
                     <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem;"><i class="bi bi-copy"></i> Salin</button>
-                    <!-- TOMBOL WA BARU -->
                     <button onclick="bagikanKeWA()" class="btn btn-success" style="font-size:0.8rem; padding: 0.3rem 0.6rem; margin: 0;"><i class="bi bi-whatsapp"></i> Simpan ke WA</button>
                 </p>
 
@@ -483,14 +514,12 @@
                     <p>Ada penambahan biaya pengerjaan sebesar: <strong style="color:#c2410c; font-size:1.1rem;">Rp <span id="txtBiayaTambahan" class="data-dinamis">0</span></strong></p>
                     
                     <div style="margin-top:1.2rem; display:flex; flex-direction:column; gap:0.6rem;" id="aksiTambahan">
-                        <!-- UPDATE LOGIKA BIAYA TAMBAHAN -->
                         <button class="btn btn-success" aria-label="Setujui Biaya Tambahan" onclick="responsTambahan('disetujui')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-check-circle-fill"></i> Setuju & Lanjutkan Perbaikan Tambahan</button>
                         <button class="btn btn-secondary" aria-label="Tolak Tambahan Tapi Lanjut" onclick="responsTambahan('ditolak_lanjut')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-tools"></i> Tolak Tambahan (Lanjutkan Servis Awal Saja)</button>
                         <button class="btn btn-danger" aria-label="Tolak Biaya Tambahan" onclick="responsTambahan('ditolak_batal')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-x-circle"></i> Batalkan Semua Servis (DP Hangus)</button>
                     </div>
                 </div>
 
-                <!-- INFO ESTIMASI & SPAREPART -->
                 <div id="boxInfoEstimasi" style="display:none; background:#f0f9ff; border-left:4px solid #0ea5e9; padding:1.2rem; border-radius:8px; margin-bottom:1rem;">
                     <h4 style="color:#0369a1; font-size:1rem; margin-bottom:5px;"><i class="bi bi-calendar2-check"></i> Estimasi Pengerjaan</h4>
                     <p>Perkiraan selesai pada: <strong id="lblEstimasiSelesai" class="data-dinamis" style="color:#0f172a;">-</strong></p>
@@ -500,7 +529,6 @@
                     </div>
                 </div>
 
-                <!-- TRACKING MIKRO WORKSHOP -->
                 <div id="boxTrackingWorkshop" style="display:none; margin: 1.5rem 0; padding: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
                     <h4 style="font-size: 1rem; margin-bottom: 1rem; color:#0f172a;"><i class="bi bi-building-gear"></i> Status Unit di Workshop</h4>
                     <div style="display:flex; flex-direction:column; gap:0.5rem;">
@@ -582,8 +610,14 @@
                     <i class="bi bi-shield-check"></i> Garansi servis berlaku selama 30 hari.
                 </div>
 
+                <!-- UPDATE: LAYOUT FAKTUR DENGAN QR CODE KANAN -->
                 <div class="faktur" id="fakturTampilan">
-                    <h4>FAKTUR PEMBAYARAN SERVIS</h4>
+                    <div class="faktur-header">
+                        <h4>FAKTUR PEMBAYARAN SERVIS</h4>
+                        <!-- Container QR Code Dinamis -->
+                        <div id="qrcodeArea" class="faktur-qr-box"></div>
+                    </div>
+                    
                     <div class="baris"><span>No. Faktur</span><span id="noFaktur" class="data-dinamis" style="font-weight:600;">-</span></div>
                     <div class="baris"><span>Kode Pesanan</span><span id="fakturKode" class="data-dinamis">-</span></div>
                     <div class="baris"><span>Nama Pelanggan</span><span id="fakturNama" class="data-dinamis">-</span></div>
@@ -592,13 +626,16 @@
                     <div class="baris"><span>Teknisi</span><span id="fakturTeknisi" class="data-dinamis">-</span></div>
                     <div class="baris"><span>Tanggal & Waktu</span><span id="fakturTanggal" class="data-dinamis">-</span></div>
                     <div class="baris"><span>Jenis Layanan</span><span id="fakturLayanan" class="data-dinamis" style="max-width: 60%; text-align:right;">-</span></div>
-                    <div class="baris"><span>Biaya Suku Cadang</span><span id="fakturSuku" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Biaya Jasa</span><span id="fakturJasa" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Biaya Pokok (Suku Cadang + Jasa)</span><span id="fakturPokok" class="data-dinamis">-</span></div>
                     <div class="baris" id="fakturRowTambahan" style="display:block; color:#c2410c;"><span>Biaya Kerusakan Tambahan</span><span id="fakturTambahan" class="data-dinamis">-</span></div>
                     <div class="baris"><span>DP yang Dibayar</span><span>Rp 50.000</span></div>
                     <div class="baris"><span>Metode Pelunasan</span><span id="fakturMetode" class="data-dinamis" style="font-weight:600;">-</span></div>
                     <div class="baris total"><span>TOTAL KESELURUHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
-                    <div class="catatan" id="txtFakturNote">Terima kasih atas kepercayaan Anda kepada kami</div>
+                    
+                    <div class="catatan" id="txtFakturNote">
+                        Terima kasih atas kepercayaan Anda kepada kami
+                        <span class="brand-watermark">SF Service™</span>
+                    </div>
                 </div>
 
                 <div id="boxBeriRating" style="margin-top:2rem; padding:1.5rem; text-align:center; background:#f1f5f9; border-radius:10px;">
@@ -616,8 +653,7 @@
 
                 <div class="tombol-faktur">
                     <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()" aria-label="Unduh PDF Faktur"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
-                    <!-- Ini tombol Halaman Awal saat transaksi sudah 100% tuntas -->
-                    <button class="btn btn-home" aria-label="Buat Pesanan Baru" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Buat Pesanan Baru</button>
+                    <button class="btn btn-home" aria-label="Buat Pesanan Baru" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
                 </div>
             </div>
         </div>
@@ -720,6 +756,7 @@ function klikMenuHome() {
         updateProgress();
         showContent();
         document.getElementById("heroLandingPage").style.display = "block";
+        document.getElementById("lacakCepatBox").style.display = "block"; // Munculkan box lacak
         muatUlasanPublik();
     }
 }
@@ -741,13 +778,23 @@ function kembaliKeAwal() {
     localStorage.removeItem("draftFormServis"); 
     kodeSaya = ""; 
     currentStep = 1; 
+    // Bersihkan URL dari parameter ?lacak= agar tidak looping saat reload
+    window.history.replaceState({}, document.title, window.location.pathname);
     location.reload(); 
+}
+
+function fokusLacakPesanan() {
+    klikMenuHome();
+    const lacakBox = document.getElementById('inputLacakCepat');
+    if (lacakBox) {
+        lacakBox.focus();
+        lacakBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
 
 window.buktiDPBase64 = "";
 window.buktiPelunasanBase64 = "";
 
-// OPTIMASI: Kompresi Gambar Klien sebelum jadi Base64
 function previewBukti(input, previewId) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
@@ -756,7 +803,7 @@ function previewBukti(input, previewId) {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement("canvas");
-                const maxDim = 800; // Resolusi diturunkan agar ukuran ringan (di bawah 500KB)
+                const maxDim = 800; 
                 let w = img.width, h = img.height;
                 
                 if(w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
@@ -765,12 +812,11 @@ function previewBukti(input, previewId) {
                 canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext("2d");
                 
-                // Beri background putih untuk mencegah background transparan PNG menjadi hitam
                 ctx.fillStyle = "#ffffff";
                 ctx.fillRect(0, 0, w, h);
                 ctx.drawImage(img, 0, 0, w, h);
                 
-                const compressedData = canvas.toDataURL("image/jpeg", 0.7); // 70% Quality
+                const compressedData = canvas.toDataURL("image/jpeg", 0.7);
                 
                 const preview = document.getElementById(previewId);
                 preview.style.display = 'block';
@@ -795,7 +841,6 @@ let metodeBayar = "";
 let intervalChat = null;
 let nilaiRating = 0; 
 
-// MODIFIKASI: Menambahkan library sweetalert toast ke klien agar seragam dengan admin
 const Toast = Swal.mixin({
     toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true,
     didOpen: (toast) => { toast.onmouseenter = Swal.stopTimer; toast.onmouseleave = Swal.resumeTimer; }
@@ -803,7 +848,6 @@ const Toast = Swal.mixin({
 
 const socket = io(window.location.origin);
 
-// MODIFIKASI: Menambahkan SweetAlert pada socket trigger Pelanggan
 socket.on("updateDataPelanggan", (kode) => {
     if(kode === kodeSaya) {
         Swal.fire({
@@ -925,14 +969,13 @@ function updateBrandOptions() {
     const isElek = Array.from(cbElek).some(cb => cb.checked);
     const isKomputer = Array.from(cbKomputer).some(cb => cb.checked);
     
-    // --- TAMBAHAN LOGIKA EKSKLUSIVITAS KATEGORI ---
     const toggleState = (cbs, disable) => {
         cbs.forEach(cb => {
             cb.disabled = disable && !cb.checked;
             const parentDiv = cb.closest('.layanan-item');
             if (disable && !cb.checked) {
                 parentDiv.style.opacity = '0.5';
-                parentDiv.style.pointerEvents = 'none'; // Cegah event klik dari div membocorkan trigger checkbox
+                parentDiv.style.pointerEvents = 'none'; 
             } else {
                 parentDiv.style.opacity = '1';
                 parentDiv.style.pointerEvents = 'auto';
@@ -943,14 +986,12 @@ function updateBrandOptions() {
     toggleState(cbHP, isElek || isKomputer);
     toggleState(cbElek, isHP || isKomputer);
     toggleState(cbKomputer, isHP || isElek);
-    // ----------------------------------------------
     
     const merekSelect = document.getElementById("merek");
     const currentValue = merekSelect.value;
     
     merekSelect.innerHTML = '<option value="">-- Silakan Pilih Kategori Merek --</option>';
     
-    // Jika tidak ada yang diceklis, tampilkan semua kategori merek
     const showAll = !isHP && !isElek && !isKomputer;
     
     if (isHP || showAll) merekSelect.appendChild(originalOptHP.cloneNode(true));
@@ -1001,31 +1042,42 @@ if(localStorage.getItem('tema') === 'gelap') { toggleDarkMode(); }
 function tampilkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.add("skeleton")); }
 function hilangkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.remove("skeleton")); }
 
+// LOGIKA PEMBACAAN URL PARAMETER (QR CODE SCANNED)
 document.addEventListener("DOMContentLoaded", () => {
     inisialisasiOpsiMerek(); 
     
-    let aktifOrder = localStorage.getItem("kodeAktifPelanggan");
-    let aktifKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
-
-    if(aktifOrder) {
-        kodeSaya = aktifOrder;
-        document.getElementById("heroLandingPage").style.display = "none";
-        document.getElementById("publicReviewsSection").style.display = "none";
-        document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
-        cekStatus();
-        aktifkanSistemChat();
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlKode = urlParams.get('lacak');
+    
+    if (urlKode) {
+        // Otomatis proses lacak berdasarkan parameter URL (Hasil scan QR)
+        document.getElementById("inputLacakCepat").value = urlKode;
+        prosesLacakDenganKode(urlKode);
     } else {
-        if(aktifKonsul) {
-            kodeSaya = aktifKonsul;
-            document.getElementById("txtChatKode").textContent = "Konsultasi";
+        // Cek LocalStorage
+        let aktifOrder = localStorage.getItem("kodeAktifPelanggan");
+        let aktifKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
+
+        if(aktifOrder) {
+            kodeSaya = aktifOrder;
+            document.getElementById("heroLandingPage").style.display = "none";
+            document.getElementById("lacakCepatBox").style.display = "none";
+            document.getElementById("publicReviewsSection").style.display = "none";
+            document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
+            cekStatus();
             aktifkanSistemChat();
+        } else {
+            if(aktifKonsul) {
+                kodeSaya = aktifKonsul;
+                document.getElementById("txtChatKode").textContent = "Konsultasi";
+                aktifkanSistemChat();
+            }
+            restoreDraft();
+            updateProgress();
+            showContent();
+            pasangListenerValidasiRealTime();
+            muatUlasanPublik();
         }
-        
-        restoreDraft();
-        updateProgress();
-        showContent();
-        pasangListenerValidasiRealTime();
-        muatUlasanPublik();
     }
 
     document.querySelectorAll('#starContainer i').forEach(star => {
@@ -1081,7 +1133,6 @@ function pasangListenerValidasiRealTime() {
     document.getElementById('merekLainnya').addEventListener('input', function() { validasiInputRealTime(this, 'errMerekLainnya'); simpanDraft();});
 }
 
-// OPTIMASI: Kompresi Gambar Kondisi sebelum jadi Base64
 function tampilPratinjau() {
     const fileKondisi = document.getElementById("fileKondisi");
     const pratinjau = document.getElementById("pratinjauFile");
@@ -1096,7 +1147,7 @@ function tampilPratinjau() {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement("canvas");
-                    const maxDim = 800; // Memastikan gambar di bawah 500KB
+                    const maxDim = 800; 
                     let w = img.width, h = img.height;
                     
                     if(w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
@@ -1177,6 +1228,7 @@ function kirimPesanan() {
         localStorage.removeItem("kodeKonsultasiPelanggan"); 
         
         document.getElementById("heroLandingPage").style.display = "none";
+        document.getElementById("lacakCepatBox").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
         document.getElementById("kodePesananDP").textContent = kodeSaya;
         document.getElementById("kodePesanan").textContent = kodeSaya;
@@ -1202,15 +1254,15 @@ function salinKode() {
     });
 }
 
-// FITUR BARU: Bagikan Kode Resi ke WA Sendiri
 function bagikanKeWA() {
     let kode = localStorage.getItem("kodeAktifPelanggan");
     let noWa = document.getElementById("wa").value.replace(/[^0-9]/g, '');
     if(!noWa.startsWith('62') && noWa !== '') noWa = '62' + noWa.substring(1); 
     
     if (!kode) return;
-    let urlStr = window.location.href.split('?')[0]; // URL Web Servis saat ini
-    let text = `*KODE PESANAN SF TECH*\n\nSimpan pesan ini agar Anda bisa melacak progres servis perangkat Anda.\n\nKode Resi: *${kode}*\nLacak Pesanan di: ${urlStr}`;
+    let urlStr = window.location.href.split('?')[0]; 
+    let dynamicUrl = `${urlStr}?lacak=${kode}`;
+    let text = `*KODE PESANAN SF TECH*\n\nSimpan pesan ini agar Anda bisa melacak progres servis perangkat Anda.\n\nKode Resi: *${kode}*\nKlik URL ini untuk Lacak Instan: ${dynamicUrl}`;
     
     window.open(`https://wa.me/${noWa}?text=${encodeURIComponent(text)}`, '_blank');
 }
@@ -1240,38 +1292,38 @@ function konfirmasiBayarDP() {
     }).catch(err => Swal.fire('Gagal!', 'Gagal konfirmasi DP.', 'error'));
 }
 
-function tanyaKodeLacak() {
-    klikMenuHome();
-    Swal.fire({
-        title: 'Lacak Pesanan',
-        input: 'text',
-        inputLabel: 'Masukkan Kode Pesanan Anda',
-        inputPlaceholder: 'Contoh: HS-20260712-105',
-        showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-search"></i> Lacak',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#0ea5e9'
-    }).then((result) => {
-        if (result.isConfirmed && result.value) {
-            const kode = result.value.trim();
-            fetch(`${API_URL}/orders/${kode}`, { cache: 'no-store' })
-            .then(res => { if(!res.ok) throw new Error(); return res.json(); })
-            .then(data => {
-                kodeSaya = data.kode;
-                localStorage.setItem("kodeAktifPelanggan", kodeSaya);
-                document.getElementById("heroLandingPage").style.display = "none";
-                document.getElementById("publicReviewsSection").style.display = "none";
-                document.getElementById("kodePesananDP").textContent = kodeSaya;
-                document.getElementById("kodePesanan").textContent = kodeSaya;
-                document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
-                aktifkanSistemChat(); cekStatus();
-            })
-            .catch(() => Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar!', confirmButtonColor: '#ef4444' }));
-        }
+// LOGIKA INPUT LACAK CEPAT DI HERO SECTION
+function prosesLacakCepat() {
+    const kodeInput = document.getElementById("inputLacakCepat").value.trim();
+    if (!kodeInput) {
+        Swal.fire({ icon: 'warning', title: 'Kosong', text: 'Silakan masukkan kode pesanan terlebih dahulu.', confirmButtonColor: '#0ea5e9' });
+        return;
+    }
+    prosesLacakDenganKode(kodeInput);
+}
+
+// LOGIKA PEMROSESAN LACAK UNIVERSAL (Dari Input / URL Param)
+function prosesLacakDenganKode(kode) {
+    fetch(`${API_URL}/orders/${kode}`, { cache: 'no-store' })
+    .then(res => { if(!res.ok) throw new Error(); return res.json(); })
+    .then(data => {
+        kodeSaya = data.kode;
+        localStorage.setItem("kodeAktifPelanggan", kodeSaya);
+        document.getElementById("heroLandingPage").style.display = "none";
+        document.getElementById("lacakCepatBox").style.display = "none";
+        document.getElementById("publicReviewsSection").style.display = "none";
+        document.getElementById("kodePesananDP").textContent = kodeSaya;
+        document.getElementById("kodePesanan").textContent = kodeSaya;
+        document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
+        aktifkanSistemChat(); cekStatus();
+    })
+    .catch(() => {
+        Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar di sistem kami!', confirmButtonColor: '#ef4444' });
+        // Jika dari URL parameter yang salah, bersihkan URL
+        window.history.replaceState({}, document.title, window.location.pathname);
     });
 }
 
-// UPDATE LOGIKA: Penanganan Keputusan Kerusakan Tambahan
 function responsTambahan(aksi) {
     let payload = {};
     let pesan = '';
@@ -1338,7 +1390,6 @@ function cekStatus() {
         if(!data) { kembaliKeAwal(); return; }
         hilangkanSkeleton();
         
-        // Pengecekan Logika Kerusakan Tambahan Tampil/Tidak
         if(document.getElementById("boxKerusakanTambahan")) {
             if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "pending" && data.status !== "ditolak_pelanggan") {
                 document.getElementById("boxKerusakanTambahan").style.display = "block";
@@ -1396,7 +1447,6 @@ function cekStatus() {
             document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
             document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
             
-            // --- FITUR BARU: LOGIKA TAMPILAN ESTIMASI & WORKSHOP ---
             const boxEstimasi = document.getElementById("boxInfoEstimasi");
             if(data.estimasiSelesai) {
                 boxEstimasi.style.display = "block";
@@ -1419,14 +1469,13 @@ function cekStatus() {
                 
                 urutan.forEach((step, idx) => {
                     const el = document.getElementById("ws-" + step);
-                    el.className = "ws-step data-dinamis"; // reset
+                    el.className = "ws-step data-dinamis"; 
                     if (idx < indexSaatIni) el.classList.add("selesai");
                     else if (idx === indexSaatIni) el.classList.add("aktif");
                 });
             } else {
                 boxWorkshop.style.display = "none";
             }
-            // --------------------------------------------------------
 
             sinkronBiayaTampil(data);
         }
@@ -1465,10 +1514,24 @@ function isiDataFaktur(data) {
     document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
 
     let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
-    document.getElementById("fakturSuku").textContent = "Rp " + suku.toLocaleString("id-ID");
-    document.getElementById("fakturJasa").textContent = "Rp " + jasa.toLocaleString("id-ID");
+    let biayaPokok = suku + jasa;
+    document.getElementById("fakturPokok").textContent = "Rp " + biayaPokok.toLocaleString("id-ID");
     document.getElementById("fakturTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
-    document.getElementById("fakturTotal").textContent = "Rp " + (suku + jasa + tamb).toLocaleString("id-ID");
+    document.getElementById("fakturTotal").textContent = "Rp " + (biayaPokok + tamb).toLocaleString("id-ID");
+
+    // GENERATE QR CODE DINAMIS MENGARAH KE URL TRACKING
+    const qrContainer = document.getElementById("qrcodeArea");
+    qrContainer.innerHTML = ""; // Bersihkan QR lama
+    const urlLacakDinamis = window.location.origin + window.location.pathname + "?lacak=" + data.kode;
+    
+    new QRCode(qrContainer, {
+        text: urlLacakDinamis,
+        width: 70,
+        height: 70,
+        colorDark : "#0f172a",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.L
+    });
 }
 
 function bukaHalamanFaktur() { currentStep = 7; updateProgress(); showContent(); cekStatus(); }
@@ -1502,7 +1565,6 @@ function kirimChatPelanggan() {
     .then(() => inp.value = "");
 }
 
-// FITUR BARU: Auto Welcome Message pada Live Chat
 function muatLogPesan() {
     if(!kodeSaya) return;
     const box = document.getElementById("boxPesanPelanggan");
@@ -1511,7 +1573,6 @@ function muatLogPesan() {
     fetch(`${API_URL}/chats/${kodeSaya}?_t=${Date.now()}`, { cache: 'no-store' }).then(res => res.json()).then(chatData => {
         let htmlStr = "";
         
-        // Cek jika kosong, berikan Auto Message Bot secara Realtime Frontend
         if (chatData.length === 0) {
             htmlStr += `<div class="msg-bubble msg-admin" style="background:#f0f9ff; border:1px solid #bae6fd;"><strong>🤖 SF Tech Bot:</strong><br>Halo! Selamat datang di Live Chat SF Tech. Ada yang bisa kami bantu? Silakan sampaikan pesan Anda di sini, Admin kami akan segera membalasnya.<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span></div>`;
         }
@@ -1542,20 +1603,42 @@ function unduhPDF() {
         const { jsPDF } = window.jspdf; if (!jsPDF) return Swal.fire('Error', 'Library PDF belum termuat.', 'error');
         const doc = new jsPDF(); const getText = (id) => document.getElementById(id) ? document.getElementById(id).textContent : "-";
 
-        doc.setFontSize(22); doc.setTextColor(30, 64, 175); doc.text("FAKTUR SERVIS", 105, 20, { align: 'center' });
-        doc.setFontSize(10); doc.setTextColor(100); doc.text("SF Tech Service Center", 105, 28, { align: 'center' });
-        doc.setDrawColor(30, 64, 175); doc.line(10, 40, 200, 40);
+        doc.setFontSize(22); doc.setTextColor(30, 64, 175); doc.text("FAKTUR SERVIS HP", 15, 25);
+        
+        // Membaca QR Code Canvas dan memasukkannya ke PDF di sisi kanan sejajar judul
+        const qrCanvas = document.querySelector("#qrcodeArea canvas");
+        if(qrCanvas) {
+            const qrDataUrl = qrCanvas.toDataURL("image/png");
+            doc.addImage(qrDataUrl, 'PNG', 165, 10, 30, 30);
+        }
+
+        doc.setFontSize(10); doc.setTextColor(100); doc.text("SF Tech Service Center", 15, 33);
+        doc.setDrawColor(30, 64, 175); doc.line(10, 45, 200, 45);
         doc.setFontSize(11); doc.setTextColor(0);
-        doc.text(`No. Faktur  : ${getText("noFaktur")}`, 15, 50); doc.text(`Tgl Servis  : ${getText("fakturTanggal")}`, 15, 56);
-        doc.text(`Pelanggan   : ${getText("fakturNama")}`, 15, 62); doc.text(`Perangkat   : ${getText("fakturMerekTipe")}`, 15, 68);
+        
+        doc.text(`No. Faktur  : ${getText("noFaktur")}`, 15, 55); 
+        doc.text(`Tgl Servis  : ${getText("fakturTanggal")}`, 15, 61);
+        doc.text(`Pelanggan   : ${getText("fakturNama")}`, 15, 67); 
+        doc.text(`Perangkat   : ${getText("fakturMerekTipe")}`, 15, 73);
 
         doc.autoTable({
-            startY: 75, head: [['Keterangan', 'Biaya']],
-            body: [ ['Biaya Suku Cadang', getText("fakturSuku")], ['Biaya Jasa Servis', getText("fakturJasa")], ['Biaya Kerusakan Tambahan', getText("fakturTambahan")], ['Potongan DP (Uang Muka)', '- Rp 50.000'] ],
+            startY: 80, head: [['Keterangan', 'Biaya']],
+            body: [ 
+                ['Biaya Pokok (Suku Cadang + Jasa)', getText("fakturPokok")], 
+                ['Biaya Kerusakan Tambahan', getText("fakturTambahan")], 
+                ['Potongan DP (Uang Muka)', '- Rp 50.000'] 
+            ],
             theme: 'striped', headStyles: { fillColor: [30, 64, 175] }
         });
 
-        doc.setFont("helvetica", "bold"); doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
+        doc.setFont("helvetica", "bold"); 
+        doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
+        
+        // Catatan Bawah & Brand Watermark
+        doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(100);
+        doc.text("Terima kasih atas kepercayaan Anda kepada kami", 105, doc.lastAutoTable.finalY + 25, { align: 'center' });
+        doc.setFont("helvetica", "bold"); doc.text("SF Service™", 105, doc.lastAutoTable.finalY + 30, { align: 'center' });
+
         doc.save(`Invoice_${getText("fakturKode")}.pdf`);
     } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
 }
