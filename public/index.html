@@ -14,6 +14,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
+    <!-- FITUR BARU: Import Library Peta Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <!-- Import Library PDF, SweetAlert2, QR Code, HTML5 QR Scanner, & HTML2Canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
@@ -68,8 +72,8 @@
 
         .progress-container {display:flex; justify-content:space-between; background:white; padding:1.5rem 1.2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2.5rem; overflow-x:auto;}
         .step-item {text-align:center; flex:1; min-width:80px; position:relative;}
-        .step-item:not(:last-child)::after {content:''; position:absolute; top:18px; left:50%; width:100%; height:3px; background:#e2e8f0; z-index:1; transition: all 0.4s;}
-        .step-item.completed:not(:last-child)::after {background: #10b981;}
+        .step-item:not(:last-child):after {content:''; position:absolute; top:18px; left:50%; width:100%; height:3px; background:#e2e8f0; z-index:1; transition: all 0.4s;}
+        .step-item.completed:not(:last-child):after {background: #10b981;}
         .step-number {width:36px; height:36px; line-height:36px; margin:0 auto 8px; border-radius:50%; background:#e2e8f0; font-weight:700; font-size:0.9rem; position:relative; z-index:2; transition: all 0.3s;}
         .step-item.active .step-number {background:#0ea5e9; color:white; scale: 1.1; box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);}
         .step-item.completed .step-number {background:#10b981; color:white;}
@@ -240,6 +244,9 @@
         body.dark-mode .ws-step { background: #1e293b; color: #f8fafc; border-color: #334155; }
         body.dark-mode .ws-step.selesai { background: rgba(22, 101, 52, 0.2); color: #4ade80; border-color: rgba(22, 101, 52, 0.3); }
         
+        /* FITUR BARU: Animasi Loading Spinner */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
         @media (max-width: 768px) {
             .container { margin: 1.5rem auto; padding: 0 4%; }
             .content-box { padding: 1.5rem; }
@@ -369,18 +376,24 @@
                 <input type="text" id="nama" placeholder="Contoh: Farhan" oninput="simpanDraft()">
                 <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
                 
+                <!-- FITUR BARU: Validasi Regex di UI akan ditangani event listener -->
                 <label>Nomor WhatsApp <span style="color:red;">*</span></label>
                 <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
-                <div class="error-text" id="errWa">Nomor WhatsApp wajib diisi!</div>
+                <div class="error-text" id="errWa">Format nomor WhatsApp tidak valid (10-13 digit angka)</div>
                 
                 <label>Alamat Lengkap</label>
                 <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
 
-                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi / Google Maps (Opsional)</label>
-                <div style="display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;">
-                    <input type="url" id="shareloc" placeholder="Link Google Maps atau klik tombol di samping ->" oninput="simpanDraft()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-                    <button type="button" class="btn" aria-label="Dapatkan Lokasi GPS" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin: 0; white-space: nowrap;"><i class="bi bi-crosshair"></i> Lokasi Saat Ini</button>
-                </div>
+                <!-- FITUR BARU: Leaflet Map -->
+                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi Peta (Geser pin ke alamat Anda)</label>
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: -8px; margin-bottom: 8px;">Akurasi peta membantu teknisi kami menemukan lokasi Anda lebih cepat.</p>
+                <div id="mapPelanggan" style="height: 250px; width: 100%; border-radius: 8px; margin-bottom: 1rem; z-index: 1; border: 2px solid #e2e8f0;"></div>
+                
+                <!-- Field tersembunyi untuk backend -->
+                <input type="hidden" id="latLokasi">
+                <input type="hidden" id="lngLokasi">
+                
+                <button type="button" class="btn" aria-label="Dapatkan Lokasi GPS" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin-bottom: 1.2rem; width: 100%; justify-content: center;"><i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini</button>
                 
                 <label>Merek Perangkat <span style="color:red;">*</span></label>
                 <select id="merek" onchange="toggleMerekLainnya()">
@@ -432,7 +445,7 @@
 
                 <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
                 <input type="file" id="fileKondisi" accept="image/*,video/*" aria-label="Upload File Kondisi Perangkat" onchange="tampilPratinjau()">
-                <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file video 5MB. Foto otomatis dikompres.</p>
+                <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file fisik video 10MB.</p>
                 <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
 
                 <div style="margin-top: 1.5rem; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -768,8 +781,7 @@
 </div>
 
 <!-- ========================================== -->
-<!-- TEMPLATE HIDDEN KARTU (SAMA PERSIS DENGAN GAMBAR REFERENSI) -->
-<!-- Elemen ini diletakkan tersembunyi, lalu di-capture menjadi gambar PDF -->
+<!-- TEMPLATE HIDDEN KARTU -->
 <!-- ========================================== -->
 <div style="position: absolute; left: -9999px; top: 0;">
     <div id="pdfCardTemplate" style="width: 400px; height: 680px; background-color: #f4f4f5; border-radius: 18px; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative;">
@@ -777,15 +789,11 @@
         <!-- Header & Lengkungan Wave -->
         <div style="width: 100%; height: 200px; position: relative;">
             <svg viewBox="0 0 400 200" preserveAspectRatio="none" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-                <!-- Warna dasar biru gelap -->
                 <path d="M0,150 Q200,200 400,150 L400,0 L0,0 Z" fill="#0b3d91" />
-                <!-- Garis border biru muda di bawah lengkungan -->
                 <path d="M0,150 Q200,200 400,150" fill="none" stroke="#38bdf8" stroke-width="8" />
             </svg>
-            
             <div style="position: absolute; top: 55px; width: 100%; text-align: center; color: white; display: flex; flex-direction: column; align-items: center;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 2px;">
-                    <!-- Logo SF Vector Pendekatan -->
                     <svg width="45" height="35" viewBox="0 0 100 60" fill="white">
                         <polygon points="10,60 40,0 60,0 30,60" />
                         <polygon points="50,60 80,0 100,0 70,60" />
@@ -797,28 +805,16 @@
             </div>
         </div>
 
-        <!-- Bagian Body / Tengah -->
         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 10px; width: 100%;">
             <h2 style="color: #0b2a5c; font-size: 24px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.25; text-align: center;">KARTU FAKTUR<br>DAN LAYANAN</h2>
             <div style="width: 45px; height: 3px; background-color: #3b82f6; margin: 0 auto 25px auto;"></div>
-            
-            <!-- Box QR Code dengan border biru -->
-            <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px; display: inline-block;">
-                <div id="pdfCardQrCode"></div>
-            </div>
-
-            <!-- Pesan Info dengan Icon HP -->
+            <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px; display: inline-block;"><div id="pdfCardQrCode"></div></div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px; width: 80%;">
-                <div style="width: 46px; height: 46px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 22px; flex-shrink: 0;">
-                    <i class="bi bi-phone"></i>
-                </div>
-                <p style="font-size: 11.5px; color: #334155; font-weight: 600; margin: 0; line-height: 1.4; text-align: left;">
-                    Scan kode QR untuk<br>informasi faktur dan<br>layanan lainnya
-                </p>
+                <div style="width: 46px; height: 46px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 22px; flex-shrink: 0;"><i class="bi bi-phone"></i></div>
+                <p style="font-size: 11.5px; color: #334155; font-weight: 600; margin: 0; line-height: 1.4; text-align: left;">Scan kode QR untuk<br>informasi faktur dan<br>layanan lainnya</p>
             </div>
         </div>
 
-        <!-- Footer -->
         <div style="width: 100%; background: #0b3d91; padding: 22px 0; color: white; display: flex; align-items: center; justify-content: center; gap: 20px;">
             <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;">
                 <div style="width: 22px; height: 22px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-whatsapp" style="font-size: 13px;"></i></div>
@@ -834,6 +830,42 @@
 </div>
 
 <script>
+// FITUR BARU: Konfigurasi Leaflet Peta Utama (Cianjur Area Default)
+let petaPelanggan, markerPelanggan;
+function inisialisasiPetaLeaflet() {
+    if(petaPelanggan) return; 
+    
+    // Default Map Coordinate di Cianjur Pusat
+    const latAwal = -6.816666;
+    const lngAwal = 107.133333;
+    
+    petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(petaPelanggan);
+    
+    markerPelanggan = L.marker([latAwal, lngAwal], {draggable: true}).addTo(petaPelanggan);
+    
+    document.getElementById('latLokasi').value = latAwal;
+    document.getElementById('lngLokasi').value = lngAwal;
+    
+    // Saat Marker Digeser
+    markerPelanggan.on('dragend', function(e) {
+        const posisi = markerPelanggan.getLatLng();
+        document.getElementById('latLokasi').value = posisi.lat;
+        document.getElementById('lngLokasi').value = posisi.lng;
+        simpanDraft();
+    });
+    
+    // Saat Peta Diklik untuk Memindah Pin
+    petaPelanggan.on('click', function(e) {
+        markerPelanggan.setLatLng(e.latlng);
+        document.getElementById('latLokasi').value = e.latlng.lat;
+        document.getElementById('lngLokasi').value = e.latlng.lng;
+        simpanDraft();
+    });
+}
 
 function klikMenuHome() {
     tampilHalaman('home');
@@ -903,6 +935,8 @@ function tutupScannerQR() {
     }
 }
 
+// Fungsi Bukti DP & Pelunasan Tetap DataURL agar Cepat di Client-Side (TIDAK BERAT)
+// Yang dirubah ke FormData hanya Video / Bukti Kondisi Awal
 window.buktiDPBase64 = "";
 window.buktiPelunasanBase64 = "";
 
@@ -945,7 +979,6 @@ function previewBukti(input, previewId) {
 const API_URL = window.location.origin + "/api";
 let currentStep = 1; 
 let kodeSaya = "";   
-let fileDataURL = "";
 let tipeFile = "";
 let metodeDP = "";
 let metodeBayar = "";
@@ -962,12 +995,8 @@ const socket = io(window.location.origin);
 socket.on("updateDataPelanggan", (kode) => {
     if(kode === kodeSaya) {
         Swal.fire({
-            icon: 'info',
-            title: 'Pembaruan Status!',
-            text: 'Status pesanan Anda telah diperbarui oleh Admin.',
-            confirmButtonColor: '#0ea5e9'
+            icon: 'info', title: 'Pembaruan Status!', text: 'Status pesanan Anda telah diperbarui oleh Admin.', confirmButtonColor: '#0ea5e9'
         });
-        
         tampilkanSkeleton(); 
         setTimeout(() => cekStatus(), 600); 
     }
@@ -976,11 +1005,8 @@ socket.on("updateDataPelanggan", (kode) => {
 socket.on("chatBaruDiterima", (data) => {
     const kodeChat = data.kode || data;
     const pengirim = data.pengirim || 'admin';
-    
     if(kodeChat === kodeSaya) {
-        if (pengirim === 'admin') {
-            Toast.fire({ icon: 'success', title: 'Admin membalas pesan Anda' });
-        }
+        if (pengirim === 'admin') Toast.fire({ icon: 'success', title: 'Admin membalas pesan Anda' });
         muatLogPesan();
     }
 });
@@ -992,7 +1018,8 @@ function simpanDraft() {
         step: currentStep, layanan: layananChecked,
         nama: document.getElementById("nama").value, wa: document.getElementById("wa").value,
         alamat: document.getElementById("alamat").value, 
-        shareloc: document.getElementById("shareloc").value,
+        lat: document.getElementById("latLokasi").value,
+        lng: document.getElementById("lngLokasi").value,
         merek: document.getElementById("merek").value,
         merekLainnya: document.getElementById("merekLainnya").value,
         tipe: document.getElementById("tipe").value, kerusakan: document.getElementById("kerusakan").value,
@@ -1010,7 +1037,17 @@ function restoreDraft() {
             document.getElementById("nama").value = data.nama || "";
             document.getElementById("wa").value = data.wa || "";
             document.getElementById("alamat").value = data.alamat || "";
-            document.getElementById("shareloc").value = data.shareloc || ""; 
+            
+            if(data.lat && data.lng) {
+                document.getElementById("latLokasi").value = data.lat;
+                document.getElementById("lngLokasi").value = data.lng;
+                if(markerPelanggan && petaPelanggan) {
+                    const savedPos = new L.LatLng(data.lat, data.lng);
+                    markerPelanggan.setLatLng(savedPos);
+                    petaPelanggan.setView(savedPos, 14);
+                }
+            }
+
             document.getElementById("merek").value = data.merek || "";
             document.getElementById("merekLainnya").value = data.merekLainnya || "";
             document.getElementById("tipe").value = data.tipe || "";
@@ -1018,19 +1055,16 @@ function restoreDraft() {
             document.getElementById("chkSyaratKetentuan").checked = data.sk || false;
             
             data.layanan.forEach(id => { const cb = document.getElementById(id); if(cb) cb.checked = true; });
-            updateBrandOptions();
-            toggleMerekLainnya();
+            updateBrandOptions(); toggleMerekLainnya();
         } catch(e){}
     }
 }
 
+// FITUR BARU GPS & MAP MARKER MOVE
 function dapatkanLokasiOtomatis() {
     const btn = document.getElementById("btnLokasiGPS");
-    const inputShareloc = document.getElementById("shareloc");
     
-    if (!navigator.geolocation) {
-        return Swal.fire('Tidak Mendukung', 'Browser Anda tidak mendukung fitur lokasi.', 'error');
-    }
+    if (!navigator.geolocation) return Swal.fire('Tidak Mendukung', 'Browser Anda tidak mendukung fitur lokasi GPS.', 'error');
     
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Membaca GPS...';
     btn.disabled = true;
@@ -1039,18 +1073,27 @@ function dapatkanLokasiOtomatis() {
         (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            inputShareloc.value = `https://maps.google.com/?q=${lat},${lng}`;
+            
+            if(markerPelanggan && petaPelanggan) {
+                const myLocation = new L.LatLng(lat, lng);
+                markerPelanggan.setLatLng(myLocation);
+                petaPelanggan.setView(myLocation, 15);
+            }
+            
+            document.getElementById('latLokasi').value = lat;
+            document.getElementById('lngLokasi').value = lng;
             simpanDraft();
-            btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Berhasil';
-            setTimeout(() => { btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini'; btn.disabled = false; }, 3000);
+            
+            btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Berhasil Melacak GPS';
+            setTimeout(() => { btn.innerHTML = '<i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini'; btn.disabled = false; }, 3000);
         },
         (error) => {
             console.error(error);
-            btn.innerHTML = '<i class="bi bi-crosshair"></i> Lokasi Saat Ini';
+            btn.innerHTML = '<i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini';
             btn.disabled = false;
-            let pesanError = 'Tidak dapat mengambil lokasi.';
+            let pesanError = 'Tidak dapat mengambil lokasi presisi.';
             if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda. Mohon izinkan pada browser.';
-            Swal.fire('Gagal', pesanError, 'error');
+            Swal.fire('Gagal GPS', pesanError, 'error');
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -1179,6 +1222,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("txtChatKode").textContent = "Konsultasi";
                 aktifkanSistemChat();
             }
+            // Restore draft sebelum render UI map
             restoreDraft();
             updateProgress();
             showContent();
@@ -1204,7 +1248,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function nextStep() {
     if (currentStep === 2) { kirimPesanan(); } else {
-        if (currentStep < 7) { currentStep++; simpanDraft(); updateProgress(); showContent(); }
+        if (currentStep < 7) { 
+            currentStep++; simpanDraft(); updateProgress(); showContent(); 
+            // Fix map issue rendering on hidden div
+            if(currentStep === 2) {
+                setTimeout(() => {
+                    inisialisasiPetaLeaflet();
+                    petaPelanggan.invalidateSize();
+                }, 200);
+            }
+        }
     }
 }
 function prevStep() {
@@ -1231,15 +1284,32 @@ function validasiInputRealTime(element, errId) {
 
 function pasangListenerValidasiRealTime() {
     document.getElementById('nama').addEventListener('input', function() { validasiInputRealTime(this, 'errNama'); simpanDraft(); });
+    
+    // FITUR BARU: Strict Regex Validasi untuk WhatsApp Client-Side
     document.getElementById('wa').addEventListener('input', function() { 
-        if(this.value.startsWith('0')) this.value = '62' + this.value.substring(1);
-        validasiInputRealTime(this, 'errWa'); simpanDraft();
+        let rawValue = this.value.replace(/\D/g, ''); // bersihkan non-angka
+        if(rawValue.startsWith('0')) rawValue = '62' + rawValue.substring(1);
+        this.value = rawValue;
+
+        const waRegex = /^(62|0)[0-9]{8,11}$/;
+        const errSpan = document.getElementById('errWa');
+        
+        if (!waRegex.test(rawValue) || rawValue.length < 10 || rawValue.length > 13) {
+            this.classList.add('input-error'); 
+            if(errSpan) { errSpan.innerText = "Format tidak valid. Gunakan 10-13 digit angka awalan 62 atau 0"; errSpan.style.display = 'block'; }
+        } else {
+            this.classList.remove('input-error'); 
+            if(errSpan) errSpan.style.display = 'none';
+        }
+        simpanDraft();
     });
+
     document.getElementById('merek').addEventListener('change', function() { validasiInputRealTime(this, 'errMerek'); });
     document.getElementById('tipe').addEventListener('input', function() { validasiInputRealTime(this, 'errTipe'); simpanDraft();});
     document.getElementById('merekLainnya').addEventListener('input', function() { validasiInputRealTime(this, 'errMerekLainnya'); simpanDraft();});
 }
 
+// FITUR BARU: Loading Spinner untuk Proses Gambar
 function tampilPratinjau() {
     const fileKondisi = document.getElementById("fileKondisi");
     const pratinjau = document.getElementById("pratinjauFile");
@@ -1248,48 +1318,47 @@ function tampilPratinjau() {
         const file = fileKondisi.files[0];
         tipeFile = file.type;
         
-        if(file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    const maxDim = 800; 
-                    let w = img.width, h = img.height;
-                    
-                    if(w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
-                    else if(h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
-                    
-                    canvas.width = w; canvas.height = h;
-                    const ctx = canvas.getContext("2d");
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(0, 0, w, h);
-                    ctx.drawImage(img, 0, 0, w, h);
-                    
-                    fileDataURL = canvas.toDataURL("image/jpeg", 0.7); 
-                    pratinjau.innerHTML = `<img src="${fileDataURL}" style="max-width:100%; max-height:200px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">`;
+        // Menampilkan Spinner
+        pratinjau.innerHTML = `<div style="padding: 20px;"><i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite; display: inline-block; font-size: 2.5rem; color: #0ea5e9;"></i><br><strong style="margin-top:10px; display:inline-block;">Memproses file...</strong></div>`;
+
+        setTimeout(() => {
+            if(file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        pratinjau.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:200px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">`;
+                    };
+                    img.src = e.target.result;
                 };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        } else if(file.type.startsWith("video/")) {
-            if(file.size > 5 * 1024 * 1024) {
-                Swal.fire({ icon: 'error', title: 'Ukuran Terlalu Besar!', text: 'Maksimal ukuran file video 5MB.', confirmButtonColor: '#0ea5e9' });
-                fileKondisi.value = ""; fileDataURL = ""; pratinjau.innerHTML = "Belum ada file dipilih"; return;
+                reader.readAsDataURL(file);
+            } else if(file.type.startsWith("video/")) {
+                if(file.size > 10 * 1024 * 1024) {
+                    Swal.fire({ icon: 'error', title: 'Ukuran Terlalu Besar!', text: 'Maksimal ukuran file video 10MB.', confirmButtonColor: '#0ea5e9' });
+                    fileKondisi.value = ""; pratinjau.innerHTML = "Belum ada file dipilih"; return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    pratinjau.innerHTML = `<video src="${e.target.result}" controls style="max-width:100%; max-height:200px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);"></video>`;
+                }
+                reader.readAsDataURL(file);
             }
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                fileDataURL = e.target.result;
-                pratinjau.innerHTML = `<video src="${fileDataURL}" controls style="max-width:100%; max-height:200px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);"></video>`;
-            }
-            reader.readAsDataURL(file);
-        }
+        }, 300);
     }
 }
 
+// FITUR BARU: Mengirim Data Memakai Multipart FormData (Meninggalkan JSON Base64 untuk media utama)
 function kirimPesanan() {
+    const waInput = document.getElementById("wa");
     const isNamaValid = validasiInputRealTime(document.getElementById("nama"), 'errNama');
-    const isWaValid = validasiInputRealTime(document.getElementById("wa"), 'errWa');
+    const waRegex = /^(62|0)[0-9]{8,11}$/;
+    const isWaValid = waRegex.test(waInput.value.replace(/\D/g, '')) && waInput.value.length >= 10 && waInput.value.length <= 13;
+    
+    if(!isWaValid) {
+        waInput.classList.add('input-error'); 
+        document.getElementById('errWa').style.display = 'block';
+    }
+
     const isMerekValid = validasiInputRealTime(document.getElementById("merek"), 'errMerek');
     const isTipeValid = validasiInputRealTime(document.getElementById("tipe"), 'errTipe');
     const isSKValid = document.getElementById("chkSyaratKetentuan").checked;
@@ -1309,24 +1378,42 @@ function kirimPesanan() {
     }
 
     const btnKirim = document.getElementById("btnKirimPesanan");
-    btnKirim.disabled = true; btnKirim.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim...';
+    btnKirim.disabled = true; btnKirim.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengunggah...';
 
     const layananTerpilih = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.parentElement.textContent.trim()).join(", ");
     const generatedKode = "HS-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.floor(Math.random()*900+100);
-    
     const kodeKonsulLama = localStorage.getItem("kodeKonsultasiPelanggan") || "";
 
-    const data = {
-        kode: generatedKode, kodeKonsultasi: kodeKonsulLama, nama: document.getElementById("nama").value.trim(), wa: document.getElementById("wa").value.trim(),
-        alamat: document.getElementById("alamat").value.trim(), shareloc: document.getElementById("shareloc").value.trim(),
-        merek: merekFinal, tipe: document.getElementById("tipe").value.trim(), kerusakan: document.getElementById("kerusakan").value.trim(),
-        layanan: layananTerpilih || "Belum dipilih", status: "baru", teknisi: "", jadwal: "", biayaSuku: 0, biayaJasa: 0, totalHarga: 0,
-        metodePembayaran: "", pembayaranDikonfirmasi: false, pembayaranValid: false, kondisiHP: fileDataURL || "", tipeKondisi: tipeFile || "",
-        dpTerbayar: false, dpValid: false, metodeDP: "", lokasiServis: "", adaKerusakanTambahan: false, infoKerusakanTambahan: "",
-        biayaSukuTambahan: 0, statusPersetujuanTambahan: "pending", tanggalInput: new Date().toISOString().split('T')[0]
-    };
+    const latData = document.getElementById("latLokasi").value;
+    const lngData = document.getElementById("lngLokasi").value;
+    let fallbackShareloc = `https://maps.google.com/?q=${latData},${lngData}`;
 
-    fetch(`${API_URL}/orders`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+    // FITUR BARU: Penggunaan FormData
+    const formData = new FormData();
+    formData.append('kode', generatedKode);
+    formData.append('kodeKonsultasi', kodeKonsulLama);
+    formData.append('nama', document.getElementById("nama").value.trim());
+    formData.append('wa', document.getElementById("wa").value.trim());
+    formData.append('alamat', document.getElementById("alamat").value.trim());
+    formData.append('shareloc', fallbackShareloc); // Kirim tautan sebagai fallback string
+    formData.append('koordinat[lat]', latData); // Simpan koordinat di skema DB
+    formData.append('koordinat[lng]', lngData); 
+    formData.append('merek', merekFinal);
+    formData.append('tipe', document.getElementById("tipe").value.trim());
+    formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
+    formData.append('layanan', layananTerpilih || "Belum dipilih");
+    
+    // Append the actual physical file instead of Base64 JSON
+    const fileInput = document.getElementById("fileKondisi");
+    if(fileInput.files.length > 0) {
+        formData.append('kondisiHP', fileInput.files[0]);
+    }
+    formData.append('tipeKondisi', tipeFile || "");
+
+    fetch(`${API_URL}/orders`, { 
+        method: "POST", 
+        body: formData // Menghapus header Content-Type agar fetch meraciknya otomatis ke boundary form-data
+    })
     .then(res => { if (!res.ok) throw new Error("Gagal mendaftarkan data"); return res.json(); })
     .then(() => {
         kodeSaya = generatedKode;
@@ -1349,7 +1436,7 @@ function kirimPesanan() {
     .catch(err => {
         console.error(err);
         btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
-        Swal.fire({ icon: 'error', title: 'Sistem Sibuk', text: 'Gagal memproses pesanan. Pastikan server aktif.', confirmButtonColor: '#ef4444' });
+        Swal.fire({ icon: 'error', title: 'Sistem Sibuk', text: 'Gagal memproses pesanan atau koneksi lambat.', confirmButtonColor: '#ef4444' });
     });
 }
 
@@ -1385,12 +1472,26 @@ function pilihMetodeDP(metode) {
     document.getElementById("metodeDPDipilih").textContent = "Transfer " + metode;
 }
 
+// Catatan: Karena fitur pelunasan bisa saja berupa gambar sangat besar, diubah ke FormData backend-nya untuk Update (PUT)
 function konfirmasiBayarDP() {
     if(!metodeDP) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih metode transfer DP!', confirmButtonColor: '#0ea5e9' });
 
+    // Karena backend route PUT /api/orders/:kode sudah kita support upload.fields(),
+    // kita ubah mekanisme base64 UI ini menjadi fetch object Blob atau kirim input file asli.
+    const fileInputDP = document.getElementById("fileBuktiDP");
+    const formDataUpdate = new FormData();
+    formDataUpdate.append('metodeDP', metodeDP);
+    formDataUpdate.append('dpTerbayar', 'true'); // Harus dikirim sbg string 'true' jika via formdata atau parsed
+
+    if(fileInputDP.files.length > 0) {
+        formDataUpdate.append('buktiDP', fileInputDP.files[0]);
+    } else {
+        return Swal.fire('Oops', 'Silakan upload gambar bukti transfer DP!', 'warning');
+    }
+
     fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metodeDP: metodeDP, dpTerbayar: true, buktiDP: window.buktiDPBase64 })
+        method: "PUT",
+        body: formDataUpdate
     })
     .then(res => res.json())
     .then(() => {
@@ -1471,10 +1572,23 @@ function pilihMetodeBayar(metode) {
 }
 
 function konfirmasiBayar() {
-    if(!metodeBayar) return Swal.fire('Perhatian', 'Pilih metode!', 'warning');
+    if(!metodeBayar) return Swal.fire('Perhatian', 'Pilih metode bayar!', 'warning');
+    
+    const fileInputLunas = document.getElementById("fileBuktiPelunasan");
+    if(metodeBayar !== "Tunai" && fileInputLunas.files.length === 0) {
+        return Swal.fire('Oops', 'Silakan upload bukti transfer pelunasan.', 'warning');
+    }
+
+    const formDataLunas = new FormData();
+    formDataLunas.append('metodePembayaran', metodeBayar);
+    formDataLunas.append('pembayaranDikonfirmasi', 'true');
+    if(fileInputLunas.files.length > 0) {
+        formDataLunas.append('buktiPelunasan', fileInputLunas.files[0]);
+    }
+
     fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metodePembayaran: metodeBayar, pembayaranDikonfirmasi: true, buktiPelunasan: window.buktiPelunasanBase64 })
+        method: "PUT",
+        body: formDataLunas
     }).then(res => res.json()).then(() => { Swal.fire('Berhasil', 'Pelunasan & bukti terkirim.', 'success'); cekStatus(); });
 }
 
@@ -1518,7 +1632,7 @@ function cekStatus() {
         }
 
         if(document.getElementById("tampilKondisiHP") && data.kondisiHP) {
-            document.getElementById("tampilKondisiHP").innerHTML = data.tipeKondisi.startsWith("video/") 
+            document.getElementById("tampilKondisiHP").innerHTML = (data.kondisiHP.endsWith('.mp4') || data.tipeKondisi.startsWith("video/")) 
                 ? `<video src="${data.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>` 
                 : `<img src="${data.kondisiHP}" style="max-width:100%; border-radius:8px;">`;
         }
@@ -1707,10 +1821,8 @@ function showContent() {
 
 // ==========================================
 // FUNGSI UNDUH KARTU FAKTUR & LAYANAN PDF
-// MENGGUNAKAN HTML2CANVAS UNTUK PIXEL-PERFECT DESAIN
 // ==========================================
 function unduhKartuPDF() {
-    // 1. Tampilkan Loading
     Swal.fire({
         title: 'Menyiapkan Desain Kartu...',
         text: 'Mohon tunggu sebentar',
@@ -1718,12 +1830,10 @@ function unduhKartuPDF() {
         didOpen: () => { Swal.showLoading(); }
     });
 
-    // 2. Generate QR Code ke dalam Hidden Template
     const qrContainer = document.getElementById("pdfCardQrCode");
     qrContainer.innerHTML = "";
     const urlLacakDinamis = window.location.origin + window.location.pathname + "?lacak=" + kodeSaya;
     
-    // Ukuran disesuaikan untuk mengisi box putih pada desain
     new QRCode(qrContainer, {
         text: urlLacakDinamis,
         width: 170,
@@ -1733,15 +1843,12 @@ function unduhKartuPDF() {
         correctLevel : QRCode.CorrectLevel.H
     });
 
-    // 3. Beri sedikit waktu agar canvas QR Code ter-render sepenuhnya sebelum ditangkap html2canvas
     setTimeout(() => {
         const cardTemplate = document.getElementById("pdfCardTemplate");
         
-        // Render menggunakan HTML2Canvas (Resolusi ditingkatkan x3 agar PDF jernih)
         html2canvas(cardTemplate, { scale: 3, useCORS: true, backgroundColor: null }).then(canvas => {
             const imgData = canvas.toDataURL("image/png");
             
-            // Konversi menjadi PDF menggunakan jsPDF (Ukuran disesuaikan rasionya dengan template 400x680 -> 100x170mm)
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 170] });
             
@@ -1752,9 +1859,8 @@ function unduhKartuPDF() {
             console.error(err);
             Swal.fire('Error', 'Gagal memproses gambar desain kartu: ' + err.message, 'error');
         });
-    }, 400); // delay 400ms untuk proses rendering aman
+    }, 400); 
 }
-
 
 function unduhPDF() {
     try {
