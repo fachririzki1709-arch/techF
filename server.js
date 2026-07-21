@@ -9,17 +9,28 @@ const http = require('http');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { Server } = require('socket.io');
+const multer = require('multer');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // --- MIDDLEWARE ---
-// Limit tetap 50mb untuk menerima payload base64 dari client sebelum di-convert
 app.use(express.json({ limit: '50mb' })); 
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cors());
 
-// Tambahan Fitur: Middleware Anti-Cache untuk semua route API agar tidak ada delay/bug di beda perangkat (mobile)
+// FITUR BARU: Rate Limiting (Mencegah Spam / DDoS ringan)
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 menit
+    max: 300, // Limit setiap IP maksimal 300 request per 15 menit
+    message: { error: "Terlalu banyak request dari IP ini, coba lagi nanti." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api', apiLimiter);
+
 app.use('/api', (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -27,22 +38,29 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
-// --- WEBSOCKET ---
-io.on('connection', (socket) => {
-    console.log("🟢 Klien terhubung ke WebSocket");
-});
-
 // --- KONFIGURASI FOLDER FRONTEND & UPLOADS ---
 const publicPath = path.join(__dirname, 'public');
 const uploadPath = path.join(publicPath, 'uploads');
 app.use(express.static(publicPath));
 
-// Otomatis buat folder uploads jika belum ada
 if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-// --- FUNGSI HELPER: KONVERSI BASE64 KE FILE FISIK ---
+// FITUR BARU: Konfigurasi Multer untuk upload file fisik
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) { cb(null, uploadPath); },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname) || '.jpg';
+        cb(null, file.fieldname + '_' + Date.now() + ext);
+    }
+});
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 50 * 1024 * 1024 } // Limit 50MB
+});
+
+// Helper Base64 tetap dipertahankan untuk backward compatibility admin jika diperlukan
 function simpanBase64KeFile(base64String, prefix) {
     if (!base64String || !base64String.startsWith('data:')) return base64String;
     try {
@@ -56,12 +74,14 @@ function simpanBase64KeFile(base64String, prefix) {
         const filepath = path.join(uploadPath, filename);
         
         fs.writeFileSync(filepath, buffer);
-        return `/uploads/${filename}`; // Kembalikan URL lokal untuk disimpan di DB
-    } catch (err) {
-        console.error("Gagal simpan file:", err);
-        return "";
-    }
+        return `/uploads/${filename}`;
+    } catch (err) { return ""; }
 }
+
+// --- WEBSOCKET ---
+io.on('connection', (socket) => {
+    console.log("🟢 Klien terhubung ke WebSocket");
+});
 
 // --- KONEKSI MONGODB ---
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/db_servis_hp"; 
@@ -90,13 +110,14 @@ const OrderSchema = new mongoose.Schema({
     adaKerusakanTambahan: { type: Boolean, default: false },
     infoKerusakanTambahan: String,
     biayaSukuTambahan: { type: Number, default: 0 },
-    statusPersetujuanTambahan: { type: String, default: "pending" }, // pending, disetujui, ditolak
+    statusPersetujuanTambahan: { type: String, default: "pending" },
     kondisiHP: String,
     tipeKondisi: { type: String, default: "" },
-    // --- FITUR BARU: TRACKING WORKSHOP & ESTIMASI ---
-    subStatusWorkshop: { type: String, default: "antrean" }, // antrean, pengecekan, tunggu_part, perbaikan, qc_akhir, siap
-    estimasiSelesai: { type: String, default: "" }, // Format: YYYY-MM-DD
-    statusSparepart: { type: String, default: "ready" } // ready, inden
+    subStatusWorkshop: { type: String, default: "antrean" },
+    estimasiSelesai: { type: String, default: "" },
+    statusSparepart: { type: String, default: "ready" },
+    // FITUR BARU: Audit Trail Riwayat Status
+    riwayatStatus: { type: Array, default: [] }
 });
 const Order = mongoose.model('Order', OrderSchema, 'orders');
 
@@ -107,8 +128,6 @@ const Chat = mongoose.model('Chat', ChatSchema, 'chats');
 
 // --- ROUTE API ---
 const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
-
-// Hash Password Default Admin (Lebih aman dari hardcode teks biasa)
 const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
 
 function verifyAdmin(req, res, next) {
@@ -123,7 +142,6 @@ function verifyAdmin(req, res, next) {
 
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
-    // Pengecekan bcrypt
     if (username === "admin" && bcrypt.compareSync(password, ADMIN_HASH)) {
         const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ token, message: "Login Berhasil" });
@@ -134,7 +152,6 @@ app.post('/api/admin/login', (req, res) => {
 
 app.get('/api/orders', verifyAdmin, async (req, res) => {
     try {
-        // Implementasi limit opsional untuk efisiensi jika data sudah ribuan
         const limit = parseInt(req.query.limit) || 2000; 
         const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
         const ordersObject = {};
@@ -143,19 +160,26 @@ app.get('/api/orders', verifyAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat data pesanan" }); }
 });
 
-app.post('/api/orders', async (req, res) => {
+// FITUR BARU: Mendukung Multer FormData
+app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]), async (req, res) => {
     try {
-        // Validasi Sederhana
         if (!req.body.nama || !req.body.wa || !req.body.merek) {
             return res.status(400).json({ error: "Data wajib tidak lengkap" });
         }
 
         const dataOrder = req.body;
         
-        // Konversi file kondisi perangkat dari base64 ke file fisik
-        if (dataOrder.kondisiHP && dataOrder.kondisiHP.startsWith('data:')) {
+        // Cek jika file dikirim via Multer FormData
+        if (req.files && req.files['kondisiHPFile']) {
+            dataOrder.kondisiHP = `/uploads/${req.files['kondisiHPFile'][0].filename}`;
+            dataOrder.tipeKondisi = req.files['kondisiHPFile'][0].mimetype;
+        } else if (dataOrder.kondisiHP && dataOrder.kondisiHP.startsWith('data:')) {
+            // Backward compatibility jika masih pakai Base64
             dataOrder.kondisiHP = simpanBase64KeFile(dataOrder.kondisiHP, 'KONDISI_' + dataOrder.kode);
         }
+
+        // FITUR BARU: Set initial audit trail
+        dataOrder.riwayatStatus = [{ status: "baru", waktu: new Date().toISOString() }];
 
         const dataBaru = new Order(dataOrder);
         await dataBaru.save();
@@ -180,17 +204,29 @@ app.get('/api/orders/:kode', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat pesanan" }); }
 });
 
-app.put('/api/orders/:kode', async (req, res) => {
+app.put('/api/orders/:kode', upload.fields([{ name: 'buktiDPFile', maxCount: 1 }, { name: 'buktiPelunasanFile', maxCount: 1 }]), async (req, res) => {
     try {
         const dataUpdate = req.body;
 
-        // Konversi Bukti DP jika ada payload base64
-        if (dataUpdate.buktiDP && dataUpdate.buktiDP.startsWith('data:')) {
-            dataUpdate.buktiDP = simpanBase64KeFile(dataUpdate.buktiDP, 'DP_' + req.params.kode);
+        // Cek file dari Multer
+        if (req.files) {
+            if (req.files['buktiDPFile']) dataUpdate.buktiDP = `/uploads/${req.files['buktiDPFile'][0].filename}`;
+            if (req.files['buktiPelunasanFile']) dataUpdate.buktiPelunasan = `/uploads/${req.files['buktiPelunasanFile'][0].filename}`;
         }
-        // Konversi Bukti Pelunasan jika ada payload base64
-        if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) {
-            dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
+
+        // Backward compatibility base64
+        if (dataUpdate.buktiDP && dataUpdate.buktiDP.startsWith('data:')) dataUpdate.buktiDP = simpanBase64KeFile(dataUpdate.buktiDP, 'DP_' + req.params.kode);
+        if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
+
+        // FITUR BARU: Audit Trail Update
+        if (dataUpdate.status) {
+            const existing = await Order.findOne({ kode: req.params.kode });
+            if (existing && existing.status !== dataUpdate.status) {
+                await Order.updateOne(
+                    { kode: req.params.kode }, 
+                    { $push: { riwayatStatus: { status: dataUpdate.status, waktu: new Date().toISOString() } } }
+                );
+            }
         }
 
         const updateData = await Order.findOneAndUpdate(
@@ -207,7 +243,6 @@ app.put('/api/orders/:kode', async (req, res) => {
 
 app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
     try {
-        // Opsional: Hapus file fisik juga jika diperlukan (fs.unlinkSync)
         await Order.findOneAndDelete({ kode: req.params.kode });
         io.emit("updateDashboardAdmin");
         res.json({ message: "Hapus berhasil" });
@@ -230,7 +265,6 @@ app.post('/api/chats', async (req, res) => {
     try {
         const chatBaru = new Chat(req.body);
         await chatBaru.save();
-        // MODIFIKASI: Mengirim data pengirim agar frontend bisa membedakan pop-up alert
         io.emit("chatBaruDiterima", { kode: chatBaru.kode, pengirim: chatBaru.pengirim });
         res.status(201).json({ message: "Chat terkirim" });
     } catch (error) { res.status(500).json({ error: "Gagal kirim chat" }); }
@@ -258,12 +292,10 @@ app.get('/api/reviews', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
 });
 
-// --- ROUTE FRONTEND (FALLBACK) ---
 app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// --- JALANKAN SERVER ---
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
