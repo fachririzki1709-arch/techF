@@ -461,13 +461,13 @@
                     <button onclick="bagikanKeWA()" class="btn btn-success" style="font-size:0.8rem; padding: 0.3rem 0.6rem; margin: 0;"><i class="bi bi-whatsapp"></i> Simpan ke WA</button>
                 </p>
 
-                <!-- Hidden QR Container untuk keperluan Generate & PDF (Sesuai permintaan: tidak perlu menampilkan kartu di layar pada tahap 3, hanya tombol unduh) -->
+                <!-- Hidden QR Container untuk keperluan Generate PDF Sesuai Desain Asli -->
                 <div id="kartuQrCodeArea" style="display:none;"></div>
 
                 <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 1.5rem; border-radius: 10px; margin: 1.5rem 0; text-align: center;">
                     <i class="bi bi-qr-code" style="font-size: 2.5rem; color: #0284c7;"></i>
                     <h4 style="margin: 0.5rem 0; color: #0369a1; font-size: 1.1rem;">Unduh Kartu Faktur & Barcode Pelacakan</h4>
-                    <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">Kartu digital berisi barcode pelacakan pesanan Anda siap diunduh dalam format PDF.</p>
+                    <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">Kartu digital berisi barcode pelacakan pesanan Anda siap diunduh dalam format PDF (Desain Layout Sesuai Referensi).</p>
                     <button class="btn btn-pdf" onclick="unduhKartuPDF()"><i class="bi bi-filetype-pdf"></i> Unduh Kartu & Barcode sebagai PDF</button>
                 </div>
                 
@@ -1277,14 +1277,13 @@ function kirimPesanan() {
         document.getElementById("kodePesanan").textContent = kodeSaya;
         document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         
-        // Generate QR code di background untuk unduh kartu
         const qrContainer = document.getElementById("kartuQrCodeArea");
         qrContainer.innerHTML = "";
         const urlLacakDinamis = window.location.origin + window.location.pathname + "?lacak=" + kodeSaya;
         new QRCode(qrContainer, {
             text: urlLacakDinamis,
-            width: 100,
-            height: 100,
+            width: 150,
+            height: 150,
             colorDark : "#0f172a",
             colorLight : "#ffffff",
             correctLevel : QRCode.CorrectLevel.L
@@ -1377,8 +1376,8 @@ function prosesLacakDenganKode(kode) {
             const urlLacakDinamis = window.location.origin + window.location.pathname + "?lacak=" + kodeSaya;
             new QRCode(qrContainer, {
                 text: urlLacakDinamis,
-                width: 100,
-                height: 100,
+                width: 150,
+                height: 150,
                 colorDark : "#0f172a",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.L
@@ -1464,8 +1463,8 @@ function cekStatus() {
             const urlLacakDinamis = window.location.origin + window.location.pathname + "?lacak=" + data.kode;
             new QRCode(qrContainer, {
                 text: urlLacakDinamis,
-                width: 100,
-                height: 100,
+                width: 150,
+                height: 150,
                 colorDark : "#0f172a",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.L
@@ -1680,7 +1679,7 @@ function showContent() {
     });
 }
 
-// FUNGSI UNDUH KARTU FAKTUR & LAYANAN SEBAGAI PDF
+// FUNGSI UNDUH KARTU FAKTUR & LAYANAN SEBAGAI PDF (DESAIN LAYOUT SAMA PERSIS SEPERTI GAMBAR REFERENSI)
 function unduhKartuPDF() {
     try {
         const { jsPDF } = window.jspdf;
@@ -1688,71 +1687,115 @@ function unduhKartuPDF() {
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 180] });
 
         // --- HALAMAN 1 (SISI DEPAN KARTU) ---
+        // Background Putih/Krem Bersih
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, 0, 100, 180, 'F');
+
+        // Header Biru Gradasi / Solid dengan lengkungan bawah
         doc.setFillColor(2, 132, 199);
-        doc.rect(0, 0, 100, 45, 'F');
+        doc.rect(0, 0, 100, 48, 'F');
+        
+        // Lengkungan Kurva Header Bawah (Simulasi visual lengkungan seperti gambar)
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(248, 250, 252);
+        doc.roundedRect(-10, 38, 120, 20, 10, 10, 'FD');
+
+        // Logo & Teks Header
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
+        doc.setFontSize(15);
         doc.setTextColor(255, 255, 255);
-        doc.text("SF SERVICE", 50, 20, { align: 'center' });
-        doc.setFontSize(8);
-        doc.text("We Come, We Fix", 50, 26, { align: 'center' });
-
-        doc.setFont("cursive", "bold");
-        doc.setFontSize(26);
-        doc.setTextColor(30, 64, 175);
-        doc.text("Terimakasih", 50, 75, { align: 'center' });
-
+        doc.text("SF SERVICE", 50, 18, { align: 'center' });
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
+        doc.setFontSize(7.5);
+        doc.text("We Come, We Fix", 50, 24, { align: 'center' });
+
+        // Ucapan Terima Kasih (Gaya Script/Bold Tengah)
+        doc.setFont("times", "italic");
+        doc.setFontSize(24);
+        doc.setTextColor(30, 64, 175);
+        doc.text("Terimakasih", 50, 78, { align: 'center' });
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.setTextColor(30, 41, 59);
+        doc.text("Telah mendukung dan", 50, 89, { align: 'center' });
+        doc.text("menggunakan layanan kami!", 50, 95, { align: 'center' });
+
+        // Garis Pembatas Halus di Tengah
+        doc.setDrawColor(203, 213, 225);
+        doc.setLineWidth(0.3);
+        doc.line(20, 120, 80, 120);
+
+        // 3 Ikon/Fitur Bawah Kartu Depan
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.5);
         doc.setTextColor(100, 116, 139);
-        doc.text("Telah mendukung dan", 50, 85, { align: 'center' });
-        doc.text("menggunakan layanan kami!", 50, 91, { align: 'center' });
+        doc.text("PROFESIONAL", 22, 133, { align: 'center' });
+        doc.text("CEPAT & TEPAT", 50, 133, { align: 'center' });
+        doc.text("TERPERCAYA", 78, 133, { align: 'center' });
 
-        doc.setDrawColor(226, 232, 240);
-        doc.line(15, 120, 85, 120);
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        doc.setTextColor(71, 85, 105);
-        doc.text("PROFESIONAL", 25, 135, { align: 'center' });
-        doc.text("CEPAT & TEPAT", 50, 135, { align: 'center' });
-        doc.text("TERPERCAYA", 75, 135, { align: 'center' });
-
-        // --- HALAMAN 2 (SISI BELAKANG KARTU - QR CODE) ---
+        // --- HALAMAN 2 (SISI BELAKANG KARTU - QR CODE & FOOTER KONTAK) ---
         doc.addPage([100, 180], 'portrait');
+        
+        // Background Halaman 2
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, 0, 100, 180, 'F');
+
+        // Header Biru Atas Halaman 2
         doc.setFillColor(2, 132, 199);
-        doc.rect(0, 0, 100, 45, 'F');
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
-        doc.text("SF SERVICE", 50, 20, { align: 'center' });
-        doc.setFontSize(8);
-        doc.text("We Come, We Fix", 50, 26, { align: 'center' });
+        doc.rect(0, 0, 100, 48, 'F');
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(248, 250, 252);
+        doc.roundedRect(-10, 38, 120, 20, 10, 10, 'FD');
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
+        doc.setFontSize(15);
+        doc.setTextColor(255, 255, 255);
+        doc.text("SF SERVICE", 50, 18, { align: 'center' });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.text("We Come, We Fix", 50, 24, { align: 'center' });
+
+        // Judul Kartu Faktur dan Layanan
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
         doc.setTextColor(15, 23, 42);
-        doc.text("KARTU FAKTUR DAN LAYANAN", 50, 58, { align: 'center' });
+        doc.text("KARTU FAKTUR DAN LAYANAN", 50, 60, { align: 'center' });
+        
+        // Garis kecil di bawah judul kartu
+        doc.setDrawColor(14, 165, 233);
+        doc.setLineWidth(0.8);
+        doc.line(42, 63, 58, 63);
+
+        // Kotak QR Code di PDF (Border rapi persis gambar)
+        doc.setDrawColor(203, 213, 225);
+        doc.setFillColor(255, 255, 255);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(25, 70, 50, 50, 3, 3, 'FD');
 
         const qrCanvas = document.querySelector("#kartuQrCodeArea canvas");
         if(qrCanvas) {
             const qrDataUrl = qrCanvas.toDataURL("image/png");
-            doc.addImage(qrDataUrl, 'PNG', 25, 66, 50, 50);
+            doc.addImage(qrDataUrl, 'PNG', 27, 72, 46, 46);
         }
 
+        // Keterangan Scan QR
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
+        doc.setFontSize(7.5);
         doc.setTextColor(100, 116, 139);
-        doc.text("Scan kode QR untuk informasi", 50, 126, { align: 'center' });
-        doc.text("faktur dan layanan lainnya", 50, 132, { align: 'center' });
+        doc.text("Scan kode QR untuk informasi", 50, 132, { align: 'center' });
+        doc.text("faktur dan layanan lainnya", 50, 137, { align: 'center' });
 
-        // Footer Kartu
+        // Footer Bawah Kartu Belakang (Background Biru Gelap / Navy Sesuai Gambar)
         doc.setFillColor(15, 23, 42);
-        doc.rect(0, 155, 100, 25, 'F');
+        doc.rect(0, 153, 100, 27, 'F');
+        
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(8);
-        doc.text("0888 9999 765", 28, 169, { align: 'center' });
-        doc.text("@SFSERVICE.CJR", 75, 169, { align: 'center' });
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.text("0888 9999 765", 33, 169);
+        doc.text("@SFSERVICE.CJR", 63, 169);
 
         doc.save(`Kartu_Layanan_${kodeSaya}.pdf`);
     } catch (e) { 
@@ -1845,6 +1888,9 @@ function onDragEnd(e) {
 
 headerChat.addEventListener('mousedown', onDragStart);
 document.addEventListener('mousemove', onDragMove);
+document.addEventListener('mouseup', onDragHome = (e) => {
+    // End drag handler
+});
 document.addEventListener('mouseup', onDragEnd);
 
 headerChat.addEventListener('touchstart', onDragStart, {passive: false});
