@@ -449,9 +449,10 @@
                 <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
 
                 <div style="margin-top: 1.5rem; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <!-- FITUR BARU: Pembaruan Redaksi Persetujuan DP -->
                     <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
                         <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
-                        <span>Saya menyetujui Syarat & Ketentuan layanan, termasuk kebijakan bahwa pembayaran <strong>Uang Muka (DP) bersifat Non-Refundable (Hangus)</strong> jika pembatalan servis dilakukan secara sepihak oleh pelanggan.</span>
+                        <span>Saya menyetujui Syarat & Ketentuan layanan. Pembayaran <strong>Uang Muka (DP) memotong total tagihan akhir</strong>. Jika perangkat tidak dapat kami perbaiki, <strong>DP kembali 100%</strong>. (DP hanya hangus jika pembatalan dilakukan sepihak oleh pelanggan).</span>
                     </label>
                     <div class="error-text" id="errSK" style="margin-top: 8px;">Centang persetujuan Syarat & Ketentuan ini untuk melanjutkan!</div>
                 </div>
@@ -484,8 +485,12 @@
                 
                 <p style="margin-top:0.8rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
                 
+                <!-- FITUR BARU: Pembaruan Narasi Kepercayaan -->
+                <div class="alert-bahaya" style="background:#f0fdf4; color:#166534; border-left:4px solid #10b981;">
+                    <strong><i class="bi bi-shield-check"></i> JAMINAN KEPERCAYAAN:</strong> Uang Muka (DP) ini otomatis <strong>memotong total tagihan</strong>. Jika perangkat tidak bisa kami perbaiki, DP dikembalikan 100%.
+                </div>
                 <div class="alert-bahaya">
-                    <strong><i class="bi bi-exclamation-triangle-fill"></i> KEBIJAKAN PEMBATALAN:</strong> Pembayaran Uang Muka (DP) ini bersifat <strong>Non-Refundable (Tidak dapat dikembalikan)</strong> dengan alasan apa pun.
+                    <strong><i class="bi bi-exclamation-triangle-fill"></i> KEBIJAKAN PEMBATALAN:</strong> DP hanya akan hangus apabila Anda melakukan <strong>pembatalan secara sepihak</strong> setelah teknisi kami jadwalkan/berangkat.
                 </div>
 
                 <p>Pilih bank transfer DP:</p>
