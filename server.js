@@ -21,10 +21,10 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cors());
 
-// FITUR BARU: Rate Limiting (Mencegah Spam / DDoS ringan)
+// Rate Limiting
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 menit
-    max: 300, // Limit setiap IP maksimal 300 request per 15 menit
+    windowMs: 15 * 60 * 1000, 
+    max: 300, 
     message: { error: "Terlalu banyak request dari IP ini, coba lagi nanti." },
     standardHeaders: true,
     legacyHeaders: false,
@@ -47,7 +47,7 @@ if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-// FITUR BARU: Konfigurasi Multer untuk upload file fisik
+// Konfigurasi Multer
 const storage = multer.diskStorage({
     destination: function (req, file, cb) { cb(null, uploadPath); },
     filename: function (req, file, cb) {
@@ -57,10 +57,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 } // Limit 50MB
+    limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-// Helper Base64 tetap dipertahankan untuk backward compatibility admin jika diperlukan
 function simpanBase64KeFile(base64String, prefix) {
     if (!base64String || !base64String.startsWith('data:')) return base64String;
     try {
@@ -89,22 +88,21 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// --- SCHEMA & MODEL ---
+// --- SCHEMA & MODEL (Dimodifikasi: Hapus DP, Tambah Pengecekan & Inden) ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
     shareloc: { type: String, default: "" }, 
     status: { type: String, default: "baru" },
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     teknisi: String, jadwal: String, lokasiServis: String,
-    buktiDP: String, buktiPelunasan: String,  
+    buktiPelunasan: String,  
     etaTeknisi: { type: String, default: "" },
     rating: { type: Number, default: 0 },
     ulasan: { type: String, default: "" },
     biayaSuku: { type: Number, default: 0 },
     biayaJasa: { type: Number, default: 0 },
-    metodePembayaran: String, metodeDP: String,
-    dpValid: { type: Boolean, default: false },
-    dpTerbayar: { type: Boolean, default: false },
+    biayaPengecekan: { type: Number, default: 50000 },
+    metodePembayaran: String,
     pembayaranDikonfirmasi: { type: Boolean, default: false },
     pembayaranValid: { type: Boolean, default: false },
     adaKerusakanTambahan: { type: Boolean, default: false },
@@ -116,7 +114,9 @@ const OrderSchema = new mongoose.Schema({
     subStatusWorkshop: { type: String, default: "antrean" },
     estimasiSelesai: { type: String, default: "" },
     statusSparepart: { type: String, default: "ready" },
-    // FITUR BARU: Audit Trail Riwayat Status
+    buktiBayarInden: { type: String, default: "" },
+    metodeBayarInden: { type: String, default: "" },
+    indenTerbayar: { type: Boolean, default: false },
     riwayatStatus: { type: Array, default: [] }
 });
 const Order = mongoose.model('Order', OrderSchema, 'orders');
@@ -160,7 +160,6 @@ app.get('/api/orders', verifyAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat data pesanan" }); }
 });
 
-// FITUR BARU: Mendukung Multer FormData
 app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]), async (req, res) => {
     try {
         if (!req.body.nama || !req.body.wa || !req.body.merek) {
@@ -169,17 +168,16 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
 
         const dataOrder = req.body;
         
-        // Cek jika file dikirim via Multer FormData
         if (req.files && req.files['kondisiHPFile']) {
             dataOrder.kondisiHP = `/uploads/${req.files['kondisiHPFile'][0].filename}`;
             dataOrder.tipeKondisi = req.files['kondisiHPFile'][0].mimetype;
         } else if (dataOrder.kondisiHP && dataOrder.kondisiHP.startsWith('data:')) {
-            // Backward compatibility jika masih pakai Base64
             dataOrder.kondisiHP = simpanBase64KeFile(dataOrder.kondisiHP, 'KONDISI_' + dataOrder.kode);
         }
 
-        // FITUR BARU: Set initial audit trail
-        dataOrder.riwayatStatus = [{ status: "baru", waktu: new Date().toISOString() }];
+        // Default Audit Trail
+        dataOrder.biayaPengecekan = 50000;
+        dataOrder.riwayatStatus = [{ status: "baru", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }];
 
         const dataBaru = new Order(dataOrder);
         await dataBaru.save();
@@ -204,27 +202,35 @@ app.get('/api/orders/:kode', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat pesanan" }); }
 });
 
-app.put('/api/orders/:kode', upload.fields([{ name: 'buktiDPFile', maxCount: 1 }, { name: 'buktiPelunasanFile', maxCount: 1 }]), async (req, res) => {
+app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 1 }, { name: 'buktiPelunasanFile', maxCount: 1 }]), async (req, res) => {
     try {
         const dataUpdate = req.body;
 
-        // Cek file dari Multer
         if (req.files) {
-            if (req.files['buktiDPFile']) dataUpdate.buktiDP = `/uploads/${req.files['buktiDPFile'][0].filename}`;
+            if (req.files['buktiIndenFile']) dataUpdate.buktiBayarInden = `/uploads/${req.files['buktiIndenFile'][0].filename}`;
             if (req.files['buktiPelunasanFile']) dataUpdate.buktiPelunasan = `/uploads/${req.files['buktiPelunasanFile'][0].filename}`;
         }
-
-        // Backward compatibility base64
-        if (dataUpdate.buktiDP && dataUpdate.buktiDP.startsWith('data:')) dataUpdate.buktiDP = simpanBase64KeFile(dataUpdate.buktiDP, 'DP_' + req.params.kode);
+        if (dataUpdate.buktiBayarInden && dataUpdate.buktiBayarInden.startsWith('data:')) dataUpdate.buktiBayarInden = simpanBase64KeFile(dataUpdate.buktiBayarInden, 'INDEN_' + req.params.kode);
         if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
 
-        // FITUR BARU: Audit Trail Update
-        if (dataUpdate.status) {
-            const existing = await Order.findOne({ kode: req.params.kode });
-            if (existing && existing.status !== dataUpdate.status) {
+        // Audit Trail System
+        const existing = await Order.findOne({ kode: req.params.kode });
+        if (existing) {
+            if (dataUpdate.status && existing.status !== dataUpdate.status) {
                 await Order.updateOne(
                     { kode: req.params.kode }, 
-                    { $push: { riwayatStatus: { status: dataUpdate.status, waktu: new Date().toISOString() } } }
+                    { $push: { riwayatStatus: { status: dataUpdate.status, detail: "Pembaruan progres", waktu: new Date().toISOString() } } }
+                );
+            }
+            if (dataUpdate.statusPersetujuanTambahan && existing.statusPersetujuanTambahan !== dataUpdate.statusPersetujuanTambahan) {
+                let det = "Pelanggan mengubah persetujuan";
+                if(dataUpdate.statusPersetujuanTambahan === 'disetujui') det = "Pelanggan menyetujui tambahan biaya";
+                if(dataUpdate.statusPersetujuanTambahan === 'ditolak_lanjut') det = "Pelanggan menolak biaya tambahan (lanjut servis awal)";
+                if(dataUpdate.statusPersetujuanTambahan === 'ditolak_batal') det = "Pelanggan membatalkan seluruh servis (terkena biaya cek)";
+                
+                await Order.updateOne(
+                    { kode: req.params.kode }, 
+                    { $push: { riwayatStatus: { status: existing.status, detail: det, waktu: new Date().toISOString() } } }
                 );
             }
         }
