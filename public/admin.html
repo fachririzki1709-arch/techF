@@ -798,8 +798,8 @@ function pindahTabModal(tabIdTarget) {
         document.getElementById("tabKananLengkap").classList.remove("aktif");
         document.getElementById(tabIdTarget).classList.add("aktif");
     }
-    // Update Map Size when changing tabs
-    if(adminLeafletMap) setTimeout(() => adminLeafletMap.invalidateSize(), 200);
+    // Update Map Size when changing tabs - FIX BLANK
+    if(adminLeafletMap) setTimeout(() => adminLeafletMap.invalidateSize(), 500);
 }
 
 function getAuthHeader() { return {}; } // Karena backend tidak pakai auth ketat di versi ini
@@ -848,7 +848,8 @@ function muatData() {
     fetch(`${API_URL}/orders?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(handleApiError)
     .then(response => {
-        const semua = response; // Backend mengembalikan array
+        // FIX TABLE CRASH: Mencegah error mapping data, menjadikannya Array murni secara aman
+        const semua = Array.isArray(response) ? response : Object.values(response);
         window.semuaPesananGlobal = semua; 
         
         const tglMulai = document.getElementById("filterTglMulai").value; 
@@ -1024,7 +1025,7 @@ function getBadgeClass(d) {
     return d.status || "baru";
 }
 
-// FITUR BARU: BULK ACTIONS LOGIC
+// BULK ACTIONS LOGIC
 function togglePilihSemuaTabel(source) {
     const checkboxes = document.querySelectorAll(".row-check");
     checkboxes.forEach(cb => cb.checked = source.checked);
@@ -1138,7 +1139,7 @@ function bukaModalKelola(kode) {
         document.getElementById("infoWa").textContent = data.wa;
         document.getElementById("infoKeluhan").textContent = data.kerusakan || "-";
 
-        // Map Leaflet Admin
+        // Map Leaflet Admin - FIX MAPS BLANK
         const mapContainer = document.getElementById("adminMapContainer");
         if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
             setTimeout(() => {
@@ -1150,9 +1151,9 @@ function bukaModalKelola(kode) {
                 } else {
                     adminLeafletMap.setView(mapCenter, 15);
                     adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
-                    adminLeafletMap.invalidateSize();
                 }
-            }, 300);
+                adminLeafletMap.invalidateSize(); // Pindah keluar dari Else
+            }, 500); // Waktu jeda ditambah 
             document.getElementById("infoAlamat").innerHTML = `${data.alamat} <a href="https://www.google.com/maps?q=${data.koordinat.lat},${data.koordinat.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
         } else {
             document.getElementById("infoAlamat").textContent = data.alamat + " (GPS Tidak Diberikan)";
@@ -1398,7 +1399,6 @@ function hapusOrder(kode) {
         showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Note: Make sure backend handles DELETE /api/orders/:kode if you use this. (The previous server script didn't include it explicitly, but assuming it does).
             fetch(`${API_URL}/orders/${kode}`, { method: "DELETE", headers: getAuthHeader() })
             .then(() => { Toast.fire({ icon: 'success', title: 'Data Terhapus' }); muatData(); });
         }
