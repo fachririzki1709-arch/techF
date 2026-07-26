@@ -4,287 +4,589 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <!-- Peningkatan SEO & Meta Data -->
     <title>SF Tech - Servis HP, Laptop & Elektronik Bergaransi</title>
-    <meta name="description" content="Layanan servis HP, Laptop/PC, dan elektronik rumah tangga profesional. Panggil teknisi ke rumah atau workshop. Lacak progres secara real-time.">
+    <meta name="description" content="Layanan servis elektronik profesional, cepat, dan bergaransi resmi.">
     
-    <!-- Import Font Premium & Ikon Modern -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- FITUR BARU: Import Library Peta Leaflet.js -->
+    <!-- Library Peta Leaflet.js -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Import Library PDF, SweetAlert2, QR Code, HTML5 QR Scanner, & HTML2Canvas -->
+    <!-- Library Pendukung Utama -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- IMPORT SOCKET.IO UNTUK REAL-TIME NOTIF -->
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     
     <style>
-        * {margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans', sans-serif;}
-        body {background:#f8fafc; color:#1e293b; line-height:1.6; display: flex; flex-direction: column; min-height: 100vh;}
+        /* ==========================================
+           RESET & GLOBAL STYLES
+           ========================================== */
+        * {
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        body {
+            background: #f8fafc; 
+            color: #1e293b; 
+            line-height: 1.6; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+        }
         
+        /* ==========================================
+           HEADER & NAVIGATION
+           ========================================== */
         header {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            color:white; 
-            padding:1.2rem 5%; 
-            display:flex; 
-            justify-content:space-between; 
-            align-items:center; 
-            flex-wrap:wrap;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+            color: white; 
+            padding: 1.2rem 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
             border-bottom: 2px solid #0ea5e9;
         }
-        .logo {font-size:1.4rem; font-weight:700; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;}
-        .logo i {color: #38bdf8;}
-        nav a {color:white; text-decoration:none; margin-left:1.5rem; font-weight: 500; transition: all 0.3s; cursor: pointer;}
-        nav a:hover {color:#38bdf8; transform: translateY(-1px);}
-        
-        .main-content {flex: 1;}
-        .container {max-width:900px; margin:2.5rem auto; padding:0 5%;}
-
-        /* Kolom Lacak Cepat & Scan Barcode di Home */
-        .lacak-cepat-container {
-            background: white; padding: 2rem; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); margin: -3.5rem auto 2.5rem;
-            position: relative; z-index: 10; max-width: 800px; text-align: center; border: 1px solid #e2e8f0;
+        .logo {
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            cursor: pointer;
         }
-        .lacak-cepat-container h3 { color: #0f172a; margin-bottom: 0.5rem; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; gap: 8px;}
-        .lacak-input-group { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
-        .lacak-input-group input { flex: 1; min-width: 240px; padding: 0.9rem 1.2rem; font-size: 1rem; border-radius: 8px; border: 2px solid #cbd5e1; margin: 0; background: #f8fafc; font-weight: 600; color: #1e293b; text-align: center;}
-        .lacak-input-group input:focus { border-color: #0ea5e9; background: white; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); outline: none;}
-        .lacak-input-group button { padding: 0.9rem 1.5rem; font-size: 1rem; border-radius: 8px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 6px;}
-        .lacak-input-group button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+        .logo i {
+            color: #38bdf8;
+        }
+        nav a {
+            color: white; 
+            text-decoration: none; 
+            margin-left: 1.5rem; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: all 0.3s;
+        }
+        nav a:hover {
+            color: #38bdf8;
+        }
+        
+        /* ==========================================
+           LAYOUT & CONTAINERS
+           ========================================== */
+        .main-content {
+            flex: 1;
+        }
+        .container {
+            max-width: 900px; 
+            margin: 2.5rem auto; 
+            padding: 0 5%;
+        }
 
-        /* Scanner Modal Styles */
-        .scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
-        .scanner-box { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; }
-        body.dark-mode .scanner-box { background: #1e293b; color: #f8fafc; }
+        /* Lacak Cepat Container */
+        .lacak-cepat-container {
+            background: white; 
+            padding: 2rem; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); 
+            margin: -3.5rem auto 2.5rem; 
+            position: relative; 
+            z-index: 10; 
+            max-width: 800px; 
+            text-align: center; 
+            border: 1px solid #e2e8f0;
+        }
+        .lacak-cepat-container h3 { 
+            margin-bottom: 0.5rem; 
+            font-size: 1.3rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px;
+        }
+        .lacak-input-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 1rem; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
+        .lacak-input-group input { 
+            flex: 1; 
+            min-width: 240px; 
+            padding: 0.9rem; 
+            border-radius: 8px; 
+            border: 2px solid #cbd5e1; 
+            font-weight: 600; 
+            text-align: center;
+        }
+        .lacak-input-group button { 
+            padding: 0.9rem 1.5rem; 
+            font-size: 1rem; 
+            border-radius: 8px; 
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); 
+            color: white; 
+            border: none; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px;
+        }
 
-        .progress-container {display:flex; justify-content:space-between; background:white; padding:1.5rem 1.2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2.5rem; overflow-x:auto;}
-        .step-item {text-align:center; flex:1; min-width:80px; position:relative;}
-        .step-item:not(:last-child):after {content:''; position:absolute; top:18px; left:50%; width:100%; height:3px; background:#e2e8f0; z-index:1; transition: all 0.4s;}
-        .step-item.completed:not(:last-child):after {background: #10b981;}
-        .step-number {width:36px; height:36px; line-height:36px; margin:0 auto 8px; border-radius:50%; background:#e2e8f0; font-weight:700; font-size:0.9rem; position:relative; z-index:2; transition: all 0.3s;}
-        .step-item.active .step-number {background:#0ea5e9; color:white; scale: 1.1; box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);}
-        .step-item.completed .step-number {background:#10b981; color:white;}
-        .step-text {font-size:0.75rem; font-weight:600; color:#64748b;}
-        .step-item.active .step-text {color: #0ea5e9;}
+        /* ==========================================
+           MODALS (SCANNER)
+           ========================================== */
+        .scanner-modal { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.8); 
+            z-index: 10000; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .scanner-box { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 12px; 
+            width: 90%; 
+            max-width: 450px; 
+            text-align: center; 
+        }
 
-        .content-box {background:white; padding:2.2rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.04); border-left:5px solid #0ea5e9; margin-bottom:2rem; display:none;}
-        .content-box.active {display:block; animation:fade 0.4s ease-out;}
-        @keyframes fade {from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);}}
+        /* ==========================================
+           PROGRESS BAR STEPS
+           ========================================== */
+        .progress-container {
+            display: flex; 
+            justify-content: space-between; 
+            background: white; 
+            padding: 1.5rem 1.2rem; 
+            border-radius: 12px; 
+            margin-bottom: 2.5rem; 
+            overflow-x: auto;
+        }
+        .step-item {
+            text-align: center; 
+            flex: 1; 
+            min-width: 80px; 
+            position: relative;
+        }
+        .step-item:not(:last-child):after {
+            content: ''; 
+            position: absolute; 
+            top: 18px; 
+            left: 50%; 
+            width: 100%; 
+            height: 3px; 
+            background: #e2e8f0; 
+            z-index: 1; 
+            transition: all 0.4s;
+        }
+        .step-item.completed:not(:last-child):after {
+            background: #10b981;
+        }
+        .step-number {
+            width: 36px; 
+            height: 36px; 
+            line-height: 36px; 
+            margin: 0 auto 8px; 
+            border-radius: 50%; 
+            background: #e2e8f0; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
+            position: relative; 
+            z-index: 2; 
+            transition: all 0.3s;
+        }
+        .step-item.active .step-number {
+            background: #0ea5e9; 
+            color: white; 
+            scale: 1.1;
+        }
+        .step-item.completed .step-number {
+            background: #10b981; 
+            color: white;
+        }
+        .step-text {
+            font-size: 0.75rem; 
+            font-weight: 600;
+        }
 
-        h2, h3 {font-weight: 700; margin-bottom: 1rem;}
-        h2 {color: #0f172a;}
-        h3 {font-size: 1.2rem; margin-top: 1.5rem; color: #334155;}
+        /* ==========================================
+           CONTENT BOXES & FORMS
+           ========================================== */
+        .content-box {
+            background: white; 
+            padding: 2.2rem; 
+            border-radius: 12px; 
+            border-left: 5px solid #0ea5e9; 
+            margin-bottom: 2rem; 
+            display: none;
+        }
+        .content-box.active {
+            display: block; 
+            animation: fade 0.4s ease-out;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(12px); } 
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        .kategori-wrapper { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 1.5rem 0;}
-        @media (min-width: 768px) { .kategori-wrapper { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } }
-        .kategori-card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: all 0.3s ease; }
-        .kategori-card:hover { border-color: #cbd5e1; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
-        .kategori-card h4 { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; color: #0f172a; margin-bottom: 1.2rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem; }
+        h2, h3 { font-weight: 700; margin-bottom: 1rem; }
         
-        .kategori-card.hp h4 i { color: #0ea5e9; font-size: 1.3rem; }
-        .kategori-card.elektronik h4 i { color: #10b981; font-size: 1.3rem; }
-        .kategori-card.komputer h4 i { color: #8b5cf6; font-size: 1.3rem; }
+        /* Layanan Cards */
+        .kategori-wrapper { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 1.5rem; 
+            margin: 1.5rem 0;
+        }
+        .kategori-card { 
+            border: 2px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 1.5rem; 
+            background: #fff;
+        }
+        .layanan-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0.8rem 1rem; 
+            margin: 0.6rem 0; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            background: #f8fafc; 
+        }
+        .layanan-item label { cursor: pointer; font-weight: 500; font-size: 0.9rem; }
+        .harga { font-weight: 700; color: #0369a1; font-size: 0.85rem; }
         
-        .layanan-item { display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; margin:0.6rem 0; border:1px solid #e2e8f0; border-radius:8px; cursor: pointer; transition: all 0.2s ease; background: #f8fafc; }
-        .layanan-item:hover { border-color: #0ea5e9; background: #f0f9ff; }
-        .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; background: #f0fdf4; }
-        .kategori-card.komputer .layanan-item:hover { border-color: #8b5cf6; background: #f5f3ff; }
+        /* Inputs */
+        input, select, textarea { 
+            width: 100%; 
+            padding: 0.75rem 1rem; 
+            margin: 0.5rem 0 1.2rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 8px; 
+            font-size: 0.95rem; 
+            background: #f8fafc; 
+        }
+        .input-error { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .error-text { color: #ef4444; font-size: 0.8rem; font-weight: 600; margin-top: -0.8rem; margin-bottom: 1rem; display: none; }
         
-        .layanan-item label {cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; width: 100%; font-size: 0.9rem;}
-        .layanan-item input[type="checkbox"] {width: 18px; height: 18px; accent-color: #0ea5e9;}
-        .kategori-card.elektronik .layanan-item input[type="checkbox"] {accent-color: #10b981;}
-        .kategori-card.komputer .layanan-item input[type="checkbox"] {accent-color: #8b5cf6;}
-        
-        .harga {font-weight:700; color:#0369a1; font-size: 0.85rem;}
-        .kategori-card.elektronik .harga {color: #15803d;}
-        .kategori-card.komputer .harga {color: #6d28d9;}
-        
-        .info {padding:1rem; border-radius:8px; margin:1.2rem 0; font-size:0.9rem; font-weight: 500; display: flex; align-items: center; gap: 0.6rem;}
-        .catatan {background:#f0f9ff; color:#075985; border-left: 4px solid #0ea5e9;}
-        .rekening-box {background:#fffbeb; padding:1.2rem; border-radius:8px; margin:1rem 0; border-left:4px solid #f59e0b; display:none; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);}
-        .jadwal-box {background:#fffbeb; padding:1.2rem; border-radius:8px; margin:1rem 0; border-left:4px solid #d97706;}
-        .harga-final {background:#eff6ff; padding:1.2rem; border-radius:8px; margin:1rem 0; border-left:4px solid #1e40af;}
-        .lacak-box {background:#f0fdf4; padding:1.5rem; border-radius:10px; margin:1rem 0; border-left:4px solid #166534;}
-        
-        .status-bar {display:flex; justify-content:space-between; margin-top:1.5rem; flex-wrap:wrap; gap: 1rem;}
-        .status-bar > div {text-align: center; flex: 1; min-width: 80px;}
-        .status-dot {width:28px; height:28px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:0.8rem; margin:0 auto 8px; font-weight: 700;}
-        .status-dot.aktif {background:#f59e0b; color:white; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);}
-        .status-dot.selesai {background:#10b981; color:white;}
+        /* Buttons */
+        .btn { 
+            padding: 0.8rem 1.6rem; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            margin-right: 0.5rem;
+        }
+        .btn-primary { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; }
+        .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .btn-secondary { background: #e2e8f0; color: #1e293b; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-pdf { background: #dc2626; color: white; }
 
-        input, select, textarea { width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border:2px solid #e2e8f0; border-radius:8px; font-size:0.95rem; transition: all 0.3s; background: #f8fafc; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #0ea5e9; background: white; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
-        label {font-size: 0.85rem; font-weight: 600; color: #475569;}
-        input[type="file"] {padding:0.6rem; background:#f1f5f9; cursor: pointer; margin-bottom: 0.3rem;}
-        optgroup { font-weight: 700; color: #0f172a; font-style: normal; background: #f1f5f9;}
+        /* ==========================================
+           FAKTUR & BIAYA
+           ========================================== */
+        .faktur {
+            border: 2px solid #1e40af; 
+            padding: 2rem; 
+            border-radius: 12px; 
+            margin-top: 1.5rem; 
+            background: #fff;
+        }
+        .faktur .baris {
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 1px dotted #e2e8f0; 
+            margin: 0.6rem 0; 
+            font-size: 0.95rem;
+        }
+        .faktur .total {
+            font-weight: 700; 
+            font-size: 1.2rem; 
+            color: #1e40af; 
+            border-top: 2px solid #cbd5e1; 
+            padding-top: 1rem;
+        }
+        .faktur-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #1e40af; 
+            padding-bottom: 1rem; 
+            margin-bottom: 1.5rem;
+        }
+        .faktur-qr-box {
+            width: 75px; 
+            height: 75px; 
+            background: white; 
+            padding: 4px; 
+            border: 2px solid #cbd5e1; 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
         
-        .input-error {border-color: #ef4444 !important; background-color: #fef2f2 !important;}
-        .error-text {color: #ef4444; font-size: 0.8rem; font-weight: 600; margin-top: -0.8rem; margin-bottom: 1rem; display: none;}
+        .alert-warning-box {
+            background: #fff7ed; 
+            color: #c2410c; 
+            border-left: 4px solid #f97316; 
+            padding: 1.2rem; 
+            border-radius: 8px; 
+            margin: 1rem 0;
+        }
+        .metode-bayar {
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 0.8rem;
+        }
+        .metode-item {
+            padding: 1rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 8px; 
+            text-align: center; 
+            cursor: pointer; 
+            font-weight: 600;
+        }
+        .metode-item.aktif {
+            border-color: #10b981; 
+            background: #f0fdf4; 
+            color: #166534;
+        }
         
-        .pratinjau {margin-top:1rem; padding:1.2rem; border:2px dashed #cbd5e1; border-radius:8px; text-align:center; background: #f8fafc; color: #64748b; font-size: 0.9rem;}
-        .pratinjau img, .pratinjau video {max-width:100%; max-height:250px; border-radius:6px; margin-top:0.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08);}
-        
-        .metode-bayar {display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin:1rem 0;}
-        .metode-item {padding:1rem; border:2px solid #e2e8f0; border-radius:8px; text-align:center; cursor:pointer; font-weight: 600; transition: all 0.2s;}
-        .metode-item:hover {border-color: #cbd5e1; background: #f8fafc;}
-        .metode-item.terpilih, .metode-item.aktif {border-color:#10b981; background:#f0fdf4; color: #166534; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);}
-        
-        .btn { padding:0.8rem 1.6rem; border:none; border-radius:8px; cursor:pointer; font-size:0.95rem; font-weight: 600; margin-right:0.6rem; margin-top:0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease-in-out; }
-        .btn:hover {transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
-        .btn:active {transform: translateY(0);}
-        .btn-primary {background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color:white;}
-        .btn-secondary {background:#e2e8f0; color:#1e293b;}
-        .btn-success {background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;}
-        .btn-danger {background:#ef4444; color:white;}
-        .btn-pdf {background:#dc2626; color:white;}
-        .btn-home {background:#475569; color:white;}
-        .btn:disabled {background: #94a3b8 !important; cursor: not-allowed; transform: none !important; box-shadow: none !important;}
+        .pratinjau {
+            margin-top: 1rem; 
+            padding: 1.2rem; 
+            border: 2px dashed #cbd5e1; 
+            border-radius: 8px; 
+            text-align: center;
+        }
 
-        .faktur {border:2px solid #1e40af; padding:2rem; border-radius:12px; margin-top:1.5rem; background:#ffffff; box-shadow: 0 10px 25px rgba(30, 64, 175, 0.05);}
-        .faktur-header {display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 1rem; margin-bottom: 1.5rem;}
-        .faktur-header h4 {color:#1e40af; font-size:1.3rem; font-weight: 800; margin: 0; text-align: left; text-transform: uppercase;}
-        .faktur-qr-box {width: 75px; height: 75px; background: white; padding: 4px; border: 2px solid #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center;}
+        /* ==========================================
+           REVIEWS & RATING
+           ========================================== */
+        .rating-stars { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: center; 
+            font-size: 2rem; 
+            margin: 1rem 0; 
+            cursor: pointer;
+        }
+        .rating-stars i { 
+            color: #cbd5e1; 
+            transition: 0.2s; 
+        }
+        .rating-stars i:hover, .rating-stars i.active { 
+            color: #f59e0b; 
+        }
+        .reviews-container { 
+            display: flex; 
+            gap: 1.2rem; 
+            overflow-x: auto; 
+            padding: 1rem 0; 
+            scroll-snap-type: x mandatory; 
+            scrollbar-width: none;
+        }
+        .review-card { 
+            min-width: 280px; 
+            background: white; 
+            padding: 1.2rem; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
+            scroll-snap-align: start; 
+            border: 1px solid #e2e8f0;
+        }
         
-        .faktur .baris {display:flex; justify-content:space-between; margin:0.6rem 0; padding:0.4rem 0; border-bottom:1px dotted #e2e8f0; font-size: 0.95rem;}
-        .faktur .total {font-weight:700; font-size:1.2rem; color: #1e40af; margin-top:1.5rem; padding-top:1rem; border-top:2px solid #cbd5e1;}
-        .faktur .catatan {margin-top:1.5rem; text-align:center; font-size:0.9rem; color:#64748b; font-style: italic;}
-        .faktur .brand-watermark {font-size: 0.8rem; font-weight: 800; color: #94a3b8; display: block; margin-top: 5px; font-style: normal;}
+        /* ==========================================
+           CHAT WIDGET (DRAG & DROP)
+           ========================================== */
+        .chat-widget { 
+            position: fixed; 
+            bottom: 25px; 
+            right: 25px; 
+            width: 340px; 
+            max-width: calc(100vw - 50px); 
+            background: white; 
+            border-radius: 14px; 
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); 
+            z-index: 9999; 
+            border: 1px solid #e2e8f0; 
+            overflow: hidden; 
+            display: none; 
+            flex-direction: column; 
+            transition: all 0.3s ease; 
+        }
+        .chat-widget.minimized { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 50%; 
+            border: none; 
+            cursor: pointer; 
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .chat-widget.minimized .chat-header { 
+            background: transparent; 
+            padding: 0; 
+            box-shadow: none; 
+            width: 100%; 
+            height: 100%; 
+            justify-content: center; 
+        }
+        .chat-widget.minimized .chat-header-left span, 
+        .chat-widget.minimized .chat-toggle-btn { 
+            display: none; 
+        }
+        .chat-widget.minimized .chat-header-left i { 
+            font-size: 2rem; 
+            color: white; 
+            margin: 0;
+        }
+        .chat-widget.minimized .chat-messages, 
+        .chat-widget.minimized .chat-input-row {
+            display: none !important;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: white; 
+            padding: 1rem; 
+            font-weight: 600; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 0.9rem; 
+            cursor: grab;
+        }
+        .chat-header:active {
+            cursor: grabbing;
+        }
+        .chat-header-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            width: 100%; 
+            pointer-events: none; 
+        }
+        .chat-toggle-btn { 
+            background: none; 
+            border: none; 
+            color: white; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            pointer-events: auto;
+        }
+        .chat-messages {
+            height: 240px; 
+            overflow-y: auto; 
+            padding: 1rem; 
+            background: #f8fafc; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 0.6rem;
+        }
+        .msg-bubble {
+            max-width: 85%; 
+            padding: 0.6rem 0.9rem; 
+            border-radius: 12px; 
+            font-size: 0.88rem; 
+            line-height: 1.4; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .msg-admin {
+            background: #ffffff; 
+            color: #1e293b; 
+            align-self: flex-start; 
+            border: 1px solid #e2e8f0; 
+            border-bottom-left-radius: 2px;
+        }
+        .msg-user {
+            background: #0ea5e9; 
+            color: white; 
+            align-self: flex-end; 
+            border-bottom-right-radius: 2px;
+        }
+        .chat-input-row {
+            display: flex; 
+            border-top: 1px solid #e2e8f0; 
+            background: white;
+        }
+        .chat-input-row input {
+            border: none !important; 
+            border-radius: 0 !important; 
+            padding: 0.9rem; 
+            margin: 0 !important; 
+            flex: 1; 
+            background: white; 
+            font-size: 0.9rem;
+        }
+        .chat-input-row button {
+            background: #0ea5e9; 
+            color: white; 
+            border: none; 
+            padding: 0 1.4rem; 
+            cursor: pointer; 
+            font-weight: 600;
+        }
         
-        .tombol-faktur {display:flex; gap:1rem; margin-top:2rem; justify-content:center; flex-wrap:wrap;}
-        
-        .alert-bahaya {background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:1.2rem; border-radius:8px; margin:1rem 0; font-size: 0.9rem;}
-        .alert-warning-box {background:#fff7ed; color:#c2410c; border-left:4px solid #f97316; padding:1.2rem; border-radius:8px; margin:1rem 0;}
-
-        .chat-widget { position: fixed; bottom: 25px; right: 25px; width: 340px; max-width: calc(100vw - 50px); background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); z-index: 9999; border: 1px solid #e2e8f0; overflow: hidden; display: none; flex-direction: column; animation: chatSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transition: all 0.3s ease; }
-        @keyframes chatSlide { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        
-        .chat-widget.minimized { width: 65px; height: 65px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4); display: flex; align-items: center; justify-content: center; flex-direction: row; }
-        .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; cursor: pointer; }
-        .chat-widget.minimized .chat-header-left span, .chat-widget.minimized .chat-toggle-btn { display: none; }
-        .chat-widget.minimized .chat-header-left i { font-size: 2rem; margin: 0; color: white; display: flex; align-items: center; justify-content: center; width:100%; height:100%; pointer-events: none;}
-        .chat-widget.minimized .chat-messages, .chat-widget.minimized .chat-input-row {display: none !important;}
-
-        .chat-header {background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; cursor: grab;}
-        .chat-header:active {cursor: grabbing;}
-        .chat-header-left { display: flex; align-items: center; gap: 0.5rem; width:100%; pointer-events: none; }
-        .chat-toggle-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; padding: 0 0.2rem; display: flex; align-items: center; transition: transform 0.2rem; pointer-events: auto;}
-        .chat-toggle-btn:hover { color: #38bdf8; }
-
-        .chat-messages {height: 240px; overflow-y: auto; padding: 1rem; background: #f8fafc; display: flex; flex-direction: column; gap: 0.6rem;}
-        .msg-bubble {max-width: 85%; padding: 0.6rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
-        .msg-admin {background: #ffffff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0;}
-        .msg-user {background: #0ea5e9; color: white; align-self: flex-end; border-bottom-right-radius: 2px;}
-        .chat-input-row {display: flex; border-top: 1px solid #e2e8f0; background: white;}
-        .chat-input-row input {border: none !important; border-radius: 0 !important; padding: 0.9rem; margin: 0 !important; flex: 1; background: white; font-size: 0.9rem;}
-        .chat-input-row button {background: #0ea5e9; color: white; border: none; padding: 0 1.4rem; cursor: pointer; font-weight: 600; transition: background 0.2s;}
-        .chat-input-row button:hover {background: #0284c7;}
-
-        body.dark-mode { background:#0f172a; color:#f8fafc; }
-        body.dark-mode .content-box, body.dark-mode .progress-container, body.dark-mode .chat-widget, body.dark-mode .chat-input-row input, body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background:#1e293b; color:#f8fafc; border-color:#334155; }
-        body.dark-mode .lacak-cepat-container { background:#1e293b; border-color:#334155;}
-        body.dark-mode .lacak-cepat-container h3 { color: #f8fafc; }
-        body.dark-mode .lacak-input-group input { background: #0f172a; border-color: #334155; color: #f8fafc;}
-        body.dark-mode h2, body.dark-mode h3, body.dark-mode .step-text, body.dark-mode label, body.dark-mode .faktur-header h4, body.dark-mode .faktur .total { color:#f8fafc; }
-        body.dark-mode .layanan-item, body.dark-mode .metode-item { border-color:#334155; background: #1e293b; }
-        body.dark-mode .layanan-item:hover, body.dark-mode .metode-item:hover { background: #334155; border-color: #0ea5e9;}
-        body.dark-mode .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; }
-        body.dark-mode .kategori-card.komputer .layanan-item:hover { border-color: #8b5cf6; }
-        body.dark-mode .faktur { background: #0f172a; border-color: #3b82f6;}
-        body.dark-mode .kategori-card { background: #0f172a; border-color: #334155; }
-        body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
-        body.dark-mode optgroup { background: #0f172a; color: #0ea5e9;}
-        body.dark-mode .review-card { background: #1e293b; color: #f8fafc; border-color: #334155; }
-        
-        body.dark-mode .swal2-popup { background: #1e293b !important; color: #f8fafc !important; }
-        body.dark-mode .swal2-title, body.dark-mode .swal2-html-container { color: #f8fafc !important; }
-        body.dark-mode .swal2-input { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
-        
-        .hero-section { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 4rem 2rem 5rem; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); margin-bottom: 2rem;}
-        .hero-section h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;}
-        .hero-section p { font-size: 1.1rem; max-width: 600px; margin: 0 auto; opacity: 0.9;}
-        
-        .skeleton { animation: skeleton-loading 1.2s linear infinite alternate; background-color: #e2e8f0 !important; color: transparent !important; border-color: transparent !important; pointer-events: none; border-radius:4px;}
-        body.dark-mode .skeleton { background-color: #334155 !important; }
-        @keyframes skeleton-loading { 0% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .rating-stars { display: flex; gap: 8px; justify-content: center; font-size: 2rem; margin: 1rem 0; cursor: pointer;}
-        .rating-stars i { color: #cbd5e1; transition: 0.2s; }
-        .rating-stars i:hover, .rating-stars i.active { color: #f59e0b; }
-
-        .reviews-container { display:flex; gap:1.2rem; overflow-x:auto; padding:1rem 0; scroll-snap-type: x mandatory; scrollbar-width: none;}
-        .review-card { min-width:280px; background:white; padding:1.2rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.04); scroll-snap-align: start; border: 1px solid #e2e8f0;}
-        
-        .page-content { display: none; animation: fadeIn 0.4s; }
-        .page-content.active { display: block; }
-        .footer-section { background: #0f172a; color: #94a3b8; padding: 2.5rem 5%; text-align: center; margin-top: auto; border-top: 2px solid #38bdf8;}
-        .alur-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .alur-item { background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
-        .alur-item i { font-size: 2rem; color: #0ea5e9; margin-bottom: 1rem; display: block;}
-        body.dark-mode .alur-item { background: #1e293b; border-color: #334155; }
-        .foto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .foto-item { background: #e2e8f0; height: 200px; border-radius: 12px; display: flex; flex-direction:column; align-items: center; justify-content: center; color: #64748b; font-weight: bold; border: 2px dashed #cbd5e1; }
-        body.dark-mode .foto-item { background: #334155; border-color: #475569; color: #94a3b8;}
-
-        .ws-step { font-size: 0.85rem; padding: 0.8rem 1rem; border-radius: 8px; background: #f1f5f9; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: all 0.3s ease; margin-bottom: 8px; border: 1px solid #e2e8f0; }
-        .ws-step.aktif { background: #0ea5e9; color: white; border-color: #0ea5e9; transform: scale(1.02); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2); }
-        .ws-step.selesai { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-        body.dark-mode .ws-step { background: #1e293b; color: #f8fafc; border-color: #334155; }
-        body.dark-mode .ws-step.selesai { background: rgba(22, 101, 52, 0.2); color: #4ade80; border-color: rgba(22, 101, 52, 0.3); }
-        
-        /* FITUR BARU: Animasi Loading Spinner */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        @media (max-width: 768px) {
-            .container { margin: 1.5rem auto; padding: 0 4%; }
-            .content-box { padding: 1.5rem; }
-            .hero-section { padding: 2.5rem 1rem 4rem; }
-            .hero-section h1 { font-size: 1.8rem; }
-            .lacak-cepat-container { margin: -2.5rem 4% 2rem; padding: 1.5rem 1rem; }
-            .lacak-input-group { flex-direction: column; }
-            .step-item { min-width: 65px; }
-            .step-text { font-size: 0.65rem; }
-            .metode-bayar { grid-template-columns: 1fr; }
-            .btn { width: 100%; justify-content: center; margin-bottom: 0.5rem; margin-right: 0; }
-            .faktur { padding: 1.5rem; margin-top: 1rem; }
-            .faktur-header { flex-direction: column; text-align: center; gap: 1rem; }
-            .faktur-header h4 { text-align: center; }
-            header { padding: 1rem; flex-direction: column; gap: 12px; }
-            nav { width: 100%; justify-content: center; flex-wrap: wrap; gap: 15px; }
-            nav a { margin-left: 0; font-size: 0.95rem; }
-            .chat-widget { width: 100%; bottom: 0; right: 0; border-radius: 16px 16px 0 0; }
-            .chat-widget.minimized { width: 60px; height: 60px; bottom: 20px; right: 20px; border-radius: 50%; }
+        .footer-section { 
+            background: #0f172a; 
+            color: #94a3b8; 
+            padding: 2.5rem 5%; 
+            text-align: center; 
+            margin-top: auto; 
+            border-top: 2px solid #38bdf8;
         }
     </style>
 </head>
 <body>
 
+<!-- ==========================================
+     HEADER COMPONENT
+     ========================================== -->
 <header>
-   <div class="logo" onclick="klikMenuHome();">
-        <img src="Full Horizon_1.png" alt="SF Service Logo" style="height: 40px; width: auto; vertical-align: middle;">
+   <div class="logo" onclick="kembaliKeAwal();">
+        <i class="bi bi-tools" style="font-size: 1.5rem;"></i> SF Tech Service
     </div>
-    <nav style="display:flex; align-items:center;">
-        <button onclick="toggleDarkMode()" aria-label="Ganti Tema Tampilan" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
-        <a onclick="klikMenuHome();"><i class="bi bi-house"></i> Home</a>
-        <a onclick="tampilHalaman('about')"><i class="bi bi-info-circle"></i> About Us</a>
-        <a onclick="tampilHalaman('profile')"><i class="bi bi-images"></i> Profile</a>
+    <nav>
+        <a onclick="kembaliKeAwal();"><i class="bi bi-house"></i> Home</a>
         <a onclick="bukaScannerQR()"><i class="bi bi-upc-scan"></i> Scan Barcode</a>
     </nav>
 </header>
 
-<!-- Modal QR Code Scanner -->
+<!-- ==========================================
+     MODAL QR SCANNER
+     ========================================== -->
 <div class="scanner-modal" id="scannerModal">
     <div class="scanner-box">
         <h3><i class="bi bi-camera"></i> Scan Barcode Pelacakan</h3>
@@ -295,17 +597,13 @@
 </div>
 
 <div class="main-content">
-    
     <div id="page-home" class="page-content active">
-        <div class="hero-section" id="heroLandingPage">
-            <h1>Servis HP, Laptop & Elektronik Bergaransi</h1>
-            <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari perangkat Anda.</p>
-        </div>
-
-        <!-- Kolom Lacak Cepat (Ketik Kode atau Scan Barcode) -->
-        <div class="lacak-cepat-container" id="lacakCepatBox">
-            <h3><i class="bi bi-search" style="color: #0ea5e9;"></i> Lacak Pesanan / Cek Faktur</h3>
-            <p style="font-size: 0.9rem; color: #64748b; margin-top: 5px;">Ketik kode pemesanan Anda atau klik tombol Scan Barcode untuk melacak status servis.</p>
+        
+        <!-- ==========================================
+             PENCARIAN CEPAT (LACAK PESANAN)
+             ========================================== -->
+        <div class="lacak-cepat-container" id="lacakCepatBox" style="margin-top: 3rem;">
+            <h3><i class="bi bi-search" style="color: #0ea5e9;"></i> Lacak Pesanan / Tiket Servis</h3>
             <div class="lacak-input-group">
                 <input type="text" id="inputLacakCepat" placeholder="Contoh: HS-2026..." onkeypress="if(event.key === 'Enter') prosesLacakCepat()">
                 <button onclick="prosesLacakCepat()"><i class="bi bi-search"></i> Lacak</button>
@@ -313,148 +611,95 @@
             </div>
         </div>
 
+        <!-- ==========================================
+             MAIN CONTAINER (PROGRESS & STEPS)
+             ========================================== -->
         <div class="container" id="mainOrderContainer">
+            
             <div class="progress-container">
                 <div class="step-item active" data-step="1"><div class="step-number">1</div><div class="step-text">Layanan</div></div>
-                <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data Diri</div></div>
-                <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Bayar DP</div></div>
+                <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data & Lokasi</div></div>
+                <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Tiket Servis</div></div>
                 <div class="step-item" data-step="4"><div class="step-number">4</div><div class="step-text">Jadwal</div></div>
-                <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Proses</div></div>
-                <div class="step-item" data-step="6"><div class="step-number">6</div><div class="step-text">Bayar Sisa</div></div>
+                <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Proses Servis</div></div>
+                <div class="step-item" data-step="6"><div class="step-number">6</div><div class="step-text">Pelunasan</div></div>
                 <div class="step-item" data-step="7"><div class="step-number">7</div><div class="step-text">Selesai</div></div>
             </div>
 
-            <!-- STEP 1: LAYANAN -->
+            <!-- ==========================================
+                 STEP 1: PILIH LAYANAN
+                 ========================================== -->
             <div class="content-box active" id="step-1">
                 <h2>Pilih Kategori Perbaikan</h2>
-                <p style="margin-bottom: 1rem; color: #475569;">Pilih jenis layanan yang Anda butuhkan di bawah ini.</p>
                 
                 <div class="kategori-wrapper">
-                    <!-- Kategori HP -->
                     <div class="kategori-card hp">
-                        <h4><i class="bi bi-phone-vibrate"></i> Layanan Smartphone</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
+                        <h4><i class="bi bi-phone-vibrate"></i> Smartphone</h4>
+                        <div class="layanan-item"><label><input type="checkbox" id="l1" value="Ganti Layar (LCD)"> Ganti Layar (LCD)</label></div>
+                        <div class="layanan-item"><label><input type="checkbox" id="l2" value="Ganti Baterai"> Ganti Baterai</label></div>
                     </div>
-                    
-                    <!-- Kategori Elektronik -->
-                    <div class="kategori-card elektronik">
-                        <h4><i class="bi bi-plug"></i> Elektronik Rumah Tangga</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker</label><span class="harga">Mulai Rp 50rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
-                    </div>
-
-                    <!-- Kategori Baru: Komputer & Laptop -->
                     <div class="kategori-card komputer">
                         <h4><i class="bi bi-laptop"></i> Komputer & Laptop</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l10').click(); event.stopPropagation();"><label><input type="checkbox" id="l10" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Install OS / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l11').click(); event.stopPropagation();"><label><input type="checkbox" id="l11" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Keyboard / Baterai</label><span class="harga">Mulai Rp 200rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l12').click(); event.stopPropagation();"><label><input type="checkbox" id="l12" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Upgrade SSD / RAM</label><span class="harga">Mulai Rp 150rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l13').click(); event.stopPropagation();"><label><input type="checkbox" id="l13" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Mati Total / No Display</label><span class="harga">Mulai Rp 250rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l14').click(); event.stopPropagation();"><label><input type="checkbox" id="l14" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Cleaning & Thermal Paste</label><span class="harga">Mulai Rp 150rb</span></div>
+                        <div class="layanan-item"><label><input type="checkbox" id="l10" value="Install OS / Software"> Install OS / Software</label><span class="harga">Rp 80.000</span></div>
+                        <div class="layanan-item"><label><input type="checkbox" id="l11" value="Ganti Keyboard / Baterai"> Ganti Keyboard / Baterai</label></div>
                     </div>
                 </div>
-
-                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
                 
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan ke Data Diri <i class="bi bi-arrow-right"></i></button>
-                    <button type="button" class="btn" onclick="mulaiKonsultasi()" style="width: 100%; justify-content: center; background:#f8fafc; border:2px solid #0ea5e9; color:#0ea5e9;"><i class="bi bi-chat-dots"></i> Tanya Teknisi (Konsultasi via Live Chat)</button>
+                <div style="background:#f0f9ff; padding:1rem; border-radius:8px; margin-bottom:1rem; border-left:4px solid #0ea5e9;">
+                    <strong>ℹ️ Info Tarif Dasar:</strong> Setiap layanan dikenakan <strong>Biaya Pengecekan sebesar Rp 50.000</strong>. Biaya ini bersifat final meskipun servis dibatalkan (kecuali pengerjaan selesai, maka digabung dalam total akhir).
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan <i class="bi bi-arrow-right"></i></button>
+                    <button type="button" class="btn" onclick="mulaiKonsultasi()" style="width: 100%; justify-content: center; background:#f8fafc; border:2px solid #0ea5e9; color:#0ea5e9;"><i class="bi bi-chat-dots"></i> Tanya Teknisi (Konsultasi Chat)</button>
                 </div>
             </div>
 
-            <!-- STEP 2: DATA DIRI & PERANGKAT -->
+            <!-- ==========================================
+                 STEP 2: FORM DATA PELANGGAN & PETA LEAFLET
+                 ========================================== -->
             <div class="content-box" id="step-2">
-                <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi Perangkat</h3>
+                <h3>Data Pemesanan & Lokasi (GPS)</h3>
                 
                 <label>Nama Lengkap <span style="color:red;">*</span></label>
-                <input type="text" id="nama" placeholder="Contoh: Farhan" oninput="simpanDraft()">
-                <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
+                <input type="text" id="nama" placeholder="Nama Anda" oninput="validasiInputRealTime(this, 'errNama')">
+                <div class="error-text" id="errNama">Nama wajib diisi!</div>
                 
-                <!-- FITUR BARU: Validasi Regex di UI akan ditangani event listener -->
                 <label>Nomor WhatsApp <span style="color:red;">*</span></label>
-                <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
-                <div class="error-text" id="errWa">Format nomor WhatsApp tidak valid (10-13 digit angka)</div>
+                <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="validasiWa()">
+                <div class="error-text" id="errWa">Format WA tidak valid (10-13 digit)</div>
                 
-                <label>Alamat Lengkap</label>
-                <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
-
-                <!-- FITUR BARU: Leaflet Map -->
-                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi Peta (Geser pin ke alamat Anda)</label>
-                <p style="font-size: 0.8rem; color: #64748b; margin-top: -8px; margin-bottom: 8px;">Akurasi peta membantu teknisi kami menemukan lokasi Anda lebih cepat.</p>
-                <div id="mapPelanggan" style="height: 250px; width: 100%; border-radius: 8px; margin-bottom: 1rem; z-index: 1; border: 2px solid #e2e8f0;"></div>
+                <label>Alamat & Peta Lokasi</label>
+                <textarea id="alamat" rows="2" placeholder="Detail Alamat..."></textarea>
                 
-                <!-- Field tersembunyi untuk backend -->
+                <!-- Kontainer Peta Leaflet -->
+                <div id="mapPelanggan" style="height: 250px; width: 100%; border-radius: 8px; margin-bottom: 1rem; border: 2px solid #e2e8f0; z-index:1;"></div>
                 <input type="hidden" id="latLokasi">
                 <input type="hidden" id="lngLokasi">
                 
-                <button type="button" class="btn" aria-label="Dapatkan Lokasi GPS" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin-bottom: 1.2rem; width: 100%; justify-content: center;"><i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini</button>
+                <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; width: 100%; justify-content: center; margin-bottom:1.5rem;"><i class="bi bi-crosshair"></i> Perbarui Koordinat GPS</button>
                 
                 <label>Merek Perangkat <span style="color:red;">*</span></label>
-                <select id="merek" onchange="toggleMerekLainnya()">
-                    <option value="">-- Silakan Pilih Kategori Merek --</option>
-                    <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
-                        <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
-                        <option value="OPPO">OPPO / Realme</option>
-                        <option value="Infinix">Infinix / Tecno</option>
-                        <option value="Samsung">Samsung</option>
-                        <option value="Vivo">Vivo</option>
-                        <option value="iPhone">Apple / iPhone</option>
-                        <option value="Asus">Asus / ROG</option>
-                    </optgroup>
-                    <optgroup id="optgroup-komputer" label="💻 Kategori Komputer & Laptop">
-                        <option value="Asus PC/Laptop">Asus / ROG Laptop</option>
-                        <option value="Acer">Acer / Predator</option>
-                        <option value="Lenovo">Lenovo / ThinkPad</option>
-                        <option value="HP">HP / Compaq</option>
-                        <option value="Dell">Dell / Alienware</option>
-                        <option value="Apple Mac">Apple / MacBook / iMac</option>
-                        <option value="MSI">MSI</option>
-                        <option value="Axioo/Zyrex">Axioo / Zyrex</option>
-                        <option value="Rakitan">PC Rakitan / Custom</option>
-                    </optgroup>
-                    <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
-                        <option value="Miyako">Miyako</option>
-                        <option value="Cosmos">Cosmos</option>
-                        <option value="Maspion">Maspion</option>
-                        <option value="Philips">Philips</option>
-                        <option value="Panasonic">Panasonic</option>
-                        <option value="Sharp">Sharp</option>
-                        <option value="Yong Ma">Yong Ma</option>
-                        <option value="Sekai">Sekai</option>
-                    </optgroup>
-                    <optgroup label="Lainnya">
-                        <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
-                    </optgroup>
-                </select>
-                <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
-                <div class="error-text" id="errMerek">Pilih salah satu merek perangkat!</div>
-                <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
-                
-                <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-                <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12 / Lenovo ThinkPad T480" oninput="simpanDraft()">
-                <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
+                <input type="text" id="merek" placeholder="Contoh: Samsung, Asus, dll" oninput="validasiInputRealTime(this, 'errMerek')">
+                <div class="error-text" id="errMerek">Wajib diisi!</div>
+
+                <label>Tipe / Model <span style="color:red;">*</span></label>
+                <input type="text" id="tipe" placeholder="Contoh: A51, TUF Dash F15" oninput="validasiInputRealTime(this, 'errTipe')">
+                <div class="error-text" id="errTipe">Wajib diisi!</div>
                 
                 <label>Kerusakan / Keluhan</label>
-                <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
-
-                <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
-                <input type="file" id="fileKondisi" accept="image/*,video/*" aria-label="Upload File Kondisi Perangkat" onchange="tampilPratinjau()">
-                <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file fisik video 10MB.</p>
-                <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
+                <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan..."></textarea>
+                
+                <label>Unggah Video/Foto Kondisi Awal</label>
+                <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="previewBukti(this, 'pratinjauFile')">
+                <div class="pratinjau" id="pratinjauFile" style="display:none;"></div>
 
                 <div style="margin-top: 1.5rem; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <!-- FITUR BARU: Pembaruan Redaksi Persetujuan DP -->
                     <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
-                        <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
-                        <span>Saya menyetujui Syarat & Ketentuan layanan. Pembayaran <strong>Uang Muka (DP) memotong total tagihan akhir</strong>. Jika perangkat tidak dapat kami perbaiki, <strong>DP kembali 100%</strong>. (DP hanya hangus jika pembatalan dilakukan sepihak oleh pelanggan).</span>
+                        <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0;">
+                        <span>Saya menyetujui bahwa <strong>Biaya Pengecekan Rp 50.000</strong> akan tetap ditagihkan apabila saya membatalkan servis setelah teknisi melakukan pengecekan perangkat.</span>
                     </label>
-                    <div class="error-text" id="errSK" style="margin-top: 8px;">Centang persetujuan Syarat & Ketentuan ini untuk melanjutkan!</div>
+                    <div class="error-text" id="errSK" style="margin-top: 8px;">Centang persetujuan ini untuk melanjutkan!</div>
                 </div>
 
                 <div style="margin-top: 1.5rem; display: flex; justify-content: space-between;">
@@ -463,220 +708,147 @@
                 </div>
             </div>
 
-            <!-- STEP 3: BAYAR DP & DOWNLOAD KARTU BARCODE -->
+            <!-- ==========================================
+                 STEP 3: TIKET SERVIS AWAL
+                 ========================================== -->
             <div class="content-box" id="step-3">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP) & Kartu Barcode</h3>
-                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
+                    <h3><i class="bi bi-ticket-detailed"></i> Tiket Servis & Barcode Anda</h3>
+                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;"><i class="bi bi-x-circle"></i> Tutup</button>
                 </div>
                 
-                <p style="margin-top: 0.5rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    Kode Pesanan: <strong id="kodePesananDP" style="color: #0ea5e9;">-</strong> 
-                    <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem;"><i class="bi bi-copy"></i> Salin</button>
-                    <button onclick="bagikanKeWA()" class="btn btn-success" style="font-size:0.8rem; padding: 0.3rem 0.6rem; margin: 0;"><i class="bi bi-whatsapp"></i> Simpan ke WA</button>
-                </p>
-
+                <p>Simpan kode pelacakan di bawah ini:</p>
+                <p style="font-size:1.2rem; font-weight:bold; color:#0ea5e9; text-align:center; margin:1rem 0;" id="kodePesananTiket">-</p>
+                
                 <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 1.5rem; border-radius: 10px; margin: 1.5rem 0; text-align: center;">
                     <i class="bi bi-qr-code" style="font-size: 2.5rem; color: #0284c7;"></i>
-                    <h4 style="margin: 0.5rem 0; color: #0369a1; font-size: 1.1rem;">Unduh Kartu Faktur & Barcode Pelacakan</h4>
-                    <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">Kartu digital berisi barcode pelacakan pesanan Anda siap diunduh dalam format PDF (Desain Eksklusif).</p>
-                    <button class="btn btn-pdf" onclick="unduhKartuPDF()"><i class="bi bi-filetype-pdf"></i> Unduh Kartu & Barcode sebagai PDF</button>
+                    <h4 style="margin: 0.5rem 0; color: #0369a1; font-size: 1.1rem;">Unduh Tiket Desain Digital</h4>
+                    <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">Simpan barcode PDF ini sebagai bukti kepemilikan servis Anda.</p>
+                    <button class="btn btn-pdf" onclick="unduhKartuPDF()"><i class="bi bi-filetype-pdf"></i> Unduh Tiket Barcode (PDF)</button>
                 </div>
                 
-                <p style="margin-top:0.8rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
-                
-                <!-- FITUR BARU: Pembaruan Narasi Kepercayaan -->
-                <div class="alert-bahaya" style="background:#f0fdf4; color:#166534; border-left:4px solid #10b981;">
-                    <strong><i class="bi bi-shield-check"></i> JAMINAN KEPERCAYAAN:</strong> Uang Muka (DP) ini otomatis <strong>memotong total tagihan</strong>. Jika perangkat tidak bisa kami perbaiki, DP dikembalikan 100%.
-                </div>
-                <div class="alert-bahaya">
-                    <strong><i class="bi bi-exclamation-triangle-fill"></i> KEBIJAKAN PEMBATALAN:</strong> DP hanya akan hangus apabila Anda melakukan <strong>pembatalan secara sepihak</strong> setelah teknisi kami jadwalkan/berangkat.
-                </div>
-
-                <p>Pilih bank transfer DP:</p>
-                <div class="metode-bayar">
-                    <div class="metode-item pilihan-dp" id="dp-BCA" onclick="pilihMetodeDP('BCA')">Transfer BCA</div>
-                    <div class="metode-item pilihan-dp" id="dp-Mandiri" onclick="pilihMetodeDP('Mandiri')">Transfer Mandiri</div>
-                    <div class="metode-item pilihan-dp" id="dp-BRI" onclick="pilihMetodeDP('BRI')">Transfer BRI</div>
-                </div>
-
-                <div class="rekening-box" id="infoRekeningDP">
-                    <p><strong>Nomor Rekening:</strong> <span id="noRekDP">-</span></p>
-                    <p><strong>Atas Nama:</strong> SF Tech</p>
-                    <p><strong>Bank:</strong> <span id="namaBankDP">-</span></p>
-                </div>
-
-                <p style="margin: 1rem 0;">Metode DP dipilih: <strong id="metodeDPDipilih">-</strong></p>
-                <button class="btn btn-success" id="btnKonfirmasiDP" onclick="konfirmasiBayarDP()"><i class="bi bi-check-circle"></i> Konfirmasi Bayar DP</button>
-                <label>Upload Bukti Transfer DP:</label>
-                <input type="file" id="fileBuktiDP" accept="image/*" aria-label="Upload Bukti Transfer DP" onchange="previewBukti(this, 'pratinjauDP')">
-                <div class="pratinjau" id="pratinjauDP" style="display:none;"></div>
-                <div class="info catatan" id="infoValidasiDP" style="display:none; margin-top:1rem; background: #fff7ed; border-left-color: #d97706; color: #92400e;">
-                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu verifikasi pembayaran DP oleh admin. Penjadwalan teknisi akan dibuka setelah DP valid...</strong></span>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1.5rem; border-radius: 10px; text-align: center;">
+                    <i class="bi bi-hourglass-split" style="font-size: 2.5rem; color: #16a34a;"></i>
+                    <h4 style="margin: 0.5rem 0; color: #166534;">Menunggu Jadwal</h4>
+                    <p style="font-size: 0.85rem; color: #166534;">Admin sedang mengatur teknisi terdekat. Status otomatis berubah saat jadwal siap.</p>
                 </div>
             </div>
 
-            <!-- STEP 4: JADWAL -->
+            <!-- ==========================================
+                 STEP 4: INFORMASI JADWAL
+                 ========================================== -->
             <div class="content-box" id="step-4">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
-                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
-                </div>
+                <h3><i class="bi bi-calendar3"></i> Jadwal Servis</h3>
+                <p><strong>Kode:</strong> <span id="kodePesanan" class="data-dinamis">-</span></p>
                 
-                <p style="margin-top: 0.5rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    Kode Pesanan: <strong id="kodePesanan" style="color: #0ea5e9;">-</strong> 
-                    <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem;"><i class="bi bi-copy"></i> Salin</button>
-                    <button onclick="bagikanKeWA()" class="btn btn-success" style="font-size:0.8rem; padding: 0.3rem 0.6rem; margin: 0;"><i class="bi bi-whatsapp"></i> Simpan ke WA</button>
-                </p>
-
-                <div id="infoJadwal" style="margin-top: 1rem;">
-                    <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
-                </div>
-                <div class="jadwal-box" id="tampilJadwal" style="display:none;">
+                <div style="background:#fffbeb; padding:1.2rem; border-radius:8px; border-left:4px solid #d97706; margin-top:1rem;">
                     <p><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
                     <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
-                    <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
-                    <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
-                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
+                    <p style="color:#f59e0b; font-weight:bold;">ETA: <span id="lblETA" class="data-dinamis">Menunggu Info</span></p>
                 </div>
             </div>
 
-            <!-- STEP 5: PROSES -->
+            <!-- ==========================================
+                 STEP 5: PROSES, INDEN & KERUSAKAN TAMBAHAN
+                 ========================================== -->
             <div class="content-box" id="step-5">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-tools"></i> Proses Perbaikan</h3>
-                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
-                </div>
+                <h3><i class="bi bi-tools"></i> Proses Perbaikan & Persetujuan</h3>
                 
+                <div style="padding:1.5rem; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom:1rem;">
+                    <p><strong>Status Saat Ini:</strong> <span id="statusSaatIni" class="data-dinamis" style="font-weight:bold; color:#0ea5e9;">Sedang Dikerjakan</span></p>
+                </div>
+
+                <!-- Formulir Pembayaran Komponen Inden -->
+                <div id="boxBayarInden" style="display:none; background:#fff7ed; border-left:4px solid #c2410c; padding:1.2rem; border-radius:8px; margin-bottom:1rem;">
+                    <h4><i class="bi bi-box-seam-fill"></i> Suku Cadang Berstatus Inden</h4>
+                    <p style="margin-top:5px; font-size:0.9rem;">Untuk memproses pengiriman suku cadang, Anda wajib membayar biaya komponen sebesar:</p>
+                    <p style="font-size:1.3rem; font-weight:bold; color:#c2410c; margin:10px 0;">Rp <span id="lblBiayaInden" class="data-dinamis">0</span></p>
+                    
+                    <div id="formInden">
+                        <select id="metodeInden" style="margin-bottom:10px; width: 100%;">
+                            <option value="">-- Pilih Metode Transfer --</option>
+                            <option value="BCA">Transfer BCA (023-4567-890)</option>
+                            <option value="Mandiri">Transfer Mandiri (123-00-456789)</option>
+                        </select>
+                        <label>Upload Bukti Transfer Inden:</label>
+                        <input type="file" id="fileBuktiInden" accept="image/*" onchange="previewBukti(this, 'pratinjauInden')">
+                        <div class="pratinjau" id="pratinjauInden" style="display:none;"></div>
+                        <button class="btn btn-success" onclick="konfirmasiInden()" style="width:100%; justify-content:center; margin-top:10px;"><i class="bi bi-check-circle"></i> Konfirmasi Pembayaran Komponen</button>
+                    </div>
+                    <div id="statusIndenLunas" style="display:none; color:#15803d; font-weight:bold; margin-top:10px;"><i class="bi bi-check2-all"></i> Pembayaran Suku Cadang Berhasil. Komponen sedang diproses.</div>
+                </div>
+
+                <!-- Formulir Persetujuan (Audit Trail) Kerusakan Tambahan -->
                 <div id="boxKerusakanTambahan" class="alert-warning-box" style="display:none;">
-                    <h4><i class="bi bi-exclamation-diamond-fill"></i> Temuan Kerusakan Tambahan oleh Teknisi!</h4>
-                    <p style="margin-top: 0.5rem;">Teknisi kami menemukan kendala baru saat membongkar perangkat Anda:</p>
-                    <p style="background: white; padding: 0.7rem; border-radius: 6px; margin: 0.5rem 0; font-weight: bold; border-left: 4px solid #f97316;" id="txtKerusakanTambahan" class="data-dinamis">-</p>
-                    <p>Ada penambahan biaya pengerjaan sebesar: <strong style="color:#c2410c; font-size:1.1rem;">Rp <span id="txtBiayaTambahan" class="data-dinamis">0</span></strong></p>
+                    <h4><i class="bi bi-exclamation-diamond-fill"></i> Temuan Kerusakan Tambahan!</h4>
+                    <p style="background: white; padding: 0.7rem; border-radius: 6px; margin: 0.5rem 0;" id="txtKerusakanTambahan" class="data-dinamis">-</p>
+                    <p>Estimasi Tambahan: <strong style="color:#c2410c;">Rp <span id="txtBiayaTambahan" class="data-dinamis">0</span></strong></p>
                     
-                    <div style="margin-top:1.2rem; display:flex; flex-direction:column; gap:0.6rem;" id="aksiTambahan">
-                        <button class="btn btn-success" aria-label="Setujui Biaya Tambahan" onclick="responsTambahan('disetujui')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-check-circle-fill"></i> Setuju & Lanjutkan Perbaikan Tambahan</button>
-                        <button class="btn btn-secondary" aria-label="Tolak Tambahan Tapi Lanjut" onclick="responsTambahan('ditolak_lanjut')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-tools"></i> Tolak Tambahan (Lanjutkan Servis Awal Saja)</button>
-                        <button class="btn btn-danger" aria-label="Tolak Biaya Tambahan" onclick="responsTambahan('ditolak_batal')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-x-circle"></i> Batalkan Semua Servis (DP Hangus)</button>
+                    <div id="aksiTambahan" style="margin-top:1.2rem; display:flex; flex-direction:column; gap:0.6rem;">
+                        <button class="btn btn-success" onclick="responsTambahan('disetujui')"><i class="bi bi-check-circle-fill"></i> Setuju & Lanjutkan</button>
+                        <button class="btn btn-secondary" onclick="responsTambahan('ditolak_lanjut')">Tolak (Lanjut Servis Awal)</button>
+                        <button class="btn btn-danger" onclick="responsTambahan('ditolak_batal')">Batalkan Semua (Kena Biaya Cek 50rb)</button>
                     </div>
-                </div>
-
-                <div id="boxInfoEstimasi" style="display:none; background:#f0f9ff; border-left:4px solid #0ea5e9; padding:1.2rem; border-radius:8px; margin-bottom:1rem;">
-                    <h4 style="color:#0369a1; font-size:1rem; margin-bottom:5px;"><i class="bi bi-calendar2-check"></i> Estimasi Pengerjaan</h4>
-                    <p>Perkiraan selesai pada: <strong id="lblEstimasiSelesai" class="data-dinamis" style="color:#0f172a;">-</strong></p>
                     
-                    <div id="alertInden" style="display:none; margin-top:8px; background:#fff7ed; padding:8px 12px; border-radius:6px; color:#c2410c; font-size:0.85rem; font-weight:600;">
-                        <i class="bi bi-box-seam-fill"></i> Sparepart berstatus INDEN (Pre-Order). Waktu perbaikan mungkin lebih lama karena menunggu pengiriman suku cadang.
-                    </div>
+                    <!-- Area Tampil Bukti Audit Trail -->
+                    <div id="auditTrailPersetujuan" style="display:none; margin-top:15px; font-size:0.85rem; padding:10px; background:#e2e8f0; border-radius:6px; color:#1e293b; font-weight:600;"></div>
                 </div>
-
-                <div id="boxTrackingWorkshop" style="display:none; margin: 1.5rem 0; padding: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <h4 style="font-size: 1rem; margin-bottom: 1rem; color:#0f172a;"><i class="bi bi-building-gear"></i> Status Unit di Workshop</h4>
-                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                        <div class="ws-step data-dinamis" id="ws-antrean"><i class="bi bi-1-circle"></i> Masuk Antrean Workshop</div>
-                        <div class="ws-step data-dinamis" id="ws-pengecekan"><i class="bi bi-2-circle"></i> Pengecekan Detail (QC Awal)</div>
-                        <div class="ws-step data-dinamis" id="ws-tunggu_part"><i class="bi bi-3-circle"></i> Menunggu Sparepart Inden</div>
-                        <div class="ws-step data-dinamis" id="ws-perbaikan"><i class="bi bi-4-circle"></i> Sedang Diperbaiki Teknisi</div>
-                        <div class="ws-step data-dinamis" id="ws-qc_akhir"><i class="bi bi-5-circle"></i> Quality Control (Testing Akhir)</div>
-                        <div class="ws-step data-dinamis" id="ws-siap"><i class="bi bi-6-circle"></i> Unit Siap Diambil/Dikirim</div>
-                    </div>
-                </div>
-
-                <div class="lacak-box" id="mainLacakBox">
-                    <p><strong>Status:</strong> <span id="statusSaatIni" class="data-dinamis">Menunggu Konfirmasi</span></p>
-                    <div class="status-bar">
-                        <div><div class="status-dot selesai" id="s1"><i class="bi bi-check"></i></div><div style="font-size:0.75rem; font-weight:500;">Diterima</div></div>
-                        <div><div class="status-dot" id="s2"><i class="bi bi-calendar-event"></i></div><div style="font-size:0.75rem; font-weight:500;">Jadwal</div></div>
-                        <div><div class="status-dot" id="s3"><i class="bi bi-wrench-adjustable"></i></div><div style="font-size:0.75rem; font-weight:500;">Diperbaiki</div></div>
-                        <div><div class="status-dot" id="s4"><i class="bi bi-phone"></i></div><div style="font-size:0.75rem; font-weight:500;">Selesai</div></div>
-                    </div>
-
-                    <div style="margin-top:1.5rem;">
-                        <h4 style="font-size: 1rem;">Kondisi Perangkat Awal:</h4>
-                        <div class="pratinjau data-dinamis" id="tampilKondisiHP">Belum tersedia</div>
-                    </div>
-                </div>
-                <div class="harga-final" id="tampilHarga" style="display:block;">
-                    <h4 style="font-size: 1.1rem; color:#1e40af;"><i class="bi bi-receipt-cutoff"></i> Rincian Biaya Sementara</h4>
+                
+                <!-- Rincian Biaya Realtime -->
+                <div style="background:#eff6ff; padding:1.2rem; border-radius:8px; margin-top:1rem; border-left:4px solid #1e40af;">
+                    <h4 style="font-size: 1.1rem; color:#1e40af;"><i class="bi bi-receipt"></i> Rincian Biaya Sementara</h4>
+                    <p>Biaya Pengecekan: Rp <span>50.000</span></p>
                     <p>Biaya Suku Cadang: Rp <span id="lblBiayaSuku" class="data-dinamis">0</span></p>
-                    <p>Biaya Jasa Servis: Rp <span id="lblBiayaJasa" class="data-dinamis">0</span></p>
-                    <div id="rowBiayaTambahanFaktur" style="display:block; color: #c2410c;">
-                        <p>Biaya Kerusakan Tambahan: +Rp <span id="lblBiayaTambahanFaktur" class="data-dinamis">0</span></p>
-                    </div>
-                    <p style="color: #15803d; font-weight: 500;">Uang Muka (DP): -Rp 50.000 (Sudah dibayar)</p>
+                    <p>Biaya Jasa: Rp <span id="lblBiayaJasa" class="data-dinamis">0</span></p>
+                    <p style="color: #c2410c;">Biaya Tambahan: +Rp <span id="lblBiayaTambahanFaktur" class="data-dinamis">0</span></p>
                     <hr style="margin:0.8rem 0; border-color: #cbd5e1;">
-                    <p style="font-size:1.3rem; font-weight:700; color: #1e3a8a;">Sisa yang Harus Dibayar: Rp <span id="lblTotalBiaya" class="data-dinamis">0</span></p>
+                    <p style="font-size:1.2rem; font-weight:700;">Total Akumulasi: Rp <span id="lblTotalBiaya" class="data-dinamis">0</span></p>
                 </div>
             </div>
 
-            <!-- STEP 6: PELUNASAN -->
+            <!-- ==========================================
+                 STEP 6: PELUNASAN KESELURUHAN
+                 ========================================== -->
             <div class="content-box" id="step-6">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran Sisa</h3>
-                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
-                </div>
+                <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran</h3>
+                <p>Sisa yang Harus Dibayar: <strong style="font-size:1.3rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">0</span></strong></p>
+                <p style="font-size:0.85rem; color:#64748b;">(Total tagihan sudah dikurangi pembayaran Suku Cadang Inden jika ada).</p>
                 
-                <p>Sisa Pelunasan: <strong style="font-size:1.2rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">0</span></strong></p>
-                <p style="margin-top:0.5rem;">Pilih metode pembayaran:</p>
-
-                <div class="metode-bayar">
+                <div class="metode-bayar" style="margin-top:1rem;">
                     <div class="metode-item pilihan-bayar" id="bayar-Tunai" onclick="pilihMetodeBayar('Tunai')">Tunai / Cash</div>
-                    <div class="metode-item pilihan-bayar" id="bayar-BCA" onclick="pilihMetodeBayar('BCA')">Transfer BCA</div>
-                    <div class="metode-item pilihan-bayar" id="bayar-Mandiri" onclick="pilihMetodeBayar('Mandiri')">Transfer Mandiri</div>
-                    <div class="metode-item pilihan-bayar" id="bayar-BRI" onclick="pilihMetodeBayar('BRI')">Transfer BRI</div>
+                    <div class="metode-item pilihan-bayar" id="bayar-Transfer" onclick="pilihMetodeBayar('Transfer')">Transfer Bank</div>
                 </div>
-
-                <div class="rekening-box" id="infoRekening">
-                    <p><strong>Nomor Rekening:</strong> <span id="noRek">-</span></p>
-                    <p><strong>Atas Nama:</strong> SF Tech</p>
-                    <p><strong>Bank:</strong> <span id="namaBank">-</span></p>
-                </div>
-                <label>Upload Bukti Transfer Pelunasan:</label>
-                <input type="file" id="fileBuktiPelunasan" accept="image/*" aria-label="Upload Bukti Transfer Pelunasan" onchange="previewBukti(this, 'pratinjauPelunasan')">
-                <div class="pratinjau" id="pratinjauPelunasan" style="display:none;"></div>
                 
-                <p style="margin:1rem 0;">Metode dipilih: <strong id="metodeDipilih">-</strong></p>
-                <button class="btn btn-success" id="btnKonfirmasi" onclick="konfirmasiBayar()"><i class="bi bi-cloud-arrow-up"></i> Konfirmasi Pembayaran</button>
-
-                <div class="info catatan" id="infoValidasi" style="display:none; margin-top:1rem;">
-                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu validasi sisa pembayaran dari admin...</strong></span>
+                <div id="formPelunasanTransfer" style="display:none; margin-top:1rem;">
+                    <label>Upload Bukti Transfer Pelunasan:</label>
+                    <input type="file" id="fileBuktiPelunasan" accept="image/*" onchange="previewBukti(this, 'pratinjauPelunasan')">
+                    <div class="pratinjau" id="pratinjauPelunasan" style="display:none;"></div>
                 </div>
+
+                <button class="btn btn-success" id="btnKonfirmasi" onclick="konfirmasiBayar()" style="margin-top:1.5rem; width:100%; justify-content:center;"><i class="bi bi-cloud-arrow-up"></i> Konfirmasi Pelunasan</button>
             </div>
 
-            <!-- STEP 7: SELESAI -->
+            <!-- ==========================================
+                 STEP 7: SELESAI, INVOICE & RATING
+                 ========================================== -->
             <div class="content-box" id="step-7">
-                <h3><i class="bi bi-patch-check-fill" style="color:#10b981;"></i> Pesanan Selesai</h3>
-                <p id="txtKeteranganSelesai">Pembayaran Anda telah divalidasi secara penuh. Terima kasih telah menggunakan layanan kami!</p>
-                <div class="info info-success" id="txtGaransiLabel" style="background: #f0fdf4; color: #166534; border-left: 4px solid #10b981; padding:0.8rem; margin:0.8rem 0; border-radius:6px; font-weight:600;">
-                    <i class="bi bi-shield-check"></i> Garansi servis berlaku selama 30 hari.
-                </div>
-
+                <h3><i class="bi bi-patch-check-fill" style="color:#10b981;"></i> Pesanan Selesai / Ditutup</h3>
+                
+                <!-- Faktur Akhir -->
                 <div class="faktur" id="fakturTampilan">
                     <div class="faktur-header">
-                        <h4>FAKTUR PEMBAYARAN SERVIS</h4>
+                        <h4>FAKTUR LAYANAN</h4>
                         <div id="qrcodeArea" class="faktur-qr-box"></div>
                     </div>
-                    
-                    <div class="baris"><span>No. Faktur</span><span id="noFaktur" class="data-dinamis" style="font-weight:600;">-</span></div>
                     <div class="baris"><span>Kode Pesanan</span><span id="fakturKode" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Nama Pelanggan</span><span id="fakturNama" class="data-dinamis">-</span></div>
                     <div class="baris"><span>Merek & Tipe</span><span id="fakturMerekTipe" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Kerusakan</span><span id="fakturKerusakan" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Teknisi</span><span id="fakturTeknisi" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Tanggal & Waktu</span><span id="fakturTanggal" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>Jenis Layanan</span><span id="fakturLayanan" class="data-dinamis" style="max-width: 60%; text-align:right;">-</span></div>
-                    <div class="baris"><span>Biaya Pokok (Suku Cadang + Jasa)</span><span id="fakturPokok" class="data-dinamis">-</span></div>
-                    <div class="baris" id="fakturRowTambahan" style="display:block; color:#c2410c;"><span>Biaya Kerusakan Tambahan</span><span id="fakturTambahan" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>DP yang Dibayar</span><span>Rp 50.000</span></div>
-                    <div class="baris"><span>Metode Pelunasan</span><span id="fakturMetode" class="data-dinamis" style="font-weight:600;">-</span></div>
-                    <div class="baris total"><span>TOTAL KESELURUHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
-                    
-                    <div class="catatan" id="txtFakturNote">
-                        Terima kasih atas kepercayaan Anda kepada kami
-                        <span class="brand-watermark">SF Service™</span>
-                    </div>
+                    <div class="baris"><span>Biaya Pengecekan</span><span>Rp 50.000</span></div>
+                    <div class="baris"><span>Suku Cadang & Jasa</span><span id="fakturPokok" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Biaya Tambahan</span><span id="fakturTambahan" class="data-dinamis">-</span></div>
+                    <div class="baris total"><span>TOTAL TAGIHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
                 </div>
-
+                
+                <!-- Rating Form -->
                 <div id="boxBeriRating" style="margin-top:2rem; padding:1.5rem; text-align:center; background:#f1f5f9; border-radius:10px;">
                     <h4>Beri Penilaian Pelayanan Kami</h4>
                     <div class="rating-stars" id="starContainer">
@@ -686,112 +858,57 @@
                         <i class="bi bi-star" data-val="4"></i>
                         <i class="bi bi-star" data-val="5"></i>
                     </div>
-                    <textarea id="ulasanPelanggan" rows="2" placeholder="Tuliskan ulasan Anda mengenai hasil servis..." style="margin-top:10px;"></textarea>
-                    <button class="btn btn-success" aria-label="Kirim Ulasan" onclick="kirimRatingUlasan()">Kirim Ulasan</button>
+                    <textarea id="ulasanPelanggan" rows="2" placeholder="Tuliskan ulasan Anda..." style="margin-top:10px;"></textarea>
+                    <button class="btn btn-success" onclick="kirimRatingUlasan()">Kirim Ulasan</button>
                 </div>
 
-                <div class="tombol-faktur">
-                    <button class="btn btn-pdf" id="btnUnduhPDF" onclick="unduhPDF()" aria-label="Unduh PDF Faktur"><i class="bi bi-filetype-pdf"></i> Unduh sebagai PDF</button>
-                    <button class="btn btn-home" aria-label="Buat Pesanan Baru" onclick="kembaliKeAwal()"><i class="bi bi-house"></i> Halaman Awal</button>
+                <div style="display: flex; gap:1rem; margin-top:2rem; justify-content:center; flex-wrap:wrap;">
+                    <button class="btn btn-pdf" onclick="unduhPDF()"><i class="bi bi-filetype-pdf"></i> Unduh Invoice PDF</button>
+                    <button class="btn btn-secondary" onclick="kembaliKeAwal()">Kembali ke Beranda</button>
                 </div>
             </div>
         </div>
 
+        <!-- ==========================================
+             ULASAN PUBLIK (Ditampilkan di Home)
+             ========================================== -->
         <div class="container" id="publicReviewsSection" style="margin-top:2rem; margin-bottom:2.5rem; display:none;">
             <h3 style="text-align:center; font-size:1.2rem; margin-bottom:0;"><i class="bi bi-chat-heart-fill" style="color:#ef4444;"></i> Ulasan Pelanggan Kami</h3>
             <div class="reviews-container" id="reviewList"></div>
         </div>
     </div>
-
-    <div id="page-about" class="page-content container">
-        <div class="content-box active" style="display:block; margin-top: 2rem;">
-            <h2>Tentang Kami</h2>
-            <p>SF Tech Service adalah penyedia layanan perbaikan smartphone, PC/Laptop, dan alat elektronik rumah tangga profesional. Kami hadir untuk memberikan solusi cepat, transparan, dan bergaransi kepada seluruh pelanggan kami, baik melalui kunjungan ke rumah (Home Service) maupun pengerjaan di workshop kami.</p>
-            
-            <h3 style="margin-top:2.5rem; text-align:center;"><i class="bi bi-signpost-split" style="color:#0ea5e9;"></i> Alur Pelayanan Kami</h3>
-            <div class="alur-grid">
-                <div class="alur-item">
-                    <i class="bi bi-laptop"></i>
-                    <h4 style="margin-bottom:0.5rem;">1. Input Data Online</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Pilih jenis layanan, lengkapi data diri, dan jelaskan kendala perangkat Anda melalui website kami.</p>
-                </div>
-                <div class="alur-item">
-                    <i class="bi bi-wallet2"></i>
-                    <h4 style="margin-bottom:0.5rem;">2. Bayar DP & Jadwal</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Lakukan pembayaran uang muka agar sistem kami dapat mencarikan dan menjadwalkan teknisi untuk Anda.</p>
-                </div>
-                <div class="alur-item">
-                    <i class="bi bi-tools"></i>
-                    <h4 style="margin-bottom:0.5rem;">3. Proses Perbaikan</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Teknisi akan memeriksa & memperbaiki unit. Anda bisa melacak status secara real-time di website.</p>
-                </div>
-                <div class="alur-item">
-                    <i class="bi bi-check-circle"></i>
-                    <h4 style="margin-bottom:0.5rem;">4. Selesai & Lunas</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Setelah selesai, lunasi sisa tagihan, terima nota digital garansi 30 hari, dan nikmati kembali perangkat Anda.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="page-profile" class="page-content container">
-        <div class="content-box active" style="display:block; margin-top: 2rem;">
-            <h2>Profil Perusahaan & Galeri Servis</h2>
-            <p>Sejak didirikan, kami telah melayani ratusan pelanggan dan mengembalikan fungsi berbagai jenis perangkat dengan teknisi bersertifikat dan suku cadang berkualitas.</p>
-            
-            <h3 style="margin-top:2.5rem;"><i class="bi bi-images" style="color:#10b981;"></i> Bukti Hasil Servis</h3>
-            <div class="foto-grid">
-                <div class="foto-item">
-                    <i class="bi bi-camera" style="font-size:2.5rem; margin-bottom:10px;"></i>
-                    <p>Foto Servis 1 (Placeholder)</p>
-                </div>
-                <div class="foto-item">
-                    <i class="bi bi-phone" style="font-size:2.5rem; margin-bottom:10px;"></i>
-                    <p>Foto Servis 2 (Placeholder)</p>
-                </div>
-                <div class="foto-item">
-                    <i class="bi bi-motherboard" style="font-size:2.5rem; margin-bottom:10px;"></i>
-                    <p>Foto Servis 3 (Placeholder)</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
 
 <footer class="footer-section">
-    <div style="display:flex; justify-content:center; gap: 15px; margin-bottom:1rem;">
-        <a href="#" aria-label="Facebook SF Tech" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-facebook"></i></a>
-        <a href="#" aria-label="Instagram SF Tech" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-instagram"></i></a>
-        <a href="#" aria-label="WhatsApp SF Tech" style="color:#cbd5e1; font-size:1.5rem;"><i class="bi bi-whatsapp"></i></a>
-    </div>
     <p>&copy; 2026 SF Tech Service. Semua Hak Dilindungi.</p>
 </footer>
 
+<!-- ==========================================
+     WIDGET CHAT DRAG AND DROP
+     ========================================== -->
 <div class="chat-widget minimized" id="chatWidgetPelanggan">
     <div class="chat-header" id="headerDragChat">
         <div class="chat-header-left">
             <i class="bi bi-chat-dots-fill"></i> 
             <span>Chat <span id="txtChatKode">-</span></span>
         </div>
-        <button class="chat-toggle-btn" aria-label="Minimize Chat" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
+        <button class="chat-toggle-btn" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
             <i class="bi bi-dash-lg"></i>
         </button>
     </div>
     <div class="chat-messages" id="boxPesanPelanggan"></div>
     <div class="chat-input-row">
-        <input type="text" aria-label="Ketik pesan chat" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()">
-        <button aria-label="Kirim Chat" onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
+        <input type="text" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()">
+        <button onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
     </div>
 </div>
 
-<!-- ========================================== -->
-<!-- TEMPLATE HIDDEN KARTU -->
-<!-- ========================================== -->
+<!-- ==========================================
+     TEMPLATE KARTU TIKET SVG (UNTUK EXPORT PDF)
+     ========================================== -->
 <div style="position: absolute; left: -9999px; top: 0;">
     <div id="pdfCardTemplate" style="width: 400px; height: 680px; background-color: #f4f4f5; border-radius: 18px; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative;">
-        
-        <!-- Header & Lengkungan Wave -->
+        <!-- Header Shape SVG -->
         <div style="width: 100%; height: 200px; position: relative;">
             <svg viewBox="0 0 400 200" preserveAspectRatio="none" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
                 <path d="M0,150 Q200,200 400,150 L400,0 L0,0 Z" fill="#0b3d91" />
@@ -799,764 +916,414 @@
             </svg>
             <div style="position: absolute; top: 55px; width: 100%; text-align: center; color: white; display: flex; flex-direction: column; align-items: center;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 2px;">
-                    <svg width="45" height="35" viewBox="0 0 100 60" fill="white">
-                        <polygon points="10,60 40,0 60,0 30,60" />
-                        <polygon points="50,60 80,0 100,0 70,60" />
-                        <polygon points="10,35 45,35 55,20 20,20" />
-                    </svg>
                     <h1 style="font-size: 30px; font-weight: 800; margin: 0; letter-spacing: 0.5px;">SF SERVICE</h1>
                 </div>
                 <p style="font-size: 13px; font-weight: 500; letter-spacing: 2.5px; margin: 0; opacity: 0.9; margin-left: 20px;">We Come, We Fix</p>
             </div>
         </div>
-
+        
+        <!-- Content QR Area -->
         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 10px; width: 100%;">
-            <h2 style="color: #0b2a5c; font-size: 24px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.25; text-align: center;">KARTU FAKTUR<br>DAN LAYANAN</h2>
+            <h2 style="color: #0b2a5c; font-size: 24px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.25; text-align: center;">KARTU TIKET<br>DAN LAYANAN</h2>
             <div style="width: 45px; height: 3px; background-color: #3b82f6; margin: 0 auto 25px auto;"></div>
-            <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px; display: inline-block;"><div id="pdfCardQrCode"></div></div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px; width: 80%;">
-                <div style="width: 46px; height: 46px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 22px; flex-shrink: 0;"><i class="bi bi-phone"></i></div>
-                <p style="font-size: 11.5px; color: #334155; font-weight: 600; margin: 0; line-height: 1.4; text-align: left;">Scan kode QR untuk<br>informasi faktur dan<br>layanan lainnya</p>
+            <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px; display: inline-block;">
+                <div id="pdfCardQrCode"></div>
             </div>
         </div>
-
+        
+        <!-- Footer Kontak -->
         <div style="width: 100%; background: #0b3d91; padding: 22px 0; color: white; display: flex; align-items: center; justify-content: center; gap: 20px;">
             <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;">
-                <div style="width: 22px; height: 22px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-whatsapp" style="font-size: 13px;"></i></div>
+                <div style="width: 22px; height: 22px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-whatsapp"></i>
+                </div> 
                 0888 9999 765
-            </div>
-            <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.4);"></div>
-            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;">
-                <div style="width: 22px; height: 22px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-instagram" style="font-size: 13px;"></i></div>
-                @SFSERVICE.CJR
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// FITUR BARU: Konfigurasi Leaflet Peta Utama (Cianjur Area Default)
-let petaPelanggan, markerPelanggan;
-function inisialisasiPetaLeaflet() {
-    if(petaPelanggan) return; 
-    
-    // Default Map Coordinate di Cianjur Pusat
-    const latAwal = -6.816666;
-    const lngAwal = 107.133333;
-    
-    petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 13);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(petaPelanggan);
-    
-    markerPelanggan = L.marker([latAwal, lngAwal], {draggable: true}).addTo(petaPelanggan);
-    
-    document.getElementById('latLokasi').value = latAwal;
-    document.getElementById('lngLokasi').value = lngAwal;
-    
-    // Saat Marker Digeser
-    markerPelanggan.on('dragend', function(e) {
-        const posisi = markerPelanggan.getLatLng();
-        document.getElementById('latLokasi').value = posisi.lat;
-        document.getElementById('lngLokasi').value = posisi.lng;
-        simpanDraft();
-    });
-    
-    // Saat Peta Diklik untuk Memindah Pin
-    petaPelanggan.on('click', function(e) {
-        markerPelanggan.setLatLng(e.latlng);
-        document.getElementById('latLokasi').value = e.latlng.lat;
-        document.getElementById('lngLokasi').value = e.latlng.lng;
-        simpanDraft();
-    });
-}
-
-function klikMenuHome() {
-    tampilHalaman('home');
-    if (!localStorage.getItem("kodeAktifPelanggan")) {
-        currentStep = 1;
-        simpanDraft();
-        updateProgress();
-        showContent();
-        document.getElementById("heroLandingPage").style.display = "block";
-        document.getElementById("lacakCepatBox").style.display = "block";
-        document.getElementById("publicReviewsSection").style.display = "block";
-        muatUlasanPublik();
-    }
-}
-
-function tampilHalaman(id) {
-    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
-    
-    if(id === 'home') {
-        if (!localStorage.getItem("kodeAktifPelanggan")) muatUlasanPublik();
-    } else {
-        document.getElementById("publicReviewsSection").style.display = "none";
-    }
-}
-
-function kembaliKeAwal() { 
-    localStorage.removeItem("kodeAktifPelanggan"); 
-    localStorage.removeItem("kodeKonsultasiPelanggan"); 
-    localStorage.removeItem("draftFormServis"); 
-    kodeSaya = ""; 
-    currentStep = 1; 
-    window.history.replaceState({}, document.title, window.location.pathname);
-    location.reload(); 
-}
-
-// QR Scanner Logic
-let html5QrCode = null;
-function bukaScannerQR() {
-    document.getElementById("scannerModal").style.display = "flex";
-    if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("reader");
-    }
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText, decodedResult) => {
-            tutupScannerQR();
-            let kodeMatch = decodedText;
-            if (decodedText.includes("?lacak=")) {
-                const urlObj = new URL(decodedText);
-                kodeMatch = urlObj.searchParams.get("lacak");
-            }
-            prosesLacakDenganKode(kodeMatch);
-        },
-        (errorMessage) => {}
-    ).catch(err => {
-        Swal.fire('Gagal Membuka Kamera', 'Pastikan izin kamera diizinkan oleh browser.', 'error');
-        tutupScannerQR();
-    });
-}
-
-function tutupScannerQR() {
-    document.getElementById("scannerModal").style.display = "none";
-    if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(err => console.log(err));
-    }
-}
-
-// Fungsi Bukti DP & Pelunasan Tetap DataURL agar Cepat di Client-Side (TIDAK BERAT)
-// Yang dirubah ke FormData hanya Video / Bukti Kondisi Awal
-window.buktiDPBase64 = "";
-window.buktiPelunasanBase64 = "";
-
-function previewBukti(input, previewId) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                const maxDim = 800; 
-                let w = img.width, h = img.height;
-                
-                if(w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
-                else if(h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
-                
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext("2d");
-                
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(0, 0, w, h);
-                ctx.drawImage(img, 0, 0, w, h);
-                
-                const compressedData = canvas.toDataURL("image/jpeg", 0.7);
-                
-                const preview = document.getElementById(previewId);
-                preview.style.display = 'block';
-                preview.innerHTML = `<img src="${compressedData}" style="max-height:150px;">`;
-                
-                if(previewId === 'pratinjauDP') window.buktiDPBase64 = compressedData;
-                else window.buktiPelunasanBase64 = compressedData;
-            };
-            img.src = e.target.result;
-        }
-        reader.readAsDataURL(file);
-    }
-}
-
-const API_URL = window.location.origin + "/api";
+/* ==========================================
+   INISIALISASI & GLOBAL VARIABEL
+   ========================================== */
 let currentStep = 1; 
-let kodeSaya = "";   
-let tipeFile = "";
-let metodeDP = "";
-let metodeBayar = "";
-let intervalChat = null;
-let nilaiRating = 0; 
-
-const Toast = Swal.mixin({
-    toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true,
-    didOpen: (toast) => { toast.onmouseenter = Swal.stopTimer; toast.onmouseleave = Swal.resumeTimer; }
-});
-
+let kodeSaya = ""; 
+let metodeBayar = ""; 
+let nilaiRating = 0;
+const API_URL = window.location.origin + "/api";
 const socket = io(window.location.origin);
 
-socket.on("updateDataPelanggan", (kode) => {
-    if(kode === kodeSaya) {
-        Swal.fire({
-            icon: 'info', title: 'Pembaruan Status!', text: 'Status pesanan Anda telah diperbarui oleh Admin.', confirmButtonColor: '#0ea5e9'
-        });
-        tampilkanSkeleton(); 
-        setTimeout(() => cekStatus(), 600); 
-    }
+/* Socket IO Listeners */
+socket.on("updateDataPelanggan", (kode) => { 
+    if(kode === kodeSaya) { 
+        Swal.fire('Pembaruan Status!', 'Status pesanan Anda telah diperbarui admin.', 'info'); 
+        cekStatus(); 
+    } 
 });
 
 socket.on("chatBaruDiterima", (data) => {
     const kodeChat = data.kode || data;
-    const pengirim = data.pengirim || 'admin';
-    if(kodeChat === kodeSaya) {
-        if (pengirim === 'admin') Toast.fire({ icon: 'success', title: 'Admin membalas pesan Anda' });
-        muatLogPesan();
+    if(kodeChat === kodeSaya) { 
+        if ((data.pengirim || 'admin') === 'admin') {
+            Swal.fire({
+                toast: true, 
+                position: 'top-end', 
+                icon: 'success', 
+                title: 'Admin membalas pesan', 
+                showConfirmButton: false, 
+                timer: 3000
+            });
+        }
+        muatLogPesan(); 
     }
 });
 
-function simpanDraft() {
-    if(currentStep > 2 || localStorage.getItem("kodeAktifPelanggan")) return; 
-    const layananChecked = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.id);
-    const draft = {
-        step: currentStep, layanan: layananChecked,
-        nama: document.getElementById("nama").value, wa: document.getElementById("wa").value,
-        alamat: document.getElementById("alamat").value, 
-        lat: document.getElementById("latLokasi").value,
-        lng: document.getElementById("lngLokasi").value,
-        merek: document.getElementById("merek").value,
-        merekLainnya: document.getElementById("merekLainnya").value,
-        tipe: document.getElementById("tipe").value, kerusakan: document.getElementById("kerusakan").value,
-        sk: document.getElementById("chkSyaratKetentuan").checked
-    };
-    localStorage.setItem("draftFormServis", JSON.stringify(draft));
+/* ==========================================
+   FUNGSI PETA LEAFLET
+   ========================================== */
+let petaPelanggan, markerPelanggan;
+
+function inisialisasiPetaLeaflet() {
+    if(petaPelanggan) return; 
+    
+    // Titik Awal Default (Contoh Pusat)
+    const latAwal = -6.816666; 
+    const lngAwal = 107.133333;
+    
+    petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 16);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(petaPelanggan);
+    
+    markerPelanggan = L.marker([latAwal, lngAwal], {draggable: true}).addTo(petaPelanggan);
+    
+    document.getElementById('latLokasi').value = latAwal; 
+    document.getElementById('lngLokasi').value = lngAwal;
+    
+    // Update koordinat saat marker digeser
+    markerPelanggan.on('dragend', () => { 
+        document.getElementById('latLokasi').value = markerPelanggan.getLatLng().lat; 
+        document.getElementById('lngLokasi').value = markerPelanggan.getLatLng().lng; 
+    });
 }
 
-function restoreDraft() {
-    const draft = localStorage.getItem("draftFormServis");
-    if(draft && !localStorage.getItem("kodeAktifPelanggan")) {
-        try {
-            const data = JSON.parse(draft);
-            currentStep = data.step || 1;
-            document.getElementById("nama").value = data.nama || "";
-            document.getElementById("wa").value = data.wa || "";
-            document.getElementById("alamat").value = data.alamat || "";
-            
-            if(data.lat && data.lng) {
-                document.getElementById("latLokasi").value = data.lat;
-                document.getElementById("lngLokasi").value = data.lng;
-                if(markerPelanggan && petaPelanggan) {
-                    const savedPos = new L.LatLng(data.lat, data.lng);
-                    markerPelanggan.setLatLng(savedPos);
-                    petaPelanggan.setView(savedPos, 14);
-                }
-            }
-
-            document.getElementById("merek").value = data.merek || "";
-            document.getElementById("merekLainnya").value = data.merekLainnya || "";
-            document.getElementById("tipe").value = data.tipe || "";
-            document.getElementById("kerusakan").value = data.kerusakan || "";
-            document.getElementById("chkSyaratKetentuan").checked = data.sk || false;
-            
-            data.layanan.forEach(id => { const cb = document.getElementById(id); if(cb) cb.checked = true; });
-            updateBrandOptions(); toggleMerekLainnya();
-        } catch(e){}
-    }
-}
-
-// FITUR BARU GPS & MAP MARKER MOVE
 function dapatkanLokasiOtomatis() {
-    const btn = document.getElementById("btnLokasiGPS");
+    if (!navigator.geolocation) {
+        return Swal.fire('Error', 'Browser Anda tidak mendukung fitur GPS.', 'error');
+    }
     
-    if (!navigator.geolocation) return Swal.fire('Tidak Mendukung', 'Browser Anda tidak mendukung fitur lokasi GPS.', 'error');
-    
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Membaca GPS...';
+    const btn = document.getElementById("btnLokasiGPS"); 
+    btn.innerHTML = 'Mencari GPS Akurat...'; 
     btn.disabled = true;
     
     navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
+        (pos) => {
+            const lat = pos.coords.latitude; 
+            const lng = pos.coords.longitude;
             
-            if(markerPelanggan && petaPelanggan) {
-                const myLocation = new L.LatLng(lat, lng);
-                markerPelanggan.setLatLng(myLocation);
-                petaPelanggan.setView(myLocation, 15);
+            if(markerPelanggan && petaPelanggan) { 
+                markerPelanggan.setLatLng([lat, lng]); 
+                petaPelanggan.setView([lat, lng], 17); 
             }
             
-            document.getElementById('latLokasi').value = lat;
+            document.getElementById('latLokasi').value = lat; 
             document.getElementById('lngLokasi').value = lng;
-            simpanDraft();
             
-            btn.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Berhasil Melacak GPS';
-            setTimeout(() => { btn.innerHTML = '<i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini'; btn.disabled = false; }, 3000);
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> GPS Akurat Ditemukan';
+            setTimeout(() => { 
+                btn.innerHTML = 'Perbarui Koordinat GPS'; 
+                btn.disabled = false; 
+            }, 3000);
         },
-        (error) => {
-            console.error(error);
-            btn.innerHTML = '<i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini';
-            btn.disabled = false;
-            let pesanError = 'Tidak dapat mengambil lokasi presisi.';
-            if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda. Mohon izinkan pada browser.';
-            Swal.fire('Gagal GPS', pesanError, 'error');
+        (error) => { 
+            btn.innerHTML = 'Gagal Dapatkan GPS (Geser pin manual di peta)'; 
+            btn.disabled = false; 
+            console.error("GPS Error:", error);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
-let originalOptHP = null;
-let originalOptElek = null;
-let originalOptKomputer = null;
-let originalOptLainnya = null;
-
-function inisialisasiOpsiMerek() {
-    if(!originalOptHP) {
-        originalOptHP = document.getElementById("optgroup-hp").cloneNode(true);
-        originalOptElek = document.getElementById("optgroup-elektronik").cloneNode(true);
-        originalOptKomputer = document.getElementById("optgroup-komputer").cloneNode(true);
-        originalOptLainnya = document.querySelector('#merek optgroup[label="Lainnya"]').cloneNode(true);
-    }
-}
-
-function updateBrandOptions() {
-    inisialisasiOpsiMerek(); 
-    const cbHP = document.querySelectorAll('.kategori-card.hp input[type="checkbox"]');
-    const cbElek = document.querySelectorAll('.kategori-card.elektronik input[type="checkbox"]');
-    const cbKomputer = document.querySelectorAll('.kategori-card.komputer input[type="checkbox"]');
-
-    const isHP = Array.from(cbHP).some(cb => cb.checked);
-    const isElek = Array.from(cbElek).some(cb => cb.checked);
-    const isKomputer = Array.from(cbKomputer).some(cb => cb.checked);
-    
-    const toggleState = (cbs, disable) => {
-        cbs.forEach(cb => {
-            cb.disabled = disable && !cb.checked;
-            const parentDiv = cb.closest('.layanan-item');
-            if (disable && !cb.checked) {
-                parentDiv.style.opacity = '0.5';
-                parentDiv.style.pointerEvents = 'none'; 
-            } else {
-                parentDiv.style.opacity = '1';
-                parentDiv.style.pointerEvents = 'auto';
-            }
-        });
-    };
-
-    toggleState(cbHP, isElek || isKomputer);
-    toggleState(cbElek, isHP || isKomputer);
-    toggleState(cbKomputer, isHP || isElek);
-    
-    const merekSelect = document.getElementById("merek");
-    const currentValue = merekSelect.value;
-    
-    merekSelect.innerHTML = '<option value="">-- Silakan Pilih Kategori Merek --</option>';
-    
-    const showAll = !isHP && !isElek && !isKomputer;
-    
-    if (isHP || showAll) merekSelect.appendChild(originalOptHP.cloneNode(true));
-    if (isElek || showAll) merekSelect.appendChild(originalOptElek.cloneNode(true));
-    if (isKomputer || showAll) merekSelect.appendChild(originalOptKomputer.cloneNode(true));
-    
-    merekSelect.appendChild(originalOptLainnya.cloneNode(true));
-    
-    if (Array.from(merekSelect.options).some(opt => opt.value === currentValue)) merekSelect.value = currentValue;
-    else merekSelect.value = "";
-    toggleMerekLainnya();
-}
-
-function muatUlasanPublik() {
-    fetch(`${API_URL}/reviews`, { cache: 'no-store' })
-    .then(res => res.json())
-    .then(data => {
-        if(data.length > 0) {
-            document.getElementById("publicReviewsSection").style.display = "block";
-            const list = document.getElementById("reviewList");
-            list.innerHTML = "";
-            data.forEach(rev => {
-                let stars = "";
-                for(let i=0; i<5; i++) stars += i < rev.rating ? '<i class="bi bi-star-fill" style="color:#f59e0b;"></i>' : '<i class="bi bi-star" style="color:#cbd5e1;"></i>';
-                list.innerHTML += `<div class="review-card">
-                    <p style="font-weight:bold; font-size:0.9rem; margin-bottom:3px;">${rev.nama} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">- ${rev.merek} ${rev.tipe}</span></p>
-                    <div style="font-size:0.8rem; margin-bottom:8px;">${stars}</div>
-                    <p style="font-size:0.85rem; font-style:italic;">"${rev.ulasan}"</p>
-                </div>`;
-            });
-        }
-    });
-}
-
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const icon = document.getElementById('iconDark');
-    if(document.body.classList.contains('dark-mode')) {
-        icon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
-        localStorage.setItem('tema', 'gelap');
-    } else {
-        icon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
-        localStorage.setItem('tema', 'terang');
-    }
-}
-if(localStorage.getItem('tema') === 'gelap') { toggleDarkMode(); }
-
-function tampilkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.add("skeleton")); }
-function hilangkanSkeleton() { document.querySelectorAll(".data-dinamis").forEach(el => el.classList.remove("skeleton")); }
-
+/* ==========================================
+   LIFECYCLE & DOM CONTENT LOADED
+   ========================================== */
 document.addEventListener("DOMContentLoaded", () => {
-    inisialisasiOpsiMerek(); 
+    // Cek apakah ada parameter URL lacak
+    const urlKode = new URLSearchParams(window.location.search).get('lacak');
     
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlKode = urlParams.get('lacak');
-    
-    if (urlKode) {
-        prosesLacakDenganKode(urlKode);
+    if (urlKode) { 
+        prosesLacakDenganKode(urlKode); 
     } else {
-        let aktifOrder = localStorage.getItem("kodeAktifPelanggan");
-        let aktifKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
-
-        if(aktifOrder) {
-            kodeSaya = aktifOrder;
-            document.getElementById("heroLandingPage").style.display = "none";
-            document.getElementById("lacakCepatBox").style.display = "none";
-            document.getElementById("publicReviewsSection").style.display = "none";
-            document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
-            cekStatus();
-            aktifkanSistemChat();
-        } else {
-            if(aktifKonsul) {
-                kodeSaya = aktifKonsul;
-                document.getElementById("txtChatKode").textContent = "Konsultasi";
-                aktifkanSistemChat();
+        let orderStorage = localStorage.getItem("kodeAktifPelanggan");
+        let konsulStorage = localStorage.getItem("kodeKonsultasiPelanggan");
+        
+        if(orderStorage) { 
+            kodeSaya = orderStorage; 
+            cekStatus(); 
+            aktifkanSistemChat(); 
+        } else { 
+            if(konsulStorage) { 
+                kodeSaya = konsulStorage; 
+                document.getElementById("txtChatKode").textContent = "Konsultasi"; 
+                aktifkanSistemChat(); 
             }
-            // Restore draft sebelum render UI map
-            restoreDraft();
-            updateProgress();
-            showContent();
-            pasangListenerValidasiRealTime();
-            muatUlasanPublik();
+            showContent(); 
+            muatUlasanPublik(); 
         }
     }
-
+    
+    // Inisialisasi Star Rating Klik Event
     document.querySelectorAll('#starContainer i').forEach(star => {
         star.addEventListener('click', function() {
             nilaiRating = parseInt(this.getAttribute('data-val'));
-            document.querySelectorAll('#starContainer i').forEach(s => {
-                s.classList.replace('bi-star-fill', 'bi-star');
-                s.classList.remove('active');
-                if(parseInt(s.getAttribute('data-val')) <= nilaiRating) {
-                    s.classList.replace('bi-star', 'bi-star-fill');
-                    s.classList.add('active');
+            document.querySelectorAll('#starContainer i').forEach(s => { 
+                s.classList.replace('bi-star-fill', 'bi-star'); 
+                s.classList.remove('active'); 
+                
+                if(parseInt(s.getAttribute('data-val')) <= nilaiRating) { 
+                    s.classList.replace('bi-star', 'bi-star-fill'); 
+                    s.classList.add('active'); 
                 }
             });
         });
     });
 });
 
+/* ==========================================
+   FUNGSI NAVIGASI STEP MULTIFORM
+   ========================================== */
 function nextStep() {
-    if (currentStep === 2) { kirimPesanan(); } else {
-        if (currentStep < 7) { 
-            currentStep++; simpanDraft(); updateProgress(); showContent(); 
-            // Fix map issue rendering on hidden div
-            if(currentStep === 2) {
-                setTimeout(() => {
-                    inisialisasiPetaLeaflet();
-                    petaPelanggan.invalidateSize();
-                }, 200);
-            }
+    if (currentStep < 7) { 
+        currentStep++; 
+        showContent(); 
+        updateProgress();
+        
+        // Render peta dengan jeda agar ter-load dengan ukuran div yang benar
+        if(currentStep === 2) {
+            setTimeout(() => { 
+                inisialisasiPetaLeaflet(); 
+                petaPelanggan.invalidateSize(); 
+                dapatkanLokasiOtomatis(); 
+            }, 200);
         }
     }
 }
-function prevStep() {
-    if (currentStep > 1) { currentStep--; simpanDraft(); updateProgress(); showContent(); }
+
+function prevStep() { 
+    if (currentStep > 1) { 
+        currentStep--; 
+        showContent(); 
+        updateProgress(); 
+    } 
 }
 
-function toggleMerekLainnya() {
-    const select = document.getElementById("merek");
-    const inputLainnya = document.getElementById("merekLainnya");
-    if(select.value === "Lainnya") { inputLainnya.style.display = "block"; } else {
-        inputLainnya.style.display = "none"; inputLainnya.value = ""; validasiInputRealTime(inputLainnya, 'errMerekLainnya'); 
+/* ==========================================
+   FUNGSI VALIDASI FORM
+   ========================================== */
+function validasiInputRealTime(el, errId) {
+    if (!el.value.trim()) { 
+        el.classList.add('input-error'); 
+        document.getElementById(errId).style.display = 'block'; 
+        return false; 
+    } else { 
+        el.classList.remove('input-error'); 
+        document.getElementById(errId).style.display = 'none'; 
+        return true; 
     }
-    validasiInputRealTime(select, 'errMerek'); simpanDraft();
 }
 
-function validasiInputRealTime(element, errId) {
-    const errSpan = document.getElementById(errId);
-    if (!element.value.trim()) {
-        element.classList.add('input-error'); if(errSpan) errSpan.style.display = 'block'; return false;
-    } else {
-        element.classList.remove('input-error'); if(errSpan) errSpan.style.display = 'none'; return true;
-    }
-}
-
-function pasangListenerValidasiRealTime() {
-    document.getElementById('nama').addEventListener('input', function() { validasiInputRealTime(this, 'errNama'); simpanDraft(); });
+function validasiWa() {
+    const wa = document.getElementById('wa'); 
+    let val = wa.value.replace(/\D/g, '');
     
-    // FITUR BARU: Strict Regex Validasi untuk WhatsApp Client-Side
-    document.getElementById('wa').addEventListener('input', function() { 
-        let rawValue = this.value.replace(/\D/g, ''); // bersihkan non-angka
-        if(rawValue.startsWith('0')) rawValue = '62' + rawValue.substring(1);
-        this.value = rawValue;
-
-        const waRegex = /^(62|0)[0-9]{8,11}$/;
-        const errSpan = document.getElementById('errWa');
-        
-        if (!waRegex.test(rawValue) || rawValue.length < 10 || rawValue.length > 13) {
-            this.classList.add('input-error'); 
-            if(errSpan) { errSpan.innerText = "Format tidak valid. Gunakan 10-13 digit angka awalan 62 atau 0"; errSpan.style.display = 'block'; }
-        } else {
-            this.classList.remove('input-error'); 
-            if(errSpan) errSpan.style.display = 'none';
-        }
-        simpanDraft();
-    });
-
-    document.getElementById('merek').addEventListener('change', function() { validasiInputRealTime(this, 'errMerek'); });
-    document.getElementById('tipe').addEventListener('input', function() { validasiInputRealTime(this, 'errTipe'); simpanDraft();});
-    document.getElementById('merekLainnya').addEventListener('input', function() { validasiInputRealTime(this, 'errMerekLainnya'); simpanDraft();});
-}
-
-// FITUR BARU: Loading Spinner untuk Proses Gambar
-function tampilPratinjau() {
-    const fileKondisi = document.getElementById("fileKondisi");
-    const pratinjau = document.getElementById("pratinjauFile");
-    
-    if(fileKondisi && fileKondisi.files[0]) {
-        const file = fileKondisi.files[0];
-        tipeFile = file.type;
-        
-        // Menampilkan Spinner
-        pratinjau.innerHTML = `<div style="padding: 20px;"><i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite; display: inline-block; font-size: 2.5rem; color: #0ea5e9;"></i><br><strong style="margin-top:10px; display:inline-block;">Memproses file...</strong></div>`;
-
-        setTimeout(() => {
-            if(file.type.startsWith("image/")) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        pratinjau.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:200px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">`;
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else if(file.type.startsWith("video/")) {
-                if(file.size > 10 * 1024 * 1024) {
-                    Swal.fire({ icon: 'error', title: 'Ukuran Terlalu Besar!', text: 'Maksimal ukuran file video 10MB.', confirmButtonColor: '#0ea5e9' });
-                    fileKondisi.value = ""; pratinjau.innerHTML = "Belum ada file dipilih"; return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    pratinjau.innerHTML = `<video src="${e.target.result}" controls style="max-width:100%; max-height:200px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);"></video>`;
-                }
-                reader.readAsDataURL(file);
-            }
-        }, 300);
+    if(val.startsWith('0')) {
+        val = '62' + val.substring(1); 
     }
+    wa.value = val;
+    
+    if (!/^(62|0)[0-9]{8,11}$/.test(val)) { 
+        wa.classList.add('input-error'); 
+        document.getElementById('errWa').style.display = 'block'; 
+        return false; 
+    }
+    
+    wa.classList.remove('input-error'); 
+    document.getElementById('errWa').style.display = 'none'; 
+    return true;
 }
 
-// FITUR BARU: Mengirim Data Memakai Multipart FormData (Meninggalkan JSON Base64 untuk media utama)
+/* ==========================================
+   PROSES PEMESANAN (SUBMIT ORDER)
+   ========================================== */
 function kirimPesanan() {
-    const waInput = document.getElementById("wa");
-    const isNamaValid = validasiInputRealTime(document.getElementById("nama"), 'errNama');
-    const waRegex = /^(62|0)[0-9]{8,11}$/;
-    const isWaValid = waRegex.test(waInput.value.replace(/\D/g, '')) && waInput.value.length >= 10 && waInput.value.length <= 13;
-    
-    if(!isWaValid) {
-        waInput.classList.add('input-error'); 
-        document.getElementById('errWa').style.display = 'block';
+    // Validasi semua field wajib
+    if(!validasiInputRealTime(document.getElementById("nama"), 'errNama') || 
+       !validasiWa() || 
+       !validasiInputRealTime(document.getElementById("merek"), 'errMerek') || 
+       !validasiInputRealTime(document.getElementById("tipe"), 'errTipe') || 
+       !document.getElementById("chkSyaratKetentuan").checked) {
+        
+        if(!document.getElementById("chkSyaratKetentuan").checked) {
+            document.getElementById("errSK").style.display = 'block';
+        }
+        return Swal.fire('Perhatian', 'Mohon lengkapi data dan setujui syarat ketentuan.', 'warning');
     }
-
-    const isMerekValid = validasiInputRealTime(document.getElementById("merek"), 'errMerek');
-    const isTipeValid = validasiInputRealTime(document.getElementById("tipe"), 'errTipe');
-    const isSKValid = document.getElementById("chkSyaratKetentuan").checked;
     
-    if (!isSKValid) { document.getElementById("errSK").style.display = 'block'; }
+    // Kalkulasi Layanan
+    const checkboxes = document.querySelectorAll("input[type=checkbox]:checked");
+    const layananTeks = Array.from(checkboxes).filter(cb => cb.id !== 'chkSyaratKetentuan').map(cb => cb.value).join(", ");
     
-    let isMerekLainnyaValid = true;
-    let merekFinal = document.getElementById("merek").value;
-    if (merekFinal === "Lainnya") {
-        isMerekLainnyaValid = validasiInputRealTime(document.getElementById("merekLainnya"), 'errMerekLainnya');
-        merekFinal = document.getElementById("merekLainnya").value.trim();
-    }
+    // Jika ada Install OS, set biaya jasa estimasi (80.000)
+    let estimasiJasa = layananTeks.includes("Install OS") ? 80000 : 0;
 
-    if (!isNamaValid || !isWaValid || !isMerekValid || !isTipeValid || !isMerekLainnyaValid || !isSKValid) {
-        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Mohon periksa kolom isian merah dan setujui Syarat & Ketentuan.', confirmButtonColor: '#0ea5e9' });
-        return;
-    }
+    const btnKirim = document.getElementById("btnKirimPesanan"); 
+    btnKirim.disabled = true; 
+    btnKirim.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim...';
+    
+    // Generate Kode Pesanan Unik
+    const kodeBaru = "HS-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.floor(Math.random()*900+100);
 
-    const btnKirim = document.getElementById("btnKirimPesanan");
-    btnKirim.disabled = true; btnKirim.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengunggah...';
-
-    const layananTerpilih = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.parentElement.textContent.trim()).join(", ");
-    const generatedKode = "HS-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.floor(Math.random()*900+100);
-    const kodeKonsulLama = localStorage.getItem("kodeKonsultasiPelanggan") || "";
-
-    const latData = document.getElementById("latLokasi").value;
-    const lngData = document.getElementById("lngLokasi").value;
-    let fallbackShareloc = `https://maps.google.com/?q=${latData},${lngData}`;
-
-    // FITUR BARU: Penggunaan FormData
     const formData = new FormData();
-    formData.append('kode', generatedKode);
-    formData.append('kodeKonsultasi', kodeKonsulLama);
-    formData.append('nama', document.getElementById("nama").value.trim());
-    formData.append('wa', document.getElementById("wa").value.trim());
-    formData.append('alamat', document.getElementById("alamat").value.trim());
-    formData.append('shareloc', fallbackShareloc); // Kirim tautan sebagai fallback string
-    formData.append('koordinat[lat]', latData); // Simpan koordinat di skema DB
-    formData.append('koordinat[lng]', lngData); 
-    formData.append('merek', merekFinal);
-    formData.append('tipe', document.getElementById("tipe").value.trim());
-    formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
-    formData.append('layanan', layananTerpilih || "Belum dipilih");
+    formData.append('kode', kodeBaru);
+    formData.append('nama', document.getElementById("nama").value);
+    formData.append('wa', document.getElementById("wa").value);
+    formData.append('alamat', document.getElementById("alamat").value);
+    formData.append('merek', document.getElementById("merek").value);
+    formData.append('tipe', document.getElementById("tipe").value);
+    formData.append('kerusakan', document.getElementById("kerusakan").value);
+    formData.append('layanan', layananTeks || "Umum");
+    formData.append('biayaJasa', estimasiJasa);
+    formData.append('koordinat[lat]', document.getElementById('latLokasi').value);
+    formData.append('koordinat[lng]', document.getElementById('lngLokasi').value);
     
-    // Append the actual physical file instead of Base64 JSON
-    const fileInput = document.getElementById("fileKondisi");
-    if(fileInput.files.length > 0) {
-        formData.append('kondisiHP', fileInput.files[0]);
+    if(document.getElementById("fileKondisi").files.length > 0) {
+        formData.append('kondisiHPFile', document.getElementById("fileKondisi").files[0]);
     }
-    formData.append('tipeKondisi', tipeFile || "");
 
     fetch(`${API_URL}/orders`, { 
         method: "POST", 
-        body: formData // Menghapus header Content-Type agar fetch meraciknya otomatis ke boundary form-data
-    })
-    .then(res => { if (!res.ok) throw new Error("Gagal mendaftarkan data"); return res.json(); })
-    .then(() => {
-        kodeSaya = generatedKode;
-        localStorage.setItem("kodeAktifPelanggan", kodeSaya);
-        localStorage.removeItem("draftFormServis");
-        localStorage.removeItem("kodeKonsultasiPelanggan"); 
-        
-        document.getElementById("heroLandingPage").style.display = "none";
-        document.getElementById("lacakCepatBox").style.display = "none";
-        document.getElementById("publicReviewsSection").style.display = "none";
-        document.getElementById("kodePesananDP").textContent = kodeSaya;
-        document.getElementById("kodePesanan").textContent = kodeSaya;
-        document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
-        
-        btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
-        currentStep = 3; updateProgress(); showContent(); aktifkanSistemChat();
-        Swal.fire({ icon: 'success', title: 'Pesanan Terkirim!', text: 'Silakan unduh Kartu Faktur & Barcode Anda di Tahap 3.', confirmButtonColor: '#10b981' });
-        cekStatus();
-    })
-    .catch(err => {
-        console.error(err);
-        btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
-        Swal.fire({ icon: 'error', title: 'Sistem Sibuk', text: 'Gagal memproses pesanan atau koneksi lambat.', confirmButtonColor: '#ef4444' });
-    });
-}
-
-function salinKode() {
-    let kode = localStorage.getItem("kodeAktifPelanggan");
-    if (!kode) return;
-    navigator.clipboard.writeText(kode).then(() => {
-        Swal.fire({ icon: 'success', title: 'Tersalin!', text: 'Kode ' + kode + ' disalin.', timer: 1500, showConfirmButton: false });
-    });
-}
-
-function bagikanKeWA() {
-    let kode = localStorage.getItem("kodeAktifPelanggan");
-    let noWa = document.getElementById("wa").value.replace(/[^0-9]/g, '');
-    if(!noWa.startsWith('62') && noWa !== '') noWa = '62' + noWa.substring(1); 
-    
-    if (!kode) return;
-    let urlStr = window.location.href.split('?')[0]; 
-    let dynamicUrl = `${urlStr}?lacak=${kode}`;
-    let text = `*KODE PESANAN SF TECH*\n\nSimpan pesan ini agar Anda bisa melacak progres servis perangkat Anda.\n\nKode Resi: *${kode}*\nKlik URL ini untuk Lacak Instan: ${dynamicUrl}`;
-    
-    window.open(`https://wa.me/${noWa}?text=${encodeURIComponent(text)}`, '_blank');
-}
-
-function pilihMetodeDP(metode) {
-    metodeDP = metode;
-    document.querySelectorAll(".pilihan-dp").forEach(el => el.classList.remove("aktif"));
-    document.getElementById(`dp-${metode}`).classList.add("aktif");
-    
-    document.getElementById("infoRekeningDP").style.display = "block";
-    document.getElementById("namaBankDP").textContent = metode;
-    document.getElementById("noRekDP").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
-    document.getElementById("metodeDPDipilih").textContent = "Transfer " + metode;
-}
-
-// Catatan: Karena fitur pelunasan bisa saja berupa gambar sangat besar, diubah ke FormData backend-nya untuk Update (PUT)
-function konfirmasiBayarDP() {
-    if(!metodeDP) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih metode transfer DP!', confirmButtonColor: '#0ea5e9' });
-
-    // Karena backend route PUT /api/orders/:kode sudah kita support upload.fields(),
-    // kita ubah mekanisme base64 UI ini menjadi fetch object Blob atau kirim input file asli.
-    const fileInputDP = document.getElementById("fileBuktiDP");
-    const formDataUpdate = new FormData();
-    formDataUpdate.append('metodeDP', metodeDP);
-    formDataUpdate.append('dpTerbayar', 'true'); // Harus dikirim sbg string 'true' jika via formdata atau parsed
-
-    if(fileInputDP.files.length > 0) {
-        formDataUpdate.append('buktiDP', fileInputDP.files[0]);
-    } else {
-        return Swal.fire('Oops', 'Silakan upload gambar bukti transfer DP!', 'warning');
-    }
-
-    fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT",
-        body: formDataUpdate
+        body: formData 
     })
     .then(res => res.json())
     .then(() => {
-        Swal.fire({ icon: 'success', title: 'Terkirim', text: 'Bukti DP tersimpan. Tunggu verifikasi.', confirmButtonColor: '#10b981' });
-        cekStatus();
-    }).catch(err => Swal.fire('Gagal!', 'Gagal konfirmasi DP.', 'error'));
+        kodeSaya = kodeBaru; 
+        localStorage.setItem("kodeAktifPelanggan", kodeSaya);
+        localStorage.removeItem("kodeKonsultasiPelanggan");
+        
+        document.getElementById("lacakCepatBox").style.display = "none";
+        document.getElementById("publicReviewsSection").style.display = "none";
+        document.getElementById("kodePesananTiket").textContent = kodeSaya;
+        
+        currentStep = 3; 
+        showContent(); 
+        updateProgress(); 
+        cekStatus(); 
+        aktifkanSistemChat();
+        
+        Swal.fire('Berhasil!', 'Pesanan terkirim. Simpan Tiket Servis (Barcode) Anda.', 'success');
+    })
+    .catch((error) => { 
+        console.error("Fetch Error:", error);
+        btnKirim.disabled = false; 
+        btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan'; 
+        Swal.fire('Error', 'Gagal mengirim pesanan. Periksa koneksi Anda.', 'error'); 
+    });
 }
 
-// LOGIKA INPUT LACAK CEPAT
+/* ==========================================
+   FUNGSI LACAK PESANAN
+   ========================================== */
 function prosesLacakCepat() {
-    const kodeInput = document.getElementById("inputLacakCepat").value.trim();
-    if (!kodeInput) {
-        Swal.fire({ icon: 'warning', title: 'Kosong', text: 'Silakan masukkan kode pesanan terlebih dahulu.', confirmButtonColor: '#0ea5e9' });
-        return;
+    const kode = document.getElementById("inputLacakCepat").value.trim();
+    if(!kode) {
+        return Swal.fire('Kosong', 'Masukkan kode pesanan terlebih dahulu.', 'warning');
     }
-    prosesLacakDenganKode(kodeInput);
+    prosesLacakDenganKode(kode);
 }
 
 function prosesLacakDenganKode(kode) {
-    fetch(`${API_URL}/orders/${kode}`, { cache: 'no-store' })
-    .then(res => { if(!res.ok) throw new Error(); return res.json(); })
-    .then(data => {
-        kodeSaya = data.kode;
-        localStorage.setItem("kodeAktifPelanggan", kodeSaya);
-        document.getElementById("heroLandingPage").style.display = "none";
+    fetch(`${API_URL}/orders/${kode}`)
+    .then(res => { 
+        if(!res.ok) throw new Error("Tidak ditemukan"); 
+        return res.json(); 
+    })
+    .then(data => { 
+        kodeSaya = data.kode; 
+        localStorage.setItem("kodeAktifPelanggan", kodeSaya); 
+        
         document.getElementById("lacakCepatBox").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
-        document.getElementById("kodePesananDP").textContent = kodeSaya;
-        document.getElementById("kodePesanan").textContent = kodeSaya;
-        document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         
-        aktifkanSistemChat(); cekStatus();
+        cekStatus(); 
+        aktifkanSistemChat();
     })
     .catch(() => {
-        Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar di sistem kami!', confirmButtonColor: '#ef4444' });
-        window.history.replaceState({}, document.title, window.location.pathname);
+        Swal.fire('Error', 'Kode pesanan tidak valid atau tidak ditemukan.', 'error');
+    });
+}
+
+/* ==========================================
+   UTILITY & FILE PREVIEW
+   ========================================== */
+function previewBukti(input, previewId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById(previewId);
+            preview.style.display = 'block'; 
+            
+            if(input.files[0].type.startsWith("video/")) {
+                preview.innerHTML = `<video src="${e.target.result}" controls style="max-height:150px;"></video>`;
+            } else {
+                preview.innerHTML = `<img src="${e.target.result}" style="max-height:150px;">`;
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+/* ==========================================
+   FUNGSI PEMBAYARAN & AUDIT TRAIL
+   ========================================== */
+function konfirmasiInden() {
+    const metode = document.getElementById("metodeInden").value; 
+    const file = document.getElementById("fileBuktiInden");
+    
+    if(!metode || file.files.length === 0) {
+        return Swal.fire('Perhatian', 'Pilih bank dan upload bukti transfer terlebih dahulu.', 'warning');
+    }
+    
+    const formData = new FormData(); 
+    formData.append('metodeBayarInden', metode); 
+    formData.append('indenTerbayar', 'true'); 
+    formData.append('buktiIndenFile', file.files[0]);
+    
+    fetch(`${API_URL}/orders/${kodeSaya}`, { 
+        method: "PUT", 
+        body: formData 
+    })
+    .then(() => { 
+        Swal.fire('Berhasil', 'Pembayaran komponen terkirim.', 'success'); 
+        cekStatus(); 
     });
 }
 
 function responsTambahan(aksi) {
-    let payload = {};
-    let pesan = '';
-    let tipeIcon = 'success';
-    
-    if (aksi === 'disetujui') {
-        payload = { statusPersetujuanTambahan: "disetujui" };
-        pesan = 'Biaya tambahan disetujui. Servis akan dilanjutkan sesuai estimasi baru.';
-    } else if (aksi === 'ditolak_lanjut') {
-        payload = { statusPersetujuanTambahan: "ditolak_lanjut" };
-        pesan = 'Kerusakan tambahan ditolak. Teknisi akan melanjutkan servis awal saja.';
-    } else if (aksi === 'ditolak_batal') {
-        payload = { statusPersetujuanTambahan: "ditolak_batal", status: "ditolak_pelanggan" };
-        pesan = 'Servis dibatalkan sepenuhnya. Sesuai S&K, Uang Muka (DP) Anda tidak dapat dikembalikan.';
-        tipeIcon = 'error';
+    let payload = { statusPersetujuanTambahan: aksi };
+    if(aksi === 'ditolak_batal') {
+        payload.status = "ditolak_pelanggan";
     }
-
-    fetch(`${API_URL}/orders/${kodeSaya}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-    .then(() => {
-        Swal.fire('Berhasil Dikonfirmasi!', pesan, tipeIcon);
-        cekStatus();
+    
+    fetch(`${API_URL}/orders/${kodeSaya}`, { 
+        method: "PUT", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(payload) 
+    })
+    .then(() => { 
+        Swal.fire('Berhasil', 'Persetujuan terekam dalam sistem.', 'success'); 
+        cekStatus(); 
     });
 }
 
@@ -1565,399 +1332,478 @@ function pilihMetodeBayar(metode) {
     document.querySelectorAll(".pilihan-bayar").forEach(el => el.classList.remove("aktif"));
     document.getElementById(`bayar-${metode}`).classList.add("aktif");
     
-    const infoBox = document.getElementById("infoRekening");
-    if(metode === "Tunai") {
-        infoBox.style.display = "none"; document.getElementById("metodeDipilih").textContent = "Tunai / Cash";
-    } else {
-        infoBox.style.display = "block";
-        document.getElementById("namaBank").textContent = metode;
-        document.getElementById("noRek").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
-        document.getElementById("metodeDipilih").textContent = "Transfer " + metode;
-    }
+    document.getElementById("formPelunasanTransfer").style.display = (metode === "Transfer") ? "block" : "none";
 }
 
 function konfirmasiBayar() {
-    if(!metodeBayar) return Swal.fire('Perhatian', 'Pilih metode bayar!', 'warning');
+    if(!metodeBayar) {
+        return Swal.fire('Perhatian', 'Pilih metode pembayaran.', 'warning');
+    }
     
-    const fileInputLunas = document.getElementById("fileBuktiPelunasan");
-    if(metodeBayar !== "Tunai" && fileInputLunas.files.length === 0) {
-        return Swal.fire('Oops', 'Silakan upload bukti transfer pelunasan.', 'warning');
+    const formData = new FormData(); 
+    formData.append('metodePembayaran', metodeBayar); 
+    formData.append('pembayaranDikonfirmasi', 'true');
+    
+    if(metodeBayar === "Transfer") {
+        const file = document.getElementById("fileBuktiPelunasan");
+        if(file.files.length === 0) {
+            return Swal.fire('Perhatian', 'Upload bukti transfer terlebih dahulu.', 'warning');
+        }
+        formData.append('buktiPelunasanFile', file.files[0]);
     }
-
-    const formDataLunas = new FormData();
-    formDataLunas.append('metodePembayaran', metodeBayar);
-    formDataLunas.append('pembayaranDikonfirmasi', 'true');
-    if(fileInputLunas.files.length > 0) {
-        formDataLunas.append('buktiPelunasan', fileInputLunas.files[0]);
-    }
-
-    fetch(`${API_URL}/orders/${kodeSaya}`, {
-        method: "PUT",
-        body: formDataLunas
-    }).then(res => res.json()).then(() => { Swal.fire('Berhasil', 'Pelunasan & bukti terkirim.', 'success'); cekStatus(); });
-}
-
-function kirimRatingUlasan() {
-    if(nilaiRating === 0) return Swal.fire('Oops', 'Mohon klik bintang penilaian terlebih dahulu.', 'warning');
-    fetch(`${API_URL}/orders/${kodeSaya}/rating`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: nilaiRating, ulasan: document.getElementById("ulasanPelanggan").value.trim() })
-    }).then(() => {
-        Swal.fire('Terima Kasih', 'Ulasan & Rating Anda telah kami terima!', 'success');
-        document.getElementById("boxBeriRating").style.display = "none";
+    
+    fetch(`${API_URL}/orders/${kodeSaya}`, { 
+        method: "PUT", 
+        body: formData 
+    })
+    .then(() => { 
+        Swal.fire('Berhasil', 'Pelunasan sedang divalidasi oleh admin.', 'success'); 
+        cekStatus(); 
     });
 }
 
+/* ==========================================
+   FUNGSI CEK STATUS & SINKRONISASI BIAYA
+   ========================================== */
 function cekStatus() {
-    if(!kodeSaya || kodeSaya.startsWith("KONSUL-")) return; 
+    if(!kodeSaya || kodeSaya.startsWith("KONSUL-")) return;
     
-    fetch(`${API_URL}/orders/${kodeSaya}?_t=${Date.now()}`, { cache: 'no-store' }).then(res => res.json()).then(data => {
-        if(!data) { kembaliKeAwal(); return; }
-        hilangkanSkeleton();
-
-        if(document.getElementById("boxKerusakanTambahan")) {
-            if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "pending" && data.status !== "ditolak_pelanggan") {
-                document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
-                document.getElementById("aksiTambahan").style.display = "flex";
-            } else if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "disetujui") {
-                document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
-                document.getElementById("aksiTambahan").innerHTML = "<p style='color:#16a34a; font-weight:bold;'><i class='bi bi-check-circle-fill'></i> Penambahan Biaya Disetujui.</p>";
-            } else if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "ditolak_lanjut") {
-                document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
-                document.getElementById("aksiTambahan").innerHTML = "<p style='color:#f59e0b; font-weight:bold;'><i class='bi bi-tools'></i> Tambahan Ditolak. (Melanjutkan Servis Awal Saja)</p>";
-            } else {
-                document.getElementById("boxKerusakanTambahan").style.display = "none";
-            }
+    document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
+    
+    fetch(`${API_URL}/orders/${kodeSaya}?_t=${Date.now()}`)
+    .then(res => res.json())
+    .then(data => {
+        if(!data) { 
+            kembaliKeAwal(); 
+            return; 
         }
+        
+        let targetStep = 3; 
 
-        if(document.getElementById("tampilKondisiHP") && data.kondisiHP) {
-            document.getElementById("tampilKondisiHP").innerHTML = (data.kondisiHP.endsWith('.mp4') || data.tipeKondisi.startsWith("video/")) 
-                ? `<video src="${data.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>` 
-                : `<img src="${data.kondisiHP}" style="max-width:100%; border-radius:8px;">`;
-        }
-        if(data.rating > 0) document.getElementById("boxBeriRating").style.display = "none";
-
-        let targetStep = currentStep;
-        if (currentStep === 7) { isiDataFaktur(data); return; }
-        if (data.status === "ditolak_pelanggan") { currentStep = 7; updateProgress(); showContent(); isiDataFaktur(data); return; }
-
-        if (!data.dpValid) {
-            targetStep = 3;
-            if (data.dpTerbayar) {
-                document.getElementById("infoValidasiDP").style.display = "flex";
-                document.getElementById("btnKonfirmasiDP").disabled = true; document.getElementById("btnKonfirmasiDP").innerText = "Menunggu Validasi Admin";
-            }
-        } 
-        else if (data.dpValid && data.status === "baru") {
-            targetStep = 4;
-            document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> DP Terverifikasi! Menunggu Jadwal...</p>";
-            document.getElementById("tampilJadwal").style.display = "none";
-        }
-        else if (data.status === "dijadwalkan") {
-            targetStep = 4;
-            document.getElementById("teknisi").textContent = data.teknisi;
-            document.getElementById("jadwal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : "-";
-            document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Ke Workshop";
-            document.getElementById("lblETA").textContent = data.etaTeknisi || "Belum diupdate admin";
-            document.getElementById("tampilJadwal").style.display = "block"; document.getElementById("infoJadwal").style.display = "none";
-        }
-        else if (data.status === "diproses") {
+        if (data.status === "dijadwalkan") {
+            targetStep = 4; 
+            document.getElementById("kodePesanan").textContent = data.kode;
+            document.getElementById("teknisi").textContent = data.teknisi; 
+            document.getElementById("jadwal").textContent = data.jadwal;
+            document.getElementById("lblETA").textContent = data.etaTeknisi || "Menunggu info admin";
+        } else if (data.status === "diproses") {
             targetStep = 5;
-            document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
-            document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
             
-            const boxEstimasi = document.getElementById("boxInfoEstimasi");
-            if(data.estimasiSelesai) {
-                boxEstimasi.style.display = "block";
-                document.getElementById("lblEstimasiSelesai").textContent = new Date(data.estimasiSelesai).toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                
-                if(data.statusSparepart === "inden") {
-                    document.getElementById("alertInden").style.display = "block";
-                } else {
-                    document.getElementById("alertInden").style.display = "none";
+            // Logika Sparepart Inden
+            if(data.statusSparepart === "inden") {
+                document.getElementById("boxBayarInden").style.display = "block";
+                document.getElementById("lblBiayaInden").textContent = (data.biayaSuku || 0).toLocaleString("id-ID");
+                if(data.indenTerbayar) { 
+                    document.getElementById("formInden").style.display = "none"; 
+                    document.getElementById("statusIndenLunas").style.display = "block"; 
                 }
-            } else {
-                boxEstimasi.style.display = "none";
+            } else { 
+                document.getElementById("boxBayarInden").style.display = "none"; 
             }
 
-            const boxWorkshop = document.getElementById("boxTrackingWorkshop");
-            if(data.lokasiServis === "workshop") {
-                boxWorkshop.style.display = "block";
-                const urutan = ["antrean", "pengecekan", "tunggu_part", "perbaikan", "qc_akhir", "siap"];
-                const indexSaatIni = urutan.indexOf(data.subStatusWorkshop || "antrean");
+            // Logika Kerusakan Tambahan (Audit Trail)
+            if(data.adaKerusakanTambahan) {
+                document.getElementById("boxKerusakanTambahan").style.display = "block";
+                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
+                document.getElementById("txtBiayaTambahan").textContent = (data.biayaSukuTambahan || 0).toLocaleString("id-ID");
                 
-                urutan.forEach((step, idx) => {
-                    const el = document.getElementById("ws-" + step);
-                    el.className = "ws-step data-dinamis"; 
-                    if (idx < indexSaatIni) el.classList.add("selesai");
-                    else if (idx === indexSaatIni) el.classList.add("aktif");
-                });
-            } else {
-                boxWorkshop.style.display = "none";
+                const auditUI = document.getElementById("auditTrailPersetujuan");
+                if(data.statusPersetujuanTambahan === "pending") {
+                    document.getElementById("aksiTambahan").style.display = "flex"; 
+                    auditUI.style.display = "none";
+                } else {
+                    document.getElementById("aksiTambahan").style.display = "none"; 
+                    auditUI.style.display = "block";
+                    
+                    let wkt = "Terekam oleh sistem"; 
+                    const log = (data.riwayatStatus || []).slice().reverse().find(l => l.detail && l.detail.includes("Pelanggan"));
+                    if(log) {
+                        wkt = new Date(log.waktu).toLocaleString("id-ID");
+                    }
+                    
+                    let tks = data.statusPersetujuanTambahan === "disetujui" ? "Biaya Tambahan DISETUJUI" : "Ditolak (Lanjut awal)";
+                    if(data.statusPersetujuanTambahan === "ditolak_batal") {
+                        tks = "Dibatalkan Seluruhnya";
+                    }
+                    
+                    auditUI.innerHTML = `<i class="bi bi-clock-history"></i> Rekam Jejak Audit:<br> Keputusan: <strong>${tks}</strong><br> Waktu: ${wkt}`;
+                }
+            } else { 
+                document.getElementById("boxKerusakanTambahan").style.display = "none"; 
             }
-
-            sinkronBiayaTampil(data);
-        }
-        else if (data.status === "selesai_servis") { targetStep = 6; sinkronBiayaTampil(data); }
-        else if (data.status === "selesai" || data.pembayaranValid === true) {
-            targetStep = 6;
-            document.getElementById("infoValidasi").style.display = "block";
-            document.getElementById("infoValidasi").innerHTML = `<strong>🎉 Pelunasan Valid!</strong><br><button class="btn btn-success" style="margin-top:10px" onclick="bukaHalamanFaktur()"><i class="bi bi-file-text"></i> Lihat Nota</button>`;
-            document.getElementById("btnKonfirmasi").disabled = true;
-            sinkronBiayaTampil(data);
+            
+        } else if (data.status === "selesai_servis" || data.status === "selesai" || data.pembayaranValid) {
+            targetStep = 6; 
+            if(data.status === "selesai" || data.pembayaranValid) {
+                targetStep = 7;
+            }
+        } else if (data.status === "ditolak_pelanggan") { 
+            targetStep = 7; 
         }
 
-        if(targetStep !== currentStep) { currentStep = targetStep; updateProgress(); showContent(); }
-        muatLogPesan(); 
-    }).catch(() => console.warn("Sinkronisasi tertunda."));
+        // Sembunyikan form rating jika sudah diisi
+        if(data.rating > 0 && document.getElementById("boxBeriRating")) {
+            document.getElementById("boxBeriRating").style.display = "none";
+        }
+
+        if(targetStep !== currentStep) { 
+            currentStep = targetStep; 
+            updateProgress(); 
+            showContent(); 
+        }
+        
+        sinkronKalkulasiBiaya(data);
+    });
 }
 
-function sinkronBiayaTampil(data) {
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+function sinkronKalkulasiBiaya(data) {
+    const biayaCek = data.biayaPengecekan || 50000; 
+    const suku = data.biayaSuku || 0; 
+    const jasa = data.biayaJasa || 0; 
+    
+    const tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+    const totalSemua = biayaCek + suku + jasa + tamb;
+    
+    // Sisa bayar = total dikurangi uang muka komponen inden (jika sudah bayar inden)
+    const sisaBayar = data.indenTerbayar ? (totalSemua - suku) : totalSemua;
+
     document.getElementById("lblBiayaSuku").textContent = suku.toLocaleString("id-ID");
     document.getElementById("lblBiayaJasa").textContent = jasa.toLocaleString("id-ID");
     document.getElementById("lblBiayaTambahanFaktur").textContent = tamb.toLocaleString("id-ID");
-    document.getElementById("lblTotalBiaya").textContent = (suku + jasa + tamb).toLocaleString("id-ID");
-    document.getElementById("bayarTotal").textContent = (suku + jasa + tamb - 50000).toLocaleString("id-ID");
-}
+    document.getElementById("lblTotalBiaya").textContent = totalSemua.toLocaleString("id-ID");
+    document.getElementById("bayarTotal").textContent = sisaBayar.toLocaleString("id-ID");
 
-function isiDataFaktur(data) {
-    document.getElementById("fakturKode").textContent = data.kode;
-    document.getElementById("fakturNama").textContent = data.nama;
-    document.getElementById("fakturMerekTipe").textContent = `${data.merek.toUpperCase()} ${data.tipe}`;
-    document.getElementById("fakturKerusakan").textContent = data.kerusakan;
-    document.getElementById("fakturLayanan").textContent = data.layanan;
-    document.getElementById("fakturTeknisi").textContent = data.teknisi || "Belum ada teknisi";
-    document.getElementById("noFaktur").textContent = "INV-" + data.kode.replace("HS-", "");
-    document.getElementById("fakturTanggal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : new Date().toLocaleString("id-ID");
-    document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
-
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
-    let biayaPokok = suku + jasa;
-    document.getElementById("fakturPokok").textContent = "Rp " + biayaPokok.toLocaleString("id-ID");
-    document.getElementById("fakturTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
-    document.getElementById("fakturTotal").textContent = "Rp " + (biayaPokok + tamb).toLocaleString("id-ID");
-
-    const qrContainer = document.getElementById("qrcodeArea");
-    qrContainer.innerHTML = "";
-    const urlLacakDinamis = window.location.origin + window.location.pathname + "?lacak=" + data.kode;
-    
-    new QRCode(qrContainer, {
-        text: urlLacakDinamis,
-        width: 70,
-        height: 70,
-        colorDark : "#0f172a",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.L
-    });
-}
-
-function bukaHalamanFaktur() { currentStep = 7; updateProgress(); showContent(); cekStatus(); }
-
-function aktifkanSistemChat() { const w = document.getElementById("chatWidgetPelanggan"); if(w) w.style.display = "flex"; muatLogPesan(); }
-function toggleChatWidget() { document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); }
-
-function mulaiKonsultasi() {
-    if(!localStorage.getItem("kodeAktifPelanggan")) {
-        let kodeKonsul = localStorage.getItem("kodeKonsultasiPelanggan");
-        if(!kodeKonsul) {
-            kodeKonsul = "KONSUL-" + new Date().getTime().toString().slice(-6);
-            localStorage.setItem("kodeKonsultasiPelanggan", kodeKonsul);
-        }
-        kodeSaya = kodeKonsul;
-        document.getElementById("txtChatKode").textContent = "Konsultasi";
-    }
-    
-    aktifkanSistemChat();
-    const widget = document.getElementById("chatWidgetPelanggan");
-    if(widget.classList.contains("minimized")) {
-        widget.classList.remove("minimized");
-    }
-    document.getElementById("inputPesanPelanggan").focus();
-}
-
-function kirimChatPelanggan() {
-    const inp = document.getElementById("inputPesanPelanggan"); const teks = inp.value.trim();
-    if(!teks || !kodeSaya) return;
-    fetch(`${API_URL}/chats`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode: kodeSaya, pengirim: 'user', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) })
-    .then(() => inp.value = "");
-}
-
-function muatLogPesan() {
-    if(!kodeSaya) return;
-    const box = document.getElementById("boxPesanPelanggan");
-    if(!box) return;
-    
-    fetch(`${API_URL}/chats/${kodeSaya}?_t=${Date.now()}`, { cache: 'no-store' }).then(res => res.json()).then(chatData => {
-        let htmlStr = "";
+    if(currentStep === 7) {
+        document.getElementById("fakturKode").textContent = data.kode;
+        document.getElementById("fakturMerekTipe").textContent = data.merek + " " + data.tipe;
+        document.getElementById("fakturPokok").textContent = "Rp " + (suku + jasa).toLocaleString("id-ID");
+        document.getElementById("fakturTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
+        document.getElementById("fakturTotal").textContent = "Rp " + (totalSemua).toLocaleString("id-ID");
         
-        if (chatData.length === 0) {
-            htmlStr += `<div class="msg-bubble msg-admin" style="background:#f0f9ff; border:1px solid #bae6fd;"><strong>🤖 SF Tech Bot:</strong><br>Halo! Selamat datang di Live Chat SF Tech. Ada yang bisa kami bantu? Silakan sampaikan pesan Anda di sini, Admin kami akan segera membalasnya.<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span></div>`;
-        }
-
-        chatData.forEach(msg => {
-            let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
-            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Admin' : '📱 Anda';
-            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
+        const qrContainer = document.getElementById("qrcodeArea");
+        qrContainer.innerHTML = "";
+        new QRCode(qrContainer, { 
+            text: window.location.origin + window.location.pathname + "?lacak=" + data.kode, 
+            width: 70, 
+            height: 70 
         });
-        
-        if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
-    });
+    }
 }
 
-function updateProgress() {
-    document.querySelectorAll(".step-item").forEach((node, i) => {
-        if (i < currentStep) { node.classList.add("completed"); if(i === (currentStep - 1)) node.classList.add("active"); else node.classList.remove("active"); } 
-        else { node.classList.remove("completed", "active"); }
-    });
-}
-function showContent() {
-    document.querySelectorAll(".content-box").forEach((content, i) => {
-        if (i === (currentStep - 1)) content.classList.add("active"); else content.classList.remove("active");
-    });
-}
-
-
-// ==========================================
-// FUNGSI UNDUH KARTU FAKTUR & LAYANAN PDF
-// ==========================================
-function unduhKartuPDF() {
-    Swal.fire({
-        title: 'Menyiapkan Desain Kartu...',
-        text: 'Mohon tunggu sebentar',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
-
-    const qrContainer = document.getElementById("pdfCardQrCode");
-    qrContainer.innerHTML = "";
-    const urlLacakDinamis = window.location.origin + window.location.pathname + "?lacak=" + kodeSaya;
+/* ==========================================
+   RATING & ULASAN (REVIEWS)
+   ========================================== */
+function kirimRatingUlasan() {
+    if(nilaiRating === 0) {
+        return Swal.fire('Oops', 'Klik bintang penilaian terlebih dahulu.', 'warning');
+    }
     
-    new QRCode(qrContainer, {
-        text: urlLacakDinamis,
-        width: 170,
-        height: 170,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+    fetch(`${API_URL}/orders/${kodeSaya}/rating`, { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ 
+            rating: nilaiRating, 
+            ulasan: document.getElementById("ulasanPelanggan").value 
+        }) 
+    })
+    .then(() => { 
+        Swal.fire('Terima Kasih', 'Ulasan Anda berhasil diterima!', 'success'); 
+        document.getElementById("boxBeriRating").style.display = "none"; 
     });
+}
 
-    setTimeout(() => {
-        const cardTemplate = document.getElementById("pdfCardTemplate");
-        
-        html2canvas(cardTemplate, { scale: 3, useCORS: true, backgroundColor: null }).then(canvas => {
-            const imgData = canvas.toDataURL("image/png");
+function muatUlasanPublik() {
+    fetch(`${API_URL}/reviews`)
+    .then(res => res.json())
+    .then(data => {
+        if(data.length > 0) {
+            document.getElementById("publicReviewsSection").style.display = "block";
+            const list = document.getElementById("reviewList"); 
+            list.innerHTML = "";
             
-            const { jsPDF } = window.jspdf;
+            data.forEach(rev => {
+                let stars = ""; 
+                for(let i=0; i<5; i++) {
+                    stars += (i < rev.rating) 
+                        ? '<i class="bi bi-star-fill" style="color:#f59e0b;"></i>' 
+                        : '<i class="bi bi-star" style="color:#cbd5e1;"></i>';
+                }
+                
+                list.innerHTML += `
+                    <div class="review-card">
+                        <p style="font-weight:bold; font-size:0.9rem; margin-bottom:3px;">${rev.nama}</p>
+                        <div style="font-size:0.8rem; margin-bottom:8px;">${stars}</div>
+                        <p style="font-size:0.85rem; font-style:italic;">"${rev.ulasan}"</p>
+                    </div>`;
+            });
+        }
+    });
+}
+
+/* ==========================================
+   SCANNER BARCODE (QR CODE)
+   ========================================== */
+let html5QrCode = null;
+
+function bukaScannerQR() {
+    document.getElementById("scannerModal").style.display = "flex";
+    
+    if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+    }
+    
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => { 
+            tutupScannerQR(); 
+            let kodeMatch = decodedText.includes("?lacak=") 
+                ? new URL(decodedText).searchParams.get("lacak") 
+                : decodedText; 
+                
+            prosesLacakDenganKode(kodeMatch); 
+        },
+        (errorMessage) => {
+            // Callback wajib untuk error scan per frame (diabaikan agar console tidak spam)
+        }
+    ).catch(err => { 
+        Swal.fire('Gagal Akses', 'Izin kamera ditolak atau tidak tersedia.', 'error'); 
+        tutupScannerQR(); 
+    });
+}
+
+function tutupScannerQR() { 
+    document.getElementById("scannerModal").style.display = "none"; 
+    
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(e => console.log("Gagal stop scanner", e)); 
+    }
+}
+
+/* ==========================================
+   EKSPOR TIKET & INVOICE (PDF)
+   ========================================== */
+function unduhKartuPDF() {
+    Swal.fire({ 
+        title: 'Menyiapkan Desain...', 
+        text: 'Mohon tunggu sebentar', 
+        allowOutsideClick: false, 
+        didOpen: () => { Swal.showLoading(); } 
+    });
+    
+    // Generate QR di elemen SVG Template
+    const qrContainer = document.getElementById("pdfCardQrCode"); 
+    qrContainer.innerHTML = "";
+    new QRCode(qrContainer, { 
+        text: window.location.origin + window.location.pathname + "?lacak=" + kodeSaya, 
+        width: 170, 
+        height: 170 
+    });
+    
+    // Ubah HTML ke Canvas ke PDF
+    setTimeout(() => {
+        html2canvas(document.getElementById("pdfCardTemplate"), { scale: 3, useCORS: true }).then(canvas => {
+            const { jsPDF } = window.jspdf; 
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 170] });
             
-            pdf.addImage(imgData, 'PNG', 0, 0, 100, 170);
-            pdf.save(`Kartu_Layanan_SF_${kodeSaya}.pdf`);
+            pdf.addImage(canvas.toDataURL("image/png"), 'PNG', 0, 0, 100, 170); 
+            pdf.save(`Tiket_SF_${kodeSaya}.pdf`); 
+            
             Swal.close();
-        }).catch(err => {
-            console.error(err);
-            Swal.fire('Error', 'Gagal memproses gambar desain kartu: ' + err.message, 'error');
         });
     }, 400); 
 }
 
 function unduhPDF() {
-    try {
-        const { jsPDF } = window.jspdf; if (!jsPDF) return Swal.fire('Error', 'Library PDF belum termuat.', 'error');
-        const doc = new jsPDF(); const getText = (id) => document.getElementById(id) ? document.getElementById(id).textContent : "-";
-
-        doc.setFontSize(22); doc.setTextColor(30, 64, 175); doc.text("FAKTUR SERVIS HP", 15, 25);
-        
-        const qrCanvas = document.querySelector("#qrcodeArea canvas");
-        if(qrCanvas) {
-            const qrDataUrl = qrCanvas.toDataURL("image/png");
-            doc.addImage(qrDataUrl, 'PNG', 165, 10, 30, 30);
-        }
-
-        doc.setFontSize(10); doc.setTextColor(100); doc.text("SF Tech Service Center", 15, 33);
-        doc.setDrawColor(30, 64, 175); doc.line(10, 45, 200, 45);
-        doc.setFontSize(11); doc.setTextColor(0);
-        
-        doc.text(`No. Faktur  : ${getText("noFaktur")}`, 15, 55); 
-        doc.text(`Tgl Servis  : ${getText("fakturTanggal")}`, 15, 61);
-        doc.text(`Pelanggan   : ${getText("fakturNama")}`, 15, 67); 
-        doc.text(`Perangkat   : ${getText("fakturMerekTipe")}`, 15, 73);
-
-        doc.autoTable({
-            startY: 80, head: [['Keterangan', 'Biaya']],
-            body: [ 
-                ['Biaya Pokok (Suku Cadang + Jasa)', getText("fakturPokok")], 
-                ['Biaya Kerusakan Tambahan', getText("fakturTambahan")], 
-                ['Potongan DP (Uang Muka)', '- Rp 50.000'] 
-            ],
-            theme: 'striped', headStyles: { fillColor: [30, 64, 175] }
-        });
-
-        doc.setFont("helvetica", "bold"); 
-        doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
-        
-        doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(100);
-        doc.text("Terima kasih atas kepercayaan Anda kepada kami", 105, doc.lastAutoTable.finalY + 25, { align: 'center' });
-        doc.setFont("helvetica", "bold"); doc.text("SF Service™", 105, doc.lastAutoTable.finalY + 30, { align: 'center' });
-
-        doc.save(`Invoice_${getText("fakturKode")}.pdf`);
-    } catch (e) { Swal.fire('Error', 'Gagal membuat PDF: ' + e.message, 'error'); }
+    const { jsPDF } = window.jspdf; 
+    const doc = new jsPDF();
+    
+    doc.setFontSize(22); 
+    doc.setTextColor(30, 64, 175); 
+    doc.text("FAKTUR SERVIS SF TECH", 15, 25);
+    
+    doc.setFontSize(11); 
+    doc.setTextColor(0);
+    doc.text(`Kode Pesanan : ${kodeSaya}`, 15, 45); 
+    
+    doc.autoTable({
+        startY: 55, 
+        head: [['Keterangan', 'Biaya']],
+        body: [ 
+            ['Biaya Pengecekan', 'Rp 50.000'],
+            ['Suku Cadang & Jasa', document.getElementById("fakturPokok").textContent], 
+            ['Biaya Kerusakan Tambahan', document.getElementById("fakturTambahan").textContent] 
+        ], 
+        theme: 'striped', 
+        headStyles: { fillColor: [30, 64, 175] }
+    });
+    
+    doc.setFont("helvetica", "bold"); 
+    doc.text(`TOTAL TAGIHAN: ${document.getElementById("fakturTotal").textContent}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
+    
+    doc.save(`Invoice_${kodeSaya}.pdf`);
 }
 
-const widgetChat = document.getElementById("chatWidgetPelanggan");
+/* ==========================================
+   SISTEM LIVE CHAT & DRAG AND DROP
+   ========================================== */
+function aktifkanSistemChat() { 
+    document.getElementById("chatWidgetPelanggan").style.display = "flex"; 
+    muatLogPesan(); 
+}
+
+function toggleChatWidget() { 
+    document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); 
+}
+
+function mulaiKonsultasi() {
+    if(!kodeSaya) { 
+        kodeSaya = "KONSUL-" + new Date().getTime().toString().slice(-6); 
+        localStorage.setItem("kodeKonsultasiPelanggan", kodeSaya); 
+        document.getElementById("txtChatKode").textContent = "Konsultasi"; 
+    }
+    aktifkanSistemChat(); 
+    document.getElementById("chatWidgetPelanggan").classList.remove("minimized");
+}
+
+function kirimChatPelanggan() {
+    const inp = document.getElementById("inputPesanPelanggan"); 
+    const teks = inp.value.trim();
+    
+    if(!teks || !kodeSaya) return;
+    
+    const wkt = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    
+    fetch(`${API_URL}/chats`, { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ kode: kodeSaya, pengirim: 'user', teks: teks, waktu: wkt }) 
+    })
+    .then(() => {
+        inp.value = "";
+    });
+}
+
+function muatLogPesan() {
+    if(!kodeSaya) return;
+    
+    fetch(`${API_URL}/chats/${kodeSaya}?_t=${Date.now()}`)
+    .then(res => res.json())
+    .then(chatData => {
+        const box = document.getElementById("boxPesanPelanggan"); 
+        let htmlStr = "";
+        
+        if (chatData.length === 0) {
+            htmlStr += `<div class="msg-bubble msg-admin"><strong>🤖 Admin:</strong><br>Halo! Ada yang bisa dibantu hari ini?</div>`;
+        }
+        
+        chatData.forEach(msg => { 
+            const clsBuble = (msg.pengirim === 'admin') ? 'msg-admin' : 'msg-user';
+            const clsNama = (msg.pengirim === 'admin') ? 'Admin' : 'Anda';
+            
+            htmlStr += `
+            <div class="msg-bubble ${clsBuble}">
+                <strong>${clsNama}:</strong><br>
+                ${msg.teks}
+                <span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span>
+            </div>`; 
+        });
+        
+        if(box.innerHTML !== htmlStr) { 
+            box.innerHTML = htmlStr; 
+            box.scrollTop = box.scrollHeight; 
+        }
+    });
+}
+
+// Logika Drag and Drop Chat Widget
 const headerChat = document.getElementById("headerDragChat");
 let isDragging = false, isMoving = false, startX, startY;
 
-function onDragStart(e) {
-    if(e.target.closest('.chat-toggle-btn')) return;
+function onDragStart(e) { 
+    if(e.target.closest('.chat-toggle-btn')) return; 
     
-    isDragging = true;
-    isMoving = false;
-    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+    isDragging = true; 
+    isMoving = false; 
+    startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX; 
+    startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY; 
     
-    startX = clientX; 
-    startY = clientY;
-    widgetChat.style.transition = 'none'; 
+    document.getElementById("chatWidgetPelanggan").style.transition = 'none'; 
 }
 
-function onDragMove(e) {
-    if(!isDragging) return;
-    const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-    const currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-    if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
+function onDragMove(e) { 
+    if(!isDragging) return; 
+    
+    const curX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX; 
+    const curY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+    
+    if (Math.abs(curX - startX) > 5 || Math.abs(curY - startY) > 5) { 
         isMoving = true; 
-        widgetChat.style.bottom = 'auto'; 
-        widgetChat.style.right = 'auto';
-        widgetChat.style.left = (widgetChat.offsetLeft + (currentX - startX)) + 'px';
-        widgetChat.style.top = (widgetChat.offsetTop + (currentY - startY)) + 'px';
-        startX = currentX;
-        startY = currentY;
+        const widget = document.getElementById("chatWidgetPelanggan"); 
+        
+        widget.style.bottom = 'auto'; 
+        widget.style.right = 'auto'; 
+        widget.style.left = (widget.offsetLeft + (curX - startX)) + 'px'; 
+        widget.style.top = (widget.offsetTop + (curY - startY)) + 'px'; 
+        
+        startX = curX; 
+        startY = curY; 
     }
 }
 
-function onDragEnd(e) {
-    if(!isDragging) return;
-    if(!isMoving) { toggleChatWidget(); }
-    isDragging = false;
-    isMoving = false;
-    widgetChat.style.transition = 'all 0.3s ease'; 
+function onDragEnd(e) { 
+    if(!isDragging) return; 
+    
+    if(!isMoving) { 
+        toggleChatWidget(); 
+    } 
+    
+    isDragging = false; 
+    isMoving = false; 
+    document.getElementById("chatWidgetPelanggan").style.transition = 'all 0.3s ease'; 
 }
 
-headerChat.addEventListener('mousedown', onDragStart);
-document.addEventListener('mousemove', onDragMove);
+// Event Listeners Drag and Drop
+headerChat.addEventListener('mousedown', onDragStart); 
+document.addEventListener('mousemove', onDragMove); 
 document.addEventListener('mouseup', onDragEnd);
 
-headerChat.addEventListener('touchstart', onDragStart, {passive: false});
-document.addEventListener('touchmove', onDragMove, {passive: false});
+headerChat.addEventListener('touchstart', onDragStart, {passive: false}); 
+document.addEventListener('touchmove', onDragMove, {passive: false}); 
 document.addEventListener('touchend', onDragEnd);
 
+/* ==========================================
+   FUNGSI RESET & UI HELPER
+   ========================================== */
+function updateProgress() { 
+    document.querySelectorAll(".step-item").forEach((node, i) => { 
+        if (i < currentStep) { 
+            node.classList.add("completed"); 
+            if(i === (currentStep - 1)) {
+                node.classList.add("active"); 
+            } else {
+                node.classList.remove("active"); 
+            }
+        } else { 
+            node.classList.remove("completed", "active"); 
+        } 
+    }); 
+}
+
+function showContent() { 
+    document.querySelectorAll(".content-box").forEach((content, i) => { 
+        if (i === (currentStep - 1)) {
+            content.classList.add("active"); 
+        } else {
+            content.classList.remove("active"); 
+        }
+    }); 
+}
+
+function kembaliKeAwal() { 
+    localStorage.removeItem("kodeAktifPelanggan"); 
+    window.location.reload(); 
+}
 </script>
 </body>
 </html>
