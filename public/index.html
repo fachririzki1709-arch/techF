@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- FITUR PETA: Import Library Peta Leaflet.js -->
+    <!-- Import Library Peta Leaflet.js -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -52,7 +52,6 @@
         .main-content {flex: 1;}
         .container {max-width:900px; margin:2.5rem auto; padding:0 5%;}
 
-        /* Kolom Lacak Cepat & Scan Barcode di Home */
         .lacak-cepat-container {
             background: white; padding: 2rem; border-radius: 12px;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); margin: -3.5rem auto 2.5rem;
@@ -65,7 +64,6 @@
         .lacak-input-group button { padding: 0.9rem 1.5rem; font-size: 1rem; border-radius: 8px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 6px;}
         .lacak-input-group button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
 
-        /* Scanner Modal Styles */
         .scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .scanner-box { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; }
         body.dark-mode .scanner-box { background: #1e293b; color: #f8fafc; }
@@ -316,11 +314,10 @@
             <div class="progress-container">
                 <div class="step-item active" data-step="1"><div class="step-number">1</div><div class="step-text">Layanan</div></div>
                 <div class="step-item" data-step="2"><div class="step-number">2</div><div class="step-text">Data Diri</div></div>
-                <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Bayar DP</div></div>
-                <div class="step-item" data-step="4"><div class="step-number">4</div><div class="step-text">Jadwal</div></div>
-                <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Proses</div></div>
-                <div class="step-item" data-step="6"><div class="step-number">6</div><div class="step-text">Bayar Sisa</div></div>
-                <div class="step-item" data-step="7"><div class="step-number">7</div><div class="step-text">Selesai</div></div>
+                <div class="step-item" data-step="3"><div class="step-number">3</div><div class="step-text">Jadwal</div></div>
+                <div class="step-item" data-step="4"><div class="step-number">4</div><div class="step-text">Proses</div></div>
+                <div class="step-item" data-step="5"><div class="step-number">5</div><div class="step-text">Pelunasan</div></div>
+                <div class="step-item" data-step="6"><div class="step-number">6</div><div class="step-text">Selesai</div></div>
             </div>
 
             <!-- STEP 1: LAYANAN -->
@@ -359,7 +356,7 @@
                     </div>
                 </div>
 
-                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Anda bisa memilih lebih dari satu layanan. Harga final ditentukan setelah pengecekan teknisi.</span></div>
+                <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Biaya pengecekan tetap sebesar Rp 50.000 akan ditambahkan ke kalkulasi total tagihan servis.</span></div>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
                     <button class="btn btn-primary" onclick="nextStep()" style="width: 100%; justify-content: center;">Lanjutkan ke Data Diri <i class="bi bi-arrow-right"></i></button>
@@ -439,7 +436,7 @@
                 <label>Kerusakan / Keluhan</label>
                 <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
 
-                <label>Unggah Kondisi Perangkat (Gambar/Video)</label>
+                <label>Unggah Kondisi Perangkat (Gambar/Video) [FormData Multi-File]</label>
                 <input type="file" id="fileKondisi" accept="image/*,video/*" aria-label="Upload File Kondisi Perangkat" onchange="tampilPratinjau()">
                 <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file fisik video 10MB.</p>
                 <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
@@ -447,7 +444,7 @@
                 <div style="margin-top: 1.5rem; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
                     <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
                         <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
-                        <span>Saya menyetujui Syarat & Ketentuan layanan, termasuk kebijakan bahwa pembayaran <strong>Uang Muka (DP) bersifat Non-Refundable (Hangus)</strong> jika pembatalan servis dilakukan secara sepihak oleh pelanggan.</span>
+                        <span>Saya menyetujui Syarat & Ketentuan layanan perbaikan dan kalkulasi biaya pengecekan tetap sebesar Rp 50.000.</span>
                     </label>
                     <div class="error-text" id="errSK" style="margin-top: 8px;">Centang persetujuan Syarat & Ketentuan ini untuk melanjutkan!</div>
                 </div>
@@ -458,15 +455,15 @@
                 </div>
             </div>
 
-            <!-- STEP 3: BAYAR DP & DOWNLOAD KARTU BARCODE -->
+            <!-- STEP 3: JADWAL & KARTU BARCODE -->
             <div class="content-box" id="step-3">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-credit-card-2-front"></i> Pembayaran Uang Muka (DP) & Kartu Barcode</h3>
+                    <h3><i class="bi bi-calendar3"></i> Jadwal & Kartu Barcode Pelacakan</h3>
                     <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
                 </div>
                 
                 <p style="margin-top: 0.5rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    Kode Pesanan: <strong id="kodePesananDP" style="color: #0ea5e9;">-</strong> 
+                    Kode Pesanan: <strong id="kodePesanan" style="color: #0ea5e9;">-</strong> 
                     <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem;"><i class="bi bi-copy"></i> Salin</button>
                     <button onclick="bagikanKeWA()" class="btn btn-success" style="font-size:0.8rem; padding: 0.3rem 0.6rem; margin: 0;"><i class="bi bi-whatsapp"></i> Simpan ke WA</button>
                 </p>
@@ -477,48 +474,6 @@
                     <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">Kartu digital berisi barcode pelacakan pesanan Anda siap diunduh dalam format PDF (Desain Eksklusif).</p>
                     <button class="btn btn-pdf" onclick="unduhKartuPDF()"><i class="bi bi-filetype-pdf"></i> Unduh Kartu & Barcode sebagai PDF</button>
                 </div>
-                
-                <p style="margin-top:0.8rem;">Untuk memproses pencarian dan pengiriman teknisi, silakan melakukan pembayaran DP sebesar: <strong style="color: #db2777; font-size: 1.3rem;">Rp 50.000</strong></p>
-                
-                <div class="alert-bahaya">
-                    <strong><i class="bi bi-exclamation-triangle-fill"></i> KEBIJAKAN PEMBATALAN:</strong> Pembayaran Uang Muka (DP) ini bersifat <strong>Non-Refundable (Tidak dapat dikembalikan)</strong> dengan alasan apa pun.
-                </div>
-
-                <p>Pilih bank transfer DP:</p>
-                <div class="metode-bayar">
-                    <div class="metode-item pilihan-dp" id="dp-BCA" onclick="pilihMetodeDP('BCA')">Transfer BCA</div>
-                    <div class="metode-item pilihan-dp" id="dp-Mandiri" onclick="pilihMetodeDP('Mandiri')">Transfer Mandiri</div>
-                    <div class="metode-item pilihan-dp" id="dp-BRI" onclick="pilihMetodeDP('BRI')">Transfer BRI</div>
-                </div>
-
-                <div class="rekening-box" id="infoRekeningDP">
-                    <p><strong>Nomor Rekening:</strong> <span id="noRekDP">-</span></p>
-                    <p><strong>Atas Nama:</strong> SF Tech</p>
-                    <p><strong>Bank:</strong> <span id="namaBankDP">-</span></p>
-                </div>
-
-                <p style="margin: 1rem 0;">Metode DP dipilih: <strong id="metodeDPDipilih">-</strong></p>
-                <button class="btn btn-success" id="btnKonfirmasiDP" onclick="konfirmasiBayarDP()"><i class="bi bi-check-circle"></i> Konfirmasi Bayar DP</button>
-                <label>Upload Bukti Transfer DP:</label>
-                <input type="file" id="fileBuktiDP" accept="image/*" aria-label="Upload Bukti Transfer DP" onchange="previewBukti(this, 'pratinjauDP')">
-                <div class="pratinjau" id="pratinjauDP" style="display:none;"></div>
-                <div class="info catatan" id="infoValidasiDP" style="display:none; margin-top:1rem; background: #fff7ed; border-left-color: #d97706; color: #92400e;">
-                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu verifikasi pembayaran DP oleh admin. Penjadwalan teknisi akan dibuka setelah DP valid...</strong></span>
-                </div>
-            </div>
-
-            <!-- STEP 4: JADWAL -->
-            <div class="content-box" id="step-4">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-calendar3"></i> Jadwal & Lokasi Servis</h3>
-                    <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
-                </div>
-                
-                <p style="margin-top: 0.5rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    Kode Pesanan: <strong id="kodePesanan" style="color: #0ea5e9;">-</strong> 
-                    <button onclick="salinKode()" aria-label="Salin Kode Pesanan" style="background:none; border:none; color:#0ea5e9; cursor:pointer; font-weight:bold; font-size:0.85rem;"><i class="bi bi-copy"></i> Salin</button>
-                    <button onclick="bagikanKeWA()" class="btn btn-success" style="font-size:0.8rem; padding: 0.3rem 0.6rem; margin: 0;"><i class="bi bi-whatsapp"></i> Simpan ke WA</button>
-                </p>
 
                 <div id="infoJadwal" style="margin-top: 1rem;">
                     <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
@@ -532,13 +487,22 @@
                 </div>
             </div>
 
-            <!-- STEP 5: PROSES -->
-            <div class="content-box" id="step-5">
+            <!-- STEP 4: PROSES -->
+            <div class="content-box" id="step-4">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-tools"></i> Proses Perbaikan</h3>
+                    <h3><i class="bi bi-tools"></i> Proses Perbaikan & Pengadaan Suku Cadang (Inden)</h3>
                     <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
                 </div>
                 
+                <!-- Bagian Khusus Upload Bukti Transfer Inden (Suku Cadang Pre-Order) -->
+                <div id="boxUploadInden" style="display:none; background:#fffbeb; border:1px solid #fcd34d; padding:1.2rem; border-radius:8px; margin-bottom:1.5rem;">
+                    <h4 style="color:#d97706; font-size:1rem; margin-bottom:5px;"><i class="bi bi-box-seam"></i> Konfirmasi Suku Cadang Inden (Pre-Order)</h4>
+                    <p style="font-size: 0.9rem; margin-bottom: 8px;">Perangkat Anda memerlukan komponen inden. Silakan lakukan pembayaran via transfer dan unggah buktinya melalui form di bawah ini:</p>
+                    <label>Upload Bukti Transfer Suku Cadang Inden [FormData]:</label>
+                    <input type="file" id="fileBuktiInden" accept="image/*" aria-label="Upload Bukti Transfer Inden">
+                    <button class="btn btn-success" style="margin-top: 5px;" onclick="kirimBuktiInden()"><i class="bi bi-cloud-arrow-up"></i> Kirim Bukti Transfer Inden</button>
+                </div>
+
                 <div id="boxKerusakanTambahan" class="alert-warning-box" style="display:none;">
                     <h4><i class="bi bi-exclamation-diamond-fill"></i> Temuan Kerusakan Tambahan oleh Teknisi!</h4>
                     <p style="margin-top: 0.5rem;">Teknisi kami menemukan kendala baru saat membongkar perangkat Anda:</p>
@@ -548,17 +512,13 @@
                     <div style="margin-top:1.2rem; display:flex; flex-direction:column; gap:0.6rem;" id="aksiTambahan">
                         <button class="btn btn-success" aria-label="Setujui Biaya Tambahan" onclick="responsTambahan('disetujui')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-check-circle-fill"></i> Setuju & Lanjutkan Perbaikan Tambahan</button>
                         <button class="btn btn-secondary" aria-label="Tolak Tambahan Tapi Lanjut" onclick="responsTambahan('ditolak_lanjut')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-tools"></i> Tolak Tambahan (Lanjutkan Servis Awal Saja)</button>
-                        <button class="btn btn-danger" aria-label="Tolak Biaya Tambahan" onclick="responsTambahan('ditolak_batal')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-x-circle"></i> Batalkan Semua Servis (DP Hangus)</button>
+                        <button class="btn btn-danger" aria-label="Tolak Biaya Tambahan" onclick="responsTambahan('ditolak_batal')" style="margin:0; width:100%; justify-content:center;"><i class="bi bi-x-circle"></i> Batalkan Semua Servis</button>
                     </div>
                 </div>
 
                 <div id="boxInfoEstimasi" style="display:none; background:#f0f9ff; border-left:4px solid #0ea5e9; padding:1.2rem; border-radius:8px; margin-bottom:1rem;">
                     <h4 style="color:#0369a1; font-size:1rem; margin-bottom:5px;"><i class="bi bi-calendar2-check"></i> Estimasi Pengerjaan</h4>
                     <p>Perkiraan selesai pada: <strong id="lblEstimasiSelesai" class="data-dinamis" style="color:#0f172a;">-</strong></p>
-                    
-                    <div id="alertInden" style="display:none; margin-top:8px; background:#fff7ed; padding:8px 12px; border-radius:6px; color:#c2410c; font-size:0.85rem; font-weight:600;">
-                        <i class="bi bi-box-seam-fill"></i> Sparepart berstatus INDEN (Pre-Order). Waktu perbaikan mungkin lebih lama karena menunggu pengiriman suku cadang.
-                    </div>
                 </div>
 
                 <div id="boxTrackingWorkshop" style="display:none; margin: 1.5rem 0; padding: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
@@ -588,26 +548,26 @@
                     </div>
                 </div>
                 <div class="harga-final" id="tampilHarga" style="display:block;">
-                    <h4 style="font-size: 1.1rem; color:#1e40af;"><i class="bi bi-receipt-cutoff"></i> Rincian Biaya Sementara</h4>
+                    <h4 style="font-size: 1.1rem; color:#1e40af;"><i class="bi bi-receipt-cutoff"></i> Kalkulasi Rincian Biaya</h4>
+                    <p>Biaya Pengecekan Tetap: Rp <span id="lblBiayaCek" class="data-dinamis">50.000</span></p>
                     <p>Biaya Suku Cadang: Rp <span id="lblBiayaSuku" class="data-dinamis">0</span></p>
                     <p>Biaya Jasa Servis: Rp <span id="lblBiayaJasa" class="data-dinamis">0</span></p>
                     <div id="rowBiayaTambahanFaktur" style="display:block; color: #c2410c;">
                         <p>Biaya Kerusakan Tambahan: +Rp <span id="lblBiayaTambahanFaktur" class="data-dinamis">0</span></p>
                     </div>
-                    <p style="color: #15803d; font-weight: 500;">Uang Muka (DP): -Rp 50.000 (Sudah dibayar)</p>
                     <hr style="margin:0.8rem 0; border-color: #cbd5e1;">
-                    <p style="font-size:1.3rem; font-weight:700; color: #1e3a8a;">Sisa yang Harus Dibayar: Rp <span id="lblTotalBiaya" class="data-dinamis">0</span></p>
+                    <p style="font-size:1.3rem; font-weight:700; color: #1e3a8a;">Total Tagihan Akhir: Rp <span id="lblTotalBiaya" class="data-dinamis">50.000</span></p>
                 </div>
             </div>
 
-            <!-- STEP 6: PELUNASAN -->
-            <div class="content-box" id="step-6">
+            <!-- STEP 5: PELUNASAN PENUH -->
+            <div class="content-box" id="step-5">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="bi bi-wallet2"></i> Pelunasan Pembayaran Sisa</h3>
+                    <h3><i class="bi bi-wallet2"></i> Pelunasan Penuh Tagihan Akhir</h3>
                     <button onclick="kembaliKeAwal()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.85rem;" title="Berhenti melacak dan kembali ke awal"><i class="bi bi-x-circle"></i> Tutup Lacak</button>
                 </div>
                 
-                <p>Sisa Pelunasan: <strong style="font-size:1.2rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">0</span></strong></p>
+                <p>Total Pelunasan Penuh: <strong style="font-size:1.2rem; color:#166534;">Rp <span id="bayarTotal" class="data-dinamis">50.000</span></strong></p>
                 <p style="margin-top:0.5rem;">Pilih metode pembayaran:</p>
 
                 <div class="metode-bayar">
@@ -622,22 +582,22 @@
                     <p><strong>Atas Nama:</strong> SF Tech</p>
                     <p><strong>Bank:</strong> <span id="namaBank">-</span></p>
                 </div>
-                <label>Upload Bukti Transfer Pelunasan:</label>
+                <label>Upload Bukti Transfer Pelunasan Akhir [FormData Multi-File]:</label>
                 <input type="file" id="fileBuktiPelunasan" accept="image/*" aria-label="Upload Bukti Transfer Pelunasan" onchange="previewBukti(this, 'pratinjauPelunasan')">
                 <div class="pratinjau" id="pratinjauPelunasan" style="display:none;"></div>
                 
                 <p style="margin:1rem 0;">Metode dipilih: <strong id="metodeDipilih">-</strong></p>
-                <button class="btn btn-success" id="btnKonfirmasi" onclick="konfirmasiBayar()"><i class="bi bi-cloud-arrow-up"></i> Konfirmasi Pembayaran</button>
+                <button class="btn btn-success" id="btnKonfirmasi" onclick="konfirmasiBayar()"><i class="bi bi-cloud-arrow-up"></i> Konfirmasi Pelunasan Penuh</button>
 
                 <div class="info catatan" id="infoValidasi" style="display:none; margin-top:1rem;">
-                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu validasi sisa pembayaran dari admin...</strong></span>
+                    <i class="bi bi-hourglass-split"></i> <span><strong>Menunggu validasi pelunasan dari admin...</strong></span>
                 </div>
             </div>
 
-            <!-- STEP 7: SELESAI -->
-            <div class="content-box" id="step-7">
+            <!-- STEP 6: SELESAI -->
+            <div class="content-box" id="step-6">
                 <h3><i class="bi bi-patch-check-fill" style="color:#10b981;"></i> Pesanan Selesai</h3>
-                <p id="txtKeteranganSelesai">Pembayaran Anda telah divalidasi secara penuh. Terima kasih telah menggunakan layanan kami!</p>
+                <p id="txtKeteranganSelesai">Pembayaran pelunasan penuh Anda telah divalidasi secara sukses. Terima kasih telah menggunakan layanan kami!</p>
                 <div class="info info-success" id="txtGaransiLabel" style="background: #f0fdf4; color: #166534; border-left: 4px solid #10b981; padding:0.8rem; margin:0.8rem 0; border-radius:6px; font-weight:600;">
                     <i class="bi bi-shield-check"></i> Garansi servis berlaku selama 30 hari.
                 </div>
@@ -656,11 +616,11 @@
                     <div class="baris"><span>Teknisi</span><span id="fakturTeknisi" class="data-dinamis">-</span></div>
                     <div class="baris"><span>Tanggal & Waktu</span><span id="fakturTanggal" class="data-dinamis">-</span></div>
                     <div class="baris"><span>Jenis Layanan</span><span id="fakturLayanan" class="data-dinamis" style="max-width: 60%; text-align:right;">-</span></div>
-                    <div class="baris"><span>Biaya Pokok (Suku Cadang + Jasa)</span><span id="fakturPokok" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Biaya Pengecekan Tetap</span><span>Rp 50.000</span></div>
+                    <div class="baris"><span>Biaya Suku Cadang & Jasa</span><span id="fakturPokok" class="data-dinamis">-</span></div>
                     <div class="baris" id="fakturRowTambahan" style="display:block; color:#c2410c;"><span>Biaya Kerusakan Tambahan</span><span id="fakturTambahan" class="data-dinamis">-</span></div>
-                    <div class="baris"><span>DP yang Dibayar</span><span>Rp 50.000</span></div>
-                    <div class="baris"><span>Metode Pelunasan</span><span id="fakturMetode" class="data-dinamis" style="font-weight:600;">-</span></div>
-                    <div class="baris total"><span>TOTAL KESELURUHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
+                    <div class="baris"><span>Metode Pembayaran</span><span id="fakturMetode" class="data-dinamis" style="font-weight:600;">-</span></div>
+                    <div class="baris total"><span>TOTAL PELUNASAN KESELURUHAN</span><span id="fakturTotal" class="data-dinamis">-</span></div>
                     
                     <div class="catatan" id="txtFakturNote">
                         Terima kasih atas kepercayaan Anda kepada kami
@@ -707,19 +667,19 @@
                     <p style="font-size:0.85rem; color:#64748b;">Pilih jenis layanan, lengkapi data diri, dan jelaskan kendala perangkat Anda melalui website kami.</p>
                 </div>
                 <div class="alur-item">
-                    <i class="bi bi-wallet2"></i>
-                    <h4 style="margin-bottom:0.5rem;">2. Bayar DP & Jadwal</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Lakukan pembayaran uang muka agar sistem kami dapat mencarikan dan menjadwalkan teknisi untuk Anda.</p>
+                    <i class="bi bi-tools"></i>
+                    <h4 style="margin-bottom:0.5rem;">2. Penjadwalan & Servis</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Sistem menjadwalkan teknisi. Perangkat diperiksa secara menyeluruh.</p>
                 </div>
                 <div class="alur-item">
-                    <i class="bi bi-tools"></i>
-                    <h4 style="margin-bottom:0.5rem;">3. Proses Perbaikan</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Teknisi akan memeriksa & memperbaiki unit. Anda bisa melacak status secara real-time di website.</p>
+                    <i class="bi bi-wallet2"></i>
+                    <h4 style="margin-bottom:0.5rem;">3. Pelunasan Penuh</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Setelah perbaikan beres dan diuji, lakukan pelunasan penuh tagihan (termasuk biaya pengecekan Rp 50rb).</p>
                 </div>
                 <div class="alur-item">
                     <i class="bi bi-check-circle"></i>
-                    <h4 style="margin-bottom:0.5rem;">4. Selesai & Lunas</h4>
-                    <p style="font-size:0.85rem; color:#64748b;">Setelah selesai, lunasi sisa tagihan, terima nota digital garansi 30 hari, dan nikmati kembali perangkat Anda.</p>
+                    <h4 style="margin-bottom:0.5rem;">4. Selesai & Garansi</h4>
+                    <p style="font-size:0.85rem; color:#64748b;">Terima nota digital garansi servis selama 30 hari.</p>
                 </div>
             </div>
         </div>
@@ -928,30 +888,10 @@ function previewBukti(input, previewId) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                const maxDim = 800; 
-                let w = img.width, h = img.height;
-                
-                if(w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
-                else if(h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
-                
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext("2d");
-                
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(0, 0, w, h);
-                ctx.drawImage(img, 0, 0, w, h);
-                
-                const compressedData = canvas.toDataURL("image/jpeg", 0.7);
-                
-                const preview = document.getElementById(previewId);
-                preview.style.display = 'block';
-                preview.innerHTML = `<img src="${compressedData}" style="max-height:150px;">`;
-            };
-            img.src = e.target.result;
-        }
+            const preview = document.getElementById(previewId);
+            preview.style.display = 'block';
+            preview.innerHTML = `<img src="${e.target.result}" style="max-height:150px;">`;
+        };
         reader.readAsDataURL(file);
     }
 }
@@ -960,7 +900,6 @@ const API_URL = window.location.origin + "/api";
 let currentStep = 1; 
 let kodeSaya = "";   
 let tipeFile = "";
-let metodeDP = "";
 let metodeBayar = "";
 let nilaiRating = 0; 
 
@@ -1225,7 +1164,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function nextStep() {
     if (currentStep === 2) { kirimPesanan(); } else {
-        if (currentStep < 7) { 
+        if (currentStep < 6) { 
             currentStep++; simpanDraft(); updateProgress(); showContent(); 
             if(currentStep === 2) {
                 setTimeout(() => {
@@ -1320,6 +1259,7 @@ function tampilPratinjau() {
     }
 }
 
+// Pengiriman Pemesanan Awal Menggunakan FormData Multi-File (Tanpa DP)
 function kirimPesanan() {
     const waInput = document.getElementById("wa");
     const isNamaValid = validasiInputRealTime(document.getElementById("nama"), 'errNama');
@@ -1374,6 +1314,7 @@ function kirimPesanan() {
     formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
     formData.append('layanan', layananTerpilih || "Belum dipilih");
     
+    // Multi-file upload untuk kondisi awal perangkat
     const fileInput = document.getElementById("fileKondisi");
     if(fileInput.files.length > 0) {
         formData.append('kondisiHP', fileInput.files[0]);
@@ -1394,13 +1335,12 @@ function kirimPesanan() {
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("lacakCepatBox").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
-        document.getElementById("kodePesananDP").textContent = kodeSaya;
         document.getElementById("kodePesanan").textContent = kodeSaya;
         document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         
         btnKirim.disabled = false; btnKirim.innerHTML = '<i class="bi bi-send-check"></i> Kirim Pesanan';
         currentStep = 3; updateProgress(); showContent(); aktifkanSistemChat();
-        Swal.fire({ icon: 'success', title: 'Pesanan Terkirim!', text: 'Silakan unduh Kartu Faktur & Barcode Anda di Tahap 3.', confirmButtonColor: '#10b981' });
+        Swal.fire({ icon: 'success', title: 'Pesanan Terkirim!', text: 'Silakan unduh Kartu Faktur & Barcode Anda di Step Jadwal.', confirmButtonColor: '#10b981' });
         cekStatus();
     })
     .catch(err => {
@@ -1431,40 +1371,26 @@ function bagikanKeWA() {
     window.open(`https://wa.me/${noWa}?text=${encodeURIComponent(text)}`, '_blank');
 }
 
-function pilihMetodeDP(metode) {
-    metodeDP = metode;
-    document.querySelectorAll(".pilihan-dp").forEach(el => el.classList.remove("aktif"));
-    document.getElementById(`dp-${metode}`).classList.add("aktif");
-    
-    document.getElementById("infoRekeningDP").style.display = "block";
-    document.getElementById("namaBankDP").textContent = metode;
-    document.getElementById("noRekDP").textContent = metode === "BCA" ? "023-4567-890" : metode === "Mandiri" ? "123-00-456789-0" : "0012-01-004567-53-0";
-    document.getElementById("metodeDPDipilih").textContent = "Transfer " + metode;
-}
-
-function konfirmasiBayarDP() {
-    if(!metodeDP) return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih metode transfer DP!', confirmButtonColor: '#0ea5e9' });
-
-    const fileInputDP = document.getElementById("fileBuktiDP");
-    const formDataUpdate = new FormData();
-    formDataUpdate.append('metodeDP', metodeDP);
-    formDataUpdate.append('dpTerbayar', 'true'); 
-
-    if(fileInputDP.files.length > 0) {
-        formDataUpdate.append('buktiDP', fileInputDP.files[0]);
-    } else {
-        return Swal.fire('Oops', 'Silakan upload gambar bukti transfer DP!', 'warning');
+// Unggah Bukti Transfer Suku Cadang (Inden) via FormData
+function kirimBuktiInden() {
+    const fileInden = document.getElementById("fileBuktiInden");
+    if (fileInden.files.length === 0) {
+        return Swal.fire('Perhatian', 'Pilih file bukti transfer inden terlebih dahulu!', 'warning');
     }
 
-    fetch(`${API_URL}/orders/${kodeSaya}`, {
+    const formDataInden = new FormData();
+    formDataInden.append('buktiInden', fileInden.files[0]);
+
+    fetch(`${API_URL}/orders/${kodeSaya}/inden`, {
         method: "PUT",
-        body: formDataUpdate
+        body: formDataInden
     })
     .then(res => res.json())
     .then(() => {
-        Swal.fire({ icon: 'success', title: 'Terkirim', text: 'Bukti DP tersimpan. Tunggu verifikasi.', confirmButtonColor: '#10b981' });
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Bukti transfer inden terkirim. Admin akan memverifikasi.', confirmButtonColor: '#10b981' });
         cekStatus();
-    }).catch(() => Swal.fire('Gagal!', 'Gagal konfirmasi DP.', 'error'));
+    })
+    .catch(() => Swal.fire('Gagal', 'Terjadi kesalahan pengunggahan.', 'error'));
 }
 
 function prosesLacakCepat() {
@@ -1485,7 +1411,6 @@ function prosesLacakDenganKode(kode) {
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("lacakCepatBox").style.display = "none";
         document.getElementById("publicReviewsSection").style.display = "none";
-        document.getElementById("kodePesananDP").textContent = kodeSaya;
         document.getElementById("kodePesanan").textContent = kodeSaya;
         document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         
@@ -1510,7 +1435,7 @@ function responsTambahan(aksi) {
         pesan = 'Kerusakan tambahan ditolak. Teknisi akan melanjutkan servis awal saja.';
     } else if (aksi === 'ditolak_batal') {
         payload = { statusPersetujuanTambahan: "ditolak_batal", status: "ditolak_pelanggan" };
-        pesan = 'Servis dibatalkan sepenuhnya. Sesuai S&K, Uang Muka (DP) Anda tidak dapat dikembalikan.';
+        pesan = 'Servis dibatalkan sepenuhnya.';
         tipeIcon = 'error';
     }
 
@@ -1537,12 +1462,13 @@ function pilihMetodeBayar(metode) {
     }
 }
 
+// Konfirmasi Pelunasan Penuh Akhir via FormData Multi-File
 function konfirmasiBayar() {
     if(!metodeBayar) return Swal.fire('Perhatian', 'Pilih metode bayar!', 'warning');
     
     const fileInputLunas = document.getElementById("fileBuktiPelunasan");
     if(metodeBayar !== "Tunai" && fileInputLunas.files.length === 0) {
-        return Swal.fire('Oops', 'Silakan upload bukti transfer pelunasan.', 'warning');
+        return Swal.fire('Oops', 'Silakan upload bukti transfer pelunasan akhir.', 'warning');
     }
 
     const formDataLunas = new FormData();
@@ -1555,7 +1481,7 @@ function konfirmasiBayar() {
     fetch(`${API_URL}/orders/${kodeSaya}`, {
         method: "PUT",
         body: formDataLunas
-    }).then(res => res.json()).then(() => { Swal.fire('Berhasil', 'Pelunasan & bukti terkirim.', 'success'); cekStatus(); });
+    }).then(res => res.json()).then(() => { Swal.fire('Berhasil', 'Pelunasan penuh & bukti terkirim.', 'success'); cekStatus(); });
 }
 
 function kirimRatingUlasan() {
@@ -1605,23 +1531,16 @@ function cekStatus() {
         if(data.rating > 0) document.getElementById("boxBeriRating").style.display = "none";
 
         let targetStep = currentStep;
-        if (currentStep === 7) { isiDataFaktur(data); return; }
-        if (data.status === "ditolak_pelanggan") { currentStep = 7; updateProgress(); showContent(); isiDataFaktur(data); return; }
+        if (currentStep === 6) { isiDataFaktur(data); return; }
+        if (data.status === "ditolak_pelanggan") { currentStep = 6; updateProgress(); showContent(); isiDataFaktur(data); return; }
 
-        if (!data.dpValid) {
+        if (data.status === "baru") {
             targetStep = 3;
-            if (data.dpTerbayar) {
-                document.getElementById("infoValidasiDP").style.display = "flex";
-                document.getElementById("btnKonfirmasiDP").disabled = true; document.getElementById("btnKonfirmasiDP").innerText = "Menunggu Validasi Admin";
-            }
-        } 
-        else if (data.dpValid && data.status === "baru") {
-            targetStep = 4;
-            document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> DP Terverifikasi! Menunggu Jadwal...</p>";
+            document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> Pesanan diterima! Menunggu penjadwalan...</p>";
             document.getElementById("tampilJadwal").style.display = "none";
         }
         else if (data.status === "dijadwalkan") {
-            targetStep = 4;
+            targetStep = 3;
             document.getElementById("teknisi").textContent = data.teknisi;
             document.getElementById("jadwal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : "-";
             document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Ke Workshop";
@@ -1629,7 +1548,7 @@ function cekStatus() {
             document.getElementById("tampilJadwal").style.display = "block"; document.getElementById("infoJadwal").style.display = "none";
         }
         else if (data.status === "diproses") {
-            targetStep = 5;
+            targetStep = 4;
             document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
             document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
             
@@ -1639,9 +1558,9 @@ function cekStatus() {
                 document.getElementById("lblEstimasiSelesai").textContent = new Date(data.estimasiSelesai).toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 
                 if(data.statusSparepart === "inden") {
-                    document.getElementById("alertInden").style.display = "block";
+                    document.getElementById("boxUploadInden").style.display = "block";
                 } else {
-                    document.getElementById("alertInden").style.display = "none";
+                    document.getElementById("boxUploadInden").style.display = "none";
                 }
             } else {
                 boxEstimasi.style.display = "none";
@@ -1665,11 +1584,11 @@ function cekStatus() {
 
             sinkronBiayaTampil(data);
         }
-        else if (data.status === "selesai_servis") { targetStep = 6; sinkronBiayaTampil(data); }
+        else if (data.status === "selesai_servis") { targetStep = 5; sinkronBiayaTampil(data); }
         else if (data.status === "selesai" || data.pembayaranValid === true) {
-            targetStep = 6;
+            targetStep = 5;
             document.getElementById("infoValidasi").style.display = "block";
-            document.getElementById("infoValidasi").innerHTML = `<strong>🎉 Pelunasan Valid!</strong><br><button class="btn btn-success" style="margin-top:10px" onclick="bukaHalamanFaktur()"><i class="bi bi-file-text"></i> Lihat Nota</button>`;
+            document.getElementById("infoValidasi").innerHTML = `<strong>🎉 Pelunasan Penuh Valid!</strong><br><button class="btn btn-success" style="margin-top:10px" onclick="bukaHalamanFaktur()"><i class="bi bi-file-text"></i> Lihat Nota</button>`;
             document.getElementById("btnKonfirmasi").disabled = true;
             sinkronBiayaTampil(data);
         }
@@ -1680,12 +1599,16 @@ function cekStatus() {
 }
 
 function sinkronBiayaTampil(data) {
+    let biayaCek = 50000;
     let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+    let totalTagihan = biayaCek + suku + jasa + tamb;
+    
+    document.getElementById("lblBiayaCek").textContent = biayaCek.toLocaleString("id-ID");
     document.getElementById("lblBiayaSuku").textContent = suku.toLocaleString("id-ID");
     document.getElementById("lblBiayaJasa").textContent = jasa.toLocaleString("id-ID");
     document.getElementById("lblBiayaTambahanFaktur").textContent = tamb.toLocaleString("id-ID");
-    document.getElementById("lblTotalBiaya").textContent = (suku + jasa + tamb).toLocaleString("id-ID");
-    document.getElementById("bayarTotal").textContent = (suku + jasa + tamb - 50000).toLocaleString("id-ID");
+    document.getElementById("lblTotalBiaya").textContent = totalTagihan.toLocaleString("id-ID");
+    document.getElementById("bayarTotal").textContent = totalTagihan.toLocaleString("id-ID");
 }
 
 function isiDataFaktur(data) {
@@ -1699,11 +1622,14 @@ function isiDataFaktur(data) {
     document.getElementById("fakturTanggal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : new Date().toLocaleString("id-ID");
     document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
 
+    let biayaCek = 50000;
     let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
     let biayaPokok = suku + jasa;
+    let totalKeseluruhan = biayaCek + biayaPokok + tamb;
+
     document.getElementById("fakturPokok").textContent = "Rp " + biayaPokok.toLocaleString("id-ID");
     document.getElementById("fakturTambahan").textContent = "Rp " + tamb.toLocaleString("id-ID");
-    document.getElementById("fakturTotal").textContent = "Rp " + (biayaPokok + tamb).toLocaleString("id-ID");
+    document.getElementById("fakturTotal").textContent = "Rp " + totalKeseluruhan.toLocaleString("id-ID");
 
     const qrContainer = document.getElementById("qrcodeArea");
     qrContainer.innerHTML = "";
@@ -1719,7 +1645,7 @@ function isiDataFaktur(data) {
     });
 }
 
-function bukaHalamanFaktur() { currentStep = 7; updateProgress(); showContent(); cekStatus(); }
+function bukaHalamanFaktur() { currentStep = 6; updateProgress(); showContent(); cekStatus(); }
 
 function aktifkanSistemChat() { const w = document.getElementById("chatWidgetPelanggan"); if(w) w.style.display = "flex"; muatLogPesan(); }
 function toggleChatWidget() { document.getElementById("chatWidgetPelanggan").classList.toggle("minimized"); }
@@ -1849,15 +1775,15 @@ function unduhPDF() {
         doc.autoTable({
             startY: 80, head: [['Keterangan', 'Biaya']],
             body: [ 
-                ['Biaya Pokok (Suku Cadang + Jasa)', getText("fakturPokok")], 
-                ['Biaya Kerusakan Tambahan', getText("fakturTambahan")], 
-                ['Potongan DP (Uang Muka)', '- Rp 50.000'] 
+                ['Biaya Pengecekan Tetap', 'Rp 50.000'],
+                ['Biaya Suku Cadang & Jasa', getText("fakturPokok")], 
+                ['Biaya Kerusakan Tambahan', getText("fakturTambahan")]
             ],
             theme: 'striped', headStyles: { fillColor: [30, 64, 175] }
         });
 
         doc.setFont("helvetica", "bold"); 
-        doc.text(`TOTAL TAGIHAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
+        doc.text(`TOTAL PELUNASAN: ${getText("fakturTotal")}`, 195, doc.lastAutoTable.finalY + 10, { align: 'right' });
         
         doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(100);
         doc.text("Terima kasih atas kepercayaan Anda kepada kami", 105, doc.lastAutoTable.finalY + 25, { align: 'center' });
