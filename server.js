@@ -191,7 +191,11 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
 
         io.emit("updateDashboardAdmin");
         res.status(201).json({ message: "Data tersimpan" });
-    } catch (error) { res.status(500).json({ error: "Gagal simpan" }); }
+    } catch (error) {
+        // PERBAIKAN: Penanganan error detail agar "Sistem Sibuk" tidak menyembunyikan penyebab aslinya
+        console.error("❌ ERROR SAAT POST /api/orders:", error);
+        res.status(500).json({ error: "Gagal simpan pesanan: " + error.message }); 
+    }
 });
 
 app.get('/api/orders/:kode', async (req, res) => {
@@ -244,7 +248,11 @@ app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 
         io.emit("updateDataPelanggan", updateData.kode);
         io.emit("updateDashboardAdmin");
         res.json({ message: "Update berhasil" });
-    } catch (error) { res.status(500).json({ error: "Gagal update" }); }
+    } catch (error) { 
+        // PERBAIKAN: Penanganan error detail untuk update pesanan
+        console.error("❌ ERROR SAAT PUT /api/orders/:kode:", error);
+        res.status(500).json({ error: "Gagal update: " + error.message }); 
+    }
 });
 
 app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
