@@ -786,45 +786,42 @@
 let petaPelanggan, markerPelanggan;
 
 function inisialisasiPetaLeaflet() {
-    // Jika peta sudah ada, kita hanya perlu memberitahu Leaflet agar merender ulang ukurannya (solusi blank abu-abu)
-    if(petaPelanggan) {
+    // FIX BLANK MAPS: Beri jeda dan panggil invalidateSize agar Leaflet merender ulang ukurannya dengan sempurna
+    setTimeout(() => {
+        if(!petaPelanggan) {
+            const latDraft = document.getElementById('latLokasi').value;
+            const lngDraft = document.getElementById('lngLokasi').value;
+            
+            const latAwal = latDraft ? parseFloat(latDraft) : -6.816666;
+            const lngAwal = lngDraft ? parseFloat(lngDraft) : 107.133333;
+            
+            petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(petaPelanggan);
+            
+            markerPelanggan = L.marker([latAwal, lngAwal], {draggable: true}).addTo(petaPelanggan);
+            
+            document.getElementById('latLokasi').value = latAwal;
+            document.getElementById('lngLokasi').value = lngAwal;
+            
+            markerPelanggan.on('dragend', function(e) {
+                const posisi = markerPelanggan.getLatLng();
+                document.getElementById('latLokasi').value = posisi.lat;
+                document.getElementById('lngLokasi').value = posisi.lng;
+                simpanDraft();
+            });
+            
+            petaPelanggan.on('click', function(e) {
+                markerPelanggan.setLatLng(e.latlng);
+                document.getElementById('latLokasi').value = e.latlng.lat;
+                document.getElementById('lngLokasi').value = e.latlng.lng;
+                simpanDraft();
+            });
+        }
         petaPelanggan.invalidateSize();
-        return; 
-    }
-    
-    // Tarik data kordinat dari input tersembunyi (berguna jika user kembali dari tab lain, atau me-restore draft)
-    const latDraft = document.getElementById('latLokasi').value;
-    const lngDraft = document.getElementById('lngLokasi').value;
-    
-    // Gunakan koordinat draft jika ada, jika kosong gunakan default daerah Cianjur
-    const latAwal = latDraft ? parseFloat(latDraft) : -6.816666;
-    const lngAwal = lngDraft ? parseFloat(lngDraft) : 107.133333;
-    
-    // Buat peta baru dengan level zoom 15 agar lebih dekat dan akurat
-    petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 15);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(petaPelanggan);
-    
-    markerPelanggan = L.marker([latAwal, lngAwal], {draggable: true}).addTo(petaPelanggan);
-    
-    document.getElementById('latLokasi').value = latAwal;
-    document.getElementById('lngLokasi').value = lngAwal;
-    
-    markerPelanggan.on('dragend', function(e) {
-        const posisi = markerPelanggan.getLatLng();
-        document.getElementById('latLokasi').value = posisi.lat;
-        document.getElementById('lngLokasi').value = posisi.lng;
-        simpanDraft();
-    });
-    
-    petaPelanggan.on('click', function(e) {
-        markerPelanggan.setLatLng(e.latlng);
-        document.getElementById('latLokasi').value = e.latlng.lat;
-        document.getElementById('lngLokasi').value = e.latlng.lng;
-        simpanDraft();
-    });
+    }, 300);
 }
 
 function klikMenuHome() {
@@ -1000,9 +997,7 @@ function dapatkanLokasiOtomatis() {
             if(petaPelanggan) {
                 const myLocation = new L.LatLng(lat, lng);
                 markerPelanggan.setLatLng(myLocation);
-                // Zoom lebih dalam (level 16) untuk akurasi pin point
                 petaPelanggan.setView(myLocation, 16);
-                // Paksa pembaruan ukuran jika tampilan sedikit lag
                 setTimeout(() => petaPelanggan.invalidateSize(), 100);
             }
             
@@ -1021,7 +1016,6 @@ function dapatkanLokasiOtomatis() {
             if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda. Mohon izinkan pada browser.';
             Swal.fire('Gagal GPS', pesanError, 'error');
         },
-        // Waktu tunggu diperpanjang menjadi 15 detik agar perangkat dapat mengunci GPS lebih baik pada jaringan yang lambat
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 }
@@ -1176,11 +1170,8 @@ function nextStep() {
     if (currentStep === 2) { kirimPesanan(); } else {
         if (currentStep < 6) { 
             currentStep++; simpanDraft(); updateProgress(); showContent(); 
-            // Jika berhasil masuk ke Langkah 2, inisialisasi / resize peta
             if(currentStep === 2) {
-                setTimeout(() => {
-                    inisialisasiPetaLeaflet();
-                }, 300);
+                inisialisasiPetaLeaflet();
             }
         }
     }
@@ -1269,7 +1260,6 @@ function tampilPratinjau() {
     }
 }
 
-// Pengiriman Pemesanan Awal Menggunakan FormData Multi-File (Tanpa DP)
 function kirimPesanan() {
     const waInput = document.getElementById("wa");
     const isNamaValid = validasiInputRealTime(document.getElementById("nama"), 'errNama');
@@ -1324,7 +1314,6 @@ function kirimPesanan() {
     formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
     formData.append('layanan', layananTerpilih || "Belum dipilih");
     
-    // Perbaikan nama field upload agar sesuai dengan Backend (kondisiHPFile)
     const fileInput = document.getElementById("fileKondisi");
     if(fileInput.files.length > 0) {
         formData.append('kondisiHPFile', fileInput.files[0]);
@@ -1381,7 +1370,6 @@ function bagikanKeWA() {
     window.open(`https://wa.me/${noWa}?text=${encodeURIComponent(text)}`, '_blank');
 }
 
-// Unggah Bukti Transfer Suku Cadang (Inden) via FormData
 function kirimBuktiInden() {
     const fileInden = document.getElementById("fileBuktiInden");
     if (fileInden.files.length === 0) {
@@ -1472,7 +1460,6 @@ function pilihMetodeBayar(metode) {
     }
 }
 
-// Konfirmasi Pelunasan Penuh Akhir via FormData Multi-File
 function konfirmasiBayar() {
     if(!metodeBayar) return Swal.fire('Perhatian', 'Pilih metode bayar!', 'warning');
     
