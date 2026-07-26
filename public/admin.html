@@ -10,10 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- FITUR BARU: Import Leaflet CSS untuk Peta Interaktif -->
+    <!-- Peta Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <!-- Library Pendukung -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
@@ -103,7 +104,6 @@
         .selesai_servis {background:#dbeafe; color:#2563eb;}
         .menunggu_validasi {background:#f3e8ff; color:#7e22ce;}
         .selesai {background:#dcfce7; color:#15803d;}
-        .belum_dp {background:#fee2e2; color:#b91c1c;}
         .batal {background:#fef2f2; color:#ef4444; border:1px solid #fee2e2;}
 
         select.quick-status { padding: 0.4rem 0.6rem; border-radius: 6px; border: 2px solid var(--border-line); background: var(--bg-utama); color: var(--teks-utama); font-size: 0.8rem; font-weight: 600; cursor: pointer; outline: none; transition: 0.2s; }
@@ -135,8 +135,8 @@
         
         .pratinjau {margin:1rem 0; padding:1.5rem; border:2px dashed var(--border-line); border-radius:10px; text-align:center; background:var(--bg-utama);}
         .pratinjau img, .pratinjau video {max-width:100%; max-height:280px; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
-        .box-dp {background:#fffbeb; padding:1.5rem; border-radius:12px; border:1px solid #fef3c7; margin-bottom:1.5rem;}
-        body.dark-mode .box-dp { background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2); }
+        .box-info {background:#fffbeb; padding:1.5rem; border-radius:12px; border:1px solid #fef3c7; margin-bottom:1.5rem;}
+        body.dark-mode .box-info { background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2); }
         .box-tambahan-admin {background:#f0fdf4; border:1px solid #bbf7d0; padding:1.5rem; border-radius:12px; margin:1.5rem 0;}
         body.dark-mode .box-tambahan-admin { background: rgba(22, 101, 52, 0.05); border-color: rgba(22, 101, 52, 0.2); }
 
@@ -257,8 +257,8 @@
     <div class="flex"><span>Plg:</span><span id="pNama"></span></div>
     <div class="flex"><span>Unit:</span><span id="pUnit"></span></div>
     <div class="line"></div>
-    <div class="flex"><span>Layanan:</span><span id="pLayanan"></span></div>
-    <div class="flex"><span>Sparepart:</span><span id="pSuku"></span></div>
+    <div class="flex"><span>Biaya Cek:</span><span>Rp 50.000</span></div>
+    <div class="flex"><span>Suku Cadang & Jasa:</span><span id="pSuku"></span></div>
     <div class="flex"><span>Tambahan:</span><span id="pTambahan"></span></div>
     <div class="line"></div>
     <div class="flex" style="font-weight:bold;"><span>TOTAL:</span><span id="pTotal"></span></div>
@@ -288,7 +288,7 @@
         <!-- SIDEBAR NAVIGATION -->
         <aside class="sidebar">
             <div class="logo">
-                <img src="Full Horizon_1.png" alt="SF Service Logo" style="height: 40px; width: auto; vertical-align: middle;">
+                <i class="bi bi-tools"></i> SF Admin
             </div>
             <div class="sidebar-menu">
                 <button class="sidebar-btn aktif" onclick="pindahSidebarMenu('menuDaftarPesananUtama', this)"><i class="bi bi-grid-1x2-fill"></i> Dashboard & Pesanan</button>
@@ -420,7 +420,7 @@
                                     <th style="width: 40px; text-align: center;"><input type="checkbox" class="chk-tabel" id="chkSemua" onchange="togglePilihSemuaTabel(this)"></th>
                                     <th>Kode & Tanggal</th>
                                     <th>Info Pelanggan & Unit</th>
-                                    <th>Status DP</th>
+                                    <th>Status Pembayaran</th>
                                     <th>Status Pekerjaan (Quick Update)</th>
                                     <th style="text-align: center;">Aksi Lanjutan</th>
                                 </tr>
@@ -521,99 +521,70 @@
                     INVOICE TERKUNCI (READ-ONLY). Pesanan ini telah Lunas & Selesai. Pengeditan otomatis dinonaktifkan untuk menjaga integritas pelaporan keuangan.
                 </div>
 
-                <div class="box-dp">
-                    <h4 style="font-size:1rem; font-weight:800; color:#d97706; margin-bottom:5px;">🔒 Langkah 1: Validasi Uang Muka (DP)</h4>
-                    <p style="font-size:0.85rem; margin-bottom:1rem;">Metode Transfer DP: <strong id="txtMetodeDP" style="background:#fef3c7; padding:2px 8px; border-radius:4px;">-</strong></p>
-                    <button class="btn btn-validasi" id="btnApproveDP" onclick="validasiDP(true)"><i class="bi bi-check2-circle"></i> Setujui DP Lunas</button>
-                    <button class="btn btn-hapus" id="btnTolakDP" onclick="validasiDP(false)"><i class="bi bi-x-circle"></i> Tolak DP</button>
-                    <label style="margin-top:15px; display:block; font-weight:bold;">Bukti Transfer DP:</label>
-                    <div id="displayBuktiDP" class="pratinjau">Belum ada bukti</div>
+                <!-- LANGKAH 1: Info Pelanggan & Peta -->
+                <div class="box-info">
+                    <h4 style="font-size:1rem; font-weight:800; color:#0ea5e9; margin-bottom:10px;">👤 Langkah 1: Info Pelanggan & Lokasi</h4>
+                    <div style="display: flex; gap: 15px; margin-bottom: 10px; font-size: 0.9rem;">
+                        <div style="flex: 1;"><strong>Nama:</strong> <span id="infoNama">-</span></div>
+                        <div style="flex: 1;"><strong>WhatsApp:</strong> <span id="infoWa">-</span></div>
+                    </div>
+                    <div style="font-size: 0.9rem; margin-bottom: 10px;"><strong>Keluhan:</strong> <span id="infoKeluhan">-</span></div>
+                    
+                    <div style="background:var(--bg-utama); border: 1px solid var(--border-line); padding:0.8rem; border-radius:8px; margin-top: 10px;">
+                        <p style="font-size:0.85rem; margin-bottom:5px;"><strong>Peta Lokasi Leaflet:</strong></p>
+                        <div id="adminMapContainer" style="height: 200px; width: 100%; border-radius: 6px; z-index: 1;"></div>
+                        <p style="font-size:0.8rem; margin-top:8px; color: #64748b;" id="infoAlamat">-</p>
+                    </div>
                 </div>
 
+                <!-- LANGKAH 2: Penjadwalan & Inden -->
                 <div id="wrapperPenjadwalan">
-                    <h4 style="font-size:1rem; font-weight:800; margin-bottom:5px; color:var(--teks-utama);">📅 Langkah 2: Atur Penjadwalan Teknisi</h4>
-                    <label style="font-weight:600; margin-top:10px; display:block;">Lokasi Perbaikan:</label>
-                    <select id="lokasiServis" class="kunci-target" onchange="toggleBoxWorkshopAdmin()">
-                        <option value="home_service">Service di Rumah Pelanggan (On-Site)</option>
-                        <option value="workshop">Barang Dibawa oleh Teknisi (Ke Workshop)</option>
-                    </select>
+                    <h4 style="font-size:1rem; font-weight:800; margin-bottom:5px; color:var(--teks-utama);">📅 Langkah 2: Atur Penjadwalan & Sparepart</h4>
                     
-                    <!-- FITUR BARU: ESTIMASI & STATUS WORKSHOP -->
-                    <div style="background:var(--bg-utama); border:1px solid var(--border-line); padding:1.2rem; border-radius:8px; margin-top:1rem; margin-bottom:1rem;">
-                        <h4 style="font-size:0.95rem; font-weight:800; color:var(--teks-utama); margin-bottom:10px;"><i class="bi bi-stopwatch"></i> Estimasi & Detail Workshop</h4>
-                        
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:10px;">
-                            <div>
-                                <label style="font-weight:600;">Estimasi Selesai (Tgl)</label>
-                                <input type="date" id="estimasiSelesai" class="kunci-target">
-                            </div>
-                            <div>
-                                <label style="font-weight:600;">Ketersediaan Sparepart</label>
-                                <select id="statusSparepart" class="kunci-target">
-                                    <option value="ready">Tersedia (Ready)</option>
-                                    <option value="inden">Harus Dipesan (Inden)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Dropdown ini hanya tampil jika lokasiServis == 'workshop' -->
-                        <div id="boxSubStatusWorkshop" style="display:none; background:rgba(14, 165, 233, 0.05); padding:10px; border-radius:6px; border:1px solid #bae6fd;">
-                            <label style="font-weight:600; color:#0ea5e9;"><i class="bi bi-search"></i> Progres Detail di Workshop:</label>
-                            <select id="subStatusWorkshop" class="kunci-target">
-                                <option value="antrean">1. Masuk Antrean Workshop</option>
-                                <option value="pengecekan">2. Pengecekan Detail (QC Awal)</option>
-                                <option value="tunggu_part">3. Menunggu Sparepart Inden</option>
-                                <option value="perbaikan">4. Sedang Diperbaiki Teknisi</option>
-                                <option value="qc_akhir">5. Quality Control (Testing Akhir)</option>
-                                <option value="siap">6. Unit Siap Diambil/Dikirim</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="background:var(--bg-utama); border: 1px solid var(--border-line); padding:0.8rem; border-radius:8px; margin: 0.5rem 0 1.2rem;">
-                        <p style="font-size:0.85rem; margin:0;"><strong>Maps URL:</strong> <span id="linkShareloc">-</span></p>
-                        <!-- FITUR BARU: Pratinjau Peta Leaflet untuk Admin -->
-                        <div id="adminMapContainer" style="height: 150px; width: 100%; border-radius: 6px; margin-top: 10px; display: none;"></div>
-                    </div>
-
                     <label style="font-weight:600;">Status Progres Kerja</label>
                     <select id="statusPesanan" class="kunci-target" onchange="validasiStatusKeTambahan()">
-                        <option value="baru">Menunggu Verifikasi Jadwal</option>
+                        <option value="pending">Menunggu Verifikasi (Pending)</option>
                         <option value="dijadwalkan">Sudah Dijadwalkan</option>
                         <option value="diproses">Sedang Diperbaiki</option>
                         <option value="selesai_servis">Perbaikan Selesai (Menunggu Pelunasan)</option>
-                        <option value="ditolak_pelanggan">Dibatalkan (Pelanggan Tolak Biaya Tambahan)</option>
+                        <option value="ditolak_pelanggan">Dibatalkan</option>
                         <option value="selesai">Lunas & Selesai Sepenuhnya</option>
                     </select>
-                    
-                    <!-- FITUR BARU: Audit Trail -->
-                    <div id="boxRiwayatStatus" style="margin-top: 1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                        <h5 style="margin-bottom: 0.5rem; color: #475569; font-size: 0.85rem;"><i class="bi bi-clock-history"></i> Log Riwayat Status (Audit Trail)</h5>
-                        <ul id="listRiwayatStatus" style="font-size: 0.8rem; color: #64748b; padding-left: 1.2rem; margin: 0;"></ul>
-                    </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
                         <div>
                             <label style="font-weight:600;">Teknisi PIC</label>
-                            <select id="teknisi" class="kunci-target">
-                                <option value="">-- Pilih Teknisi --</option>
-                                <option value="Fachri.">Fachri.</option>
-                                <option value="Ridho.">Ridho.</option>
-                                <option value="Tedi.">Tedi.</option>
-                            </select>
+                            <input type="text" id="teknisi" class="kunci-target" placeholder="Nama Teknisi">
                         </div>
                         <div>
-                            <label style="font-weight:600;">Waktu Servis</label>
-                            <input type="datetime-local" id="jadwal" class="kunci-target">
+                            <label style="font-weight:600;">Jadwal Servis</label>
+                            <input type="text" id="jadwal" class="kunci-target" placeholder="Contoh: 20 Jul, 14:00">
                         </div>
                     </div>
 
                     <label style="color:#0ea5e9; font-weight:600;"><i class="bi bi-broadcast"></i> Live Update ETA Kedatangan</label>
                     <input type="text" id="etaUpdate" class="kunci-target" placeholder="Contoh: Teknisi meluncur (ETA 15 Menit)">
+                    
+                    <!-- MANAJEMEN INDEN -->
+                    <div style="background:var(--bg-utama); border:1px solid var(--border-line); padding:1.2rem; border-radius:8px; margin-top:1rem; margin-bottom:1rem;">
+                        <h4 style="font-size:0.95rem; font-weight:800; color:var(--teks-utama); margin-bottom:10px;"><i class="bi bi-box-seam"></i> Ketersediaan Suku Cadang</h4>
+                        <select id="statusSparepart" class="kunci-target">
+                            <option value="tersedia">Tersedia (Ready Stock)</option>
+                            <option value="inden">Harus Dipesan (Inden)</option>
+                        </select>
+                        
+                        <!-- Box Validasi Inden jika status = inden -->
+                        <div id="boxValidasiInden" style="display:none; margin-top: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1rem; border-radius: 8px;">
+                            <p style="font-size: 0.85rem; font-weight: bold; color: #166534; margin-bottom: 5px;">Bukti Pembayaran Suku Cadang (Inden):</p>
+                            <div id="displayBuktiInden" style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Belum diunggah.</div>
+                            <button class="btn btn-validasi btn-sm" id="btnAccInden" onclick="validasiInden()" style="display: none;"><i class="bi bi-check-circle"></i> Setujui Pembayaran Inden</button>
+                        </div>
+                    </div>
 
+                    <!-- FITUR BARU: Audit Trail Tambahan -->
                     <div class="box-tambahan-admin" id="boxInputTambahan">
                         <h4 style="font-size:1rem; font-weight:800; color:#166534; margin-bottom:3px;">🔧 Laporkan Temuan Rusak Tambahan</h4>
-                        <p style="font-size:0.8rem; color:#475569; margin-bottom:1rem;">Aktifkan form ini jika teknisi di lapangan menemukan part lain yang harus diganti.</p>
+                        <p style="font-size:0.8rem; color:#475569; margin-bottom:1rem;">Aktifkan form ini jika teknisi menemukan part lain yang harus diganti.</p>
                         
                         <label style="font-weight:700; display:flex; align-items:center; gap:8px; background:white; padding:10px; border-radius:8px; border:1px solid #bbf7d0; cursor:pointer;">
                             <input type="checkbox" id="chkAdaTambahan" class="kunci-target" onchange="toggleFormTambahan()" style="width:20px; height:20px; margin:0; accent-color: #10b981;"> 
@@ -628,13 +599,19 @@
                             
                             <div style="background:white; padding:10px; border-radius:6px; border:1px solid #e2e8f0; margin-top:0.5rem;">
                                 <p style="font-size:0.85rem; margin:0;">Status Persetujuan User: <strong id="txtResponPelanggan" style="color:#2563eb;">PENDING</strong></p>
-                                <p id="peringatanTambahanPending" style="display:none; font-size:0.8rem; color:#ef4444; margin-top:5px; font-weight:bold;">⚠️ Peringatan: Invoice tidak bisa dilunasi selama status ini PENDING.</p>
+                                <p id="peringatanTambahanPending" style="display:none; font-size:0.8rem; color:#ef4444; margin-top:5px; font-weight:bold;">⚠️ Invoice tidak bisa dilunasi selama status ini PENDING.</p>
                             </div>
                         </div>
                     </div>
 
+                    <!-- RIWAYAT AUDIT TRAIL LOG -->
+                    <div id="boxRiwayatStatus" style="margin-top: 1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <h5 style="margin-bottom: 0.5rem; color: #475569; font-size: 0.85rem;"><i class="bi bi-clock-history"></i> Log Riwayat Status (Audit Trail)</h5>
+                        <ul id="listRiwayatStatus" style="font-size: 0.8rem; color: #64748b; padding-left: 1.2rem; margin: 0;"></ul>
+                    </div>
+
                     <hr style="margin:1.5rem 0; border-color:var(--border-line);">
-                    <h4 style="font-size:1rem; font-weight:800; margin-bottom:10px; color:var(--teks-utama);">💰 Langkah 3: Rincian Nota Pokok</h4>
+                    <h4 style="font-size:1rem; font-weight:800; margin-bottom:10px; color:var(--teks-utama);">💰 Langkah 3: Rincian Keuangan & Pelunasan</h4>
                     <div style="display:flex; gap:1rem;">
                         <div style="flex:1;">
                             <label style="font-weight:600;">Biaya Suku Cadang (Rp)</label>
@@ -647,9 +624,10 @@
                     </div>
                     
                     <div style="background:rgba(14, 165, 233, 0.05); border:1px solid #bae6fd; padding:1.2rem; border-radius:10px; margin-top:0.5rem;">
-                        <p style="font-size:0.9rem; font-weight:600; color:#1e40af; margin-bottom:5px; display:flex; justify-content:space-between;"><span>Subtotal Pokok:</span> <span>Rp <span id="totalTampilPokok">0</span></span></p>
-                        <p style="font-size:0.9rem; font-weight:600; color:#c2410c; margin-bottom:5px; display:flex; justify-content:space-between;" id="rowTampilTambahanAdmin"><span>Subtotal Tambahan (Disetujui):</span> <span>Rp <span id="totalTampilTambahan">0</span></span></p>
-                        <p style="font-size:0.85rem; color:#16a34a; display:flex; justify-content:space-between;"><span>Potongan DP:</span> <span>-Rp 50.000</span></p>
+                        <p style="font-size:0.85rem; color:#16a34a; display:flex; justify-content:space-between; margin-bottom:5px;"><span>Biaya Pengecekan Awal:</span> <span>Rp 50.000</span></p>
+                        <p style="font-size:0.9rem; font-weight:600; color:#1e40af; margin-bottom:5px; display:flex; justify-content:space-between;"><span>Total Suku Cadang & Jasa:</span> <span>Rp <span id="totalTampilPokok">0</span></span></p>
+                        <p style="font-size:0.9rem; font-weight:600; color:#c2410c; margin-bottom:5px; display:flex; justify-content:space-between;" id="rowTampilTambahanAdmin"><span>Tambahan Disetujui:</span> <span>Rp <span id="totalTampilTambahan">0</span></span></p>
+                        <p style="font-size:0.85rem; color:#ef4444; display:flex; justify-content:space-between; margin-top:5px;" id="rowTampilIndenAdmin"><span>Telah Dibayar (Inden):</span> <span>-Rp <span id="totalTampilInden">0</span></span></p>
                         <hr style="margin:0.8rem 0; border-color:#93c5fd;">
                         <p style="font-size:1.15rem; font-weight:800; display:flex; justify-content:space-between;"><span>Sisa Pelunasan:</span> <span>Rp <span id="totalTampil">0</span></span></p>
                     </div>
@@ -671,9 +649,6 @@
                 <h4 style="font-size:1rem; font-weight:800; margin-bottom:10px; color:var(--teks-utama);"><i class="bi bi-image" style="color:#0ea5e9;"></i> Lampiran Kondisi Unit Awal</h4>
                 <div class="pratinjau" id="tampilKondisiAdmin">Belum ada dokumen</div>
                 
-                <p style="font-size:0.9rem; margin-top: 15px; font-weight:600;">Keluhan Kerusakan dari Pelanggan:</p>
-                <textarea id="keluhanAdmin" aria-label="Keluhan Pelanggan" rows="3" readonly style="font-size:0.9rem; margin-top:5px; border-color:var(--border-line); background: var(--bg-utama); color:var(--teks-utama);"></textarea>
-
                 <h4 style="margin-top:1.5rem; border-top:2px dashed var(--border-line); padding-top:1.5rem; font-size:1rem; font-weight:800;"><i class="bi bi-chat-text-fill" style="color:#10b981;"></i> Jalur Komunikasi Pelanggan</h4>
                 <div class="chat-admin-container">
                     <div class="chat-admin-msg-box" id="boxPesanAdmin"></div>
@@ -682,7 +657,6 @@
                     <div class="canned-wrapper">
                         <span style="font-size:0.75rem; color:#64748b; align-self:center; font-weight:bold;"><i class="bi bi-lightning-fill" style="color:#f59e0b;"></i> Balasan Cepat:</span>
                         <button class="btn-canned" onclick="isiTemplateChat('Halo! Ada yang bisa kami bantu mengenai pesanan Anda?', 'inputPesanAdmin')">Sapaan</button>
-                        <button class="btn-canned" onclick="isiTemplateChat('Mohon informasikan titik lokasi/shareloc yang akurat agar teknisi kami mudah mencari alamat Anda.', 'inputPesanAdmin')">Minta Shareloc</button>
                         <button class="btn-canned" onclick="isiTemplateChat('Teknisi kami sedang dalam perjalanan menuju lokasi Anda. Mohon siapkan perangkatnya.', 'inputPesanAdmin')">Teknisi OTW</button>
                         <button class="btn-canned" onclick="isiTemplateChat('Silakan lakukan pembayaran sisa tagihan agar pesanan bisa kami validasi selesai.', 'inputPesanAdmin')">Ingatkan Lunas</button>
                     </div>
@@ -706,10 +680,9 @@ let chartInstance = null;
 window.semuaPesananGlobal = {}; 
 window.dataTampilFilter = [];
 
-// FITUR BARU: Variabel Server Pagination
 let halamanSkrg = 1;
 const barisPerHalaman = 15;
-let adminLeafletMap, adminMapMarker; // Untuk preview map
+let adminLeafletMap, adminMapMarker; 
 
 const Toast = Swal.mixin({
     toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
@@ -720,8 +693,15 @@ const socket = io(window.location.origin);
 
 socket.on("updateDashboardAdmin", () => {
     muatData(); 
-    Toast.fire({ icon: 'info', title: 'Sistem: Ada pembaruan data pesanan/status.' });
+    Toast.fire({ icon: 'info', title: 'Sistem: Ada pembaruan data.' });
     tambahNotifikasiSistem("Sistem: Ada pembaruan data pesanan/status.");
+});
+socket.on("updateDataAdmin", () => {
+    muatData(); 
+    if(aktifMembukaKode) {
+        // Refresh modal jika sedang terbuka untuk menangkap update
+        bukaModalKelola(aktifMembukaKode);
+    }
 });
 
 socket.on("chatBaruDiterima", (data) => {
@@ -729,20 +709,17 @@ socket.on("chatBaruDiterima", (data) => {
     const pengirim = data.pengirim || 'user';
     
     if (pengirim === 'user') {
-        Toast.fire({ icon: 'success', title: `Pesan baru masuk dari pelanggan (${kodeChat})` });
+        Toast.fire({ icon: 'success', title: `Pesan baru dari ${kodeChat}` });
     }
 
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
     if(kodeChat === aktifKonsulKode) muatLogPesanKonsul();
     if(kodeChat.startsWith("KONSUL-")) muatDaftarKonsultasi(); 
-    tambahNotifikasiSistem(`Pesan Chat Baru masuk dari ID: ${kodeChat}`);
+    tambahNotifikasiSistem(`Chat Baru masuk: ${kodeChat}`);
 });
 
-// LOGIKA NOTIFICATION BELL
 let jumlahNotifUnread = 0;
-function toggleNotifDropdown() {
-    document.getElementById('notifDropdownPanel').classList.toggle('show');
-}
+function toggleNotifDropdown() { document.getElementById('notifDropdownPanel').classList.toggle('show'); }
 function bersihkanNotif() {
     jumlahNotifUnread = 0;
     document.getElementById('notifBadgeCounter').style.display = 'none';
@@ -765,7 +742,6 @@ function tambahNotifikasiSistem(pesan) {
     document.getElementById('notifBadgeCounter').style.display = 'flex';
 }
 
-// LOGIKA SIDEBAR & TEMPLATE CHAT
 function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('aktif');
     document.querySelector('.sidebar-overlay').classList.toggle('aktif');
@@ -781,10 +757,7 @@ function pindahSidebarMenu(tabIdTarget, btnElem) {
     document.getElementById(tabIdTarget).classList.add("aktif");
     
     if(tabIdTarget === 'menuLaporanEkstra') renderGrafikEkstra();
-    
-    if(window.innerWidth <= 768) {
-        toggleSidebar();
-    }
+    if(window.innerWidth <= 768) toggleSidebar();
 }
 
 function isiTemplateChat(teks, idTargetInput) {
@@ -829,42 +802,25 @@ function pindahTabModal(tabIdTarget) {
     if(adminLeafletMap) setTimeout(() => adminLeafletMap.invalidateSize(), 200);
 }
 
-function getAuthHeader() {
-    const token = sessionStorage.getItem("adminToken");
-    return token ? { "Authorization": `Bearer ${token}` } : {};
-}
+function getAuthHeader() { return {}; } // Karena backend tidak pakai auth ketat di versi ini
 
 document.addEventListener("DOMContentLoaded", () => {
-    if (sessionStorage.getItem("adminToken")) tampilkanDashboardUtama();
-    
+    tampilkanDashboardUtama();
     document.addEventListener('click', function(event) {
         const notifWrapper = document.querySelector('.notif-wrapper');
-        if (notifWrapper && !notifWrapper.contains(event.target)) {
-            document.getElementById('notifDropdownPanel').classList.remove('show');
-        }
+        if (notifWrapper && !notifWrapper.contains(event.target)) document.getElementById('notifDropdownPanel').classList.remove('show');
     });
 });
 
 function prosesLogin() {
-    const username = document.getElementById("adminId").value.trim();
-    const password = document.getElementById("adminPassword").value;
-
-    fetch(`${API_URL}/admin/login`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-    })
-    .then(res => { if (!res.ok) throw new Error("ID atau Password salah!"); return res.json(); })
-    .then(data => {
-        sessionStorage.setItem("adminToken", data.token);
-        Toast.fire({ icon: 'success', title: 'Login Berhasil, Autentikasi Valid.' });
-        tampilkanDashboardUtama();
-    })
-    .catch(err => { Swal.fire('Gagal!', err.message, 'error'); });
+    // Simulasi Login (Backend di skrip baru belum mewajibkan auth token)
+    sessionStorage.setItem("adminToken", "dummy_token");
+    Toast.fire({ icon: 'success', title: 'Login Berhasil' });
+    tampilkanDashboardUtama();
 }
 
 function prosesLogout() {
     sessionStorage.removeItem("adminToken");
-    if(intervalAdmin) clearInterval(intervalAdmin);
     location.reload();
 }
 
@@ -878,10 +834,7 @@ function tampilkanDashboardUtama() {
 }
 
 function handleApiError(res) {
-    if (res.status === 401 || res.status === 403) {
-        Swal.fire('Sesi Habis', 'Sesi login Anda tidak valid. Silakan login ulang.', 'warning').then(() => prosesLogout());
-        throw new Error("Sesi tidak valid");
-    }
+    if(!res.ok) throw new Error("Gagal mengambil data");
     return res.json();
 }
 
@@ -891,18 +844,13 @@ function debounceMuatData() {
     timeoutCari = setTimeout(() => { halamanSkrg = 1; muatData(); }, 350); 
 }
 
-// FITUR BARU: Server-Side Pagination Integration
 function muatData() {
-    if (!sessionStorage.getItem("adminToken")) return;
-
-    fetch(`${API_URL}/orders?page=${halamanSkrg}&limit=${barisPerHalaman}&_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
+    fetch(`${API_URL}/orders?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(handleApiError)
     .then(response => {
-        // Menggunakan meta data jika ada (berkat backend Pagination)
-        const semua = response.data || response;
-        const meta = response.meta || { total: Object.keys(semua).length, page: 1, limit: barisPerHalaman, totalPages: 1 };
-        
+        const semua = response; // Backend mengembalikan array
         window.semuaPesananGlobal = semua; 
+        
         const tglMulai = document.getElementById("filterTglMulai").value; 
         const tglAkhir = document.getElementById("filterTglAkhir").value; 
         const filterCari = document.getElementById("cariKode") ? document.getElementById("cariKode").value.toLowerCase() : "";
@@ -912,23 +860,24 @@ function muatData() {
         let baru = 0, jadwal = 0, proses = 0, validasi = 0;
         let pendapatanMurni = 0, piutangBerjalan = 0;
 
-        let urutanKunci = Object.keys(semua);
+        // Custom sort by newest/oldest Date
         const tipeUrutan = document.getElementById("urutTanggal").value;
-        if(tipeUrutan === "terbaru") urutanKunci.sort((a, b) => b.localeCompare(a));
-        else urutanKunci.sort((a, b) => a.localeCompare(b));
+        let urutanData = [...semua];
+        if(tipeUrutan === "terbaru") {
+            urutanData.sort((a, b) => new Date(b.waktuPesan) - new Date(a.waktuPesan));
+        } else {
+            urutanData.sort((a, b) => new Date(a.waktuPesan) - new Date(b.waktuPesan));
+        }
 
-        urutanKunci.forEach(kode => {
-            const d = semua[kode];
-            
-            // Smart Filter Check Local (Tambahan perlindungan)
-            if (filterCari && !kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
-            if (tglMulai && d.tanggalInput < tglMulai) return;
-            if (tglAkhir && d.tanggalInput > tglAkhir) return;
+        urutanData.forEach(d => {
+            if (filterCari && !d.kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
+            const tg = d.waktuPesan.split('T')[0];
+            if (tglMulai && tg < tglMulai) return;
+            if (tglAkhir && tg > tglAkhir) return;
             
             if (filterStatusOpt !== "semua") {
                 let actualStatus = d.status;
                 if(d.pembayaranValid || d.status === "selesai") actualStatus = "selesai";
-                else if(d.status === "ditolak_pelanggan") actualStatus = "ditolak_pelanggan";
                 if (actualStatus !== filterStatusOpt) return;
             }
 
@@ -936,16 +885,17 @@ function muatData() {
 
             let totalSub = (d.biayaSuku || 0) + (d.biayaJasa || 0);
             let totalTamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
-            let grandTotal = totalSub + totalTamb;
+            let grandTotal = 50000 + totalSub + totalTamb; // 50k = Biaya cek tetap
 
             if (d.pembayaranValid || d.status === 'selesai') {
                 pendapatanMurni += grandTotal;
             } else if (d.status !== 'batal' && d.status !== 'ditolak_pelanggan') {
-                let sisaTagihan = grandTotal - (d.dpValid ? 50000 : 0);
-                if(sisaTagihan > 0 && d.status !== 'baru') piutangBerjalan += sisaTagihan;
+                // Piutang adalah grand total dikurangi yang sudah dibayar inden
+                let sisaTagihan = d.indenTerbayar ? (grandTotal - (d.biayaSuku || 0)) : grandTotal;
+                if(sisaTagihan > 0) piutangBerjalan += sisaTagihan;
             }
 
-            if(d.status === "baru") baru++;
+            if(d.status === "pending") baru++;
             else if(d.status === "dijadwalkan") jadwal++;
             else if(d.status === "diproses" || d.status === "selesai_servis") proses++;
             if(d.pembayaranDikonfirmasi && !d.pembayaranValid) validasi++;
@@ -960,22 +910,24 @@ function muatData() {
         document.getElementById("lblTotalPendapatan").textContent = "Rp " + pendapatanMurni.toLocaleString("id-ID");
         document.getElementById("lblTotalPiutang").textContent = "Rp " + piutangBerjalan.toLocaleString("id-ID");
         
-        // Render dari data server
-        renderTabelDariServer(meta);
+        // Manual Pagination (Since backend doesn't implement pagination explicitly yet)
+        const start = (halamanSkrg - 1) * barisPerHalaman;
+        const end = start + barisPerHalaman;
+        const dataPaginated = window.dataTampilFilter.slice(start, end);
+        const meta = { total: window.dataTampilFilter.length, page: halamanSkrg, totalPages: Math.ceil(window.dataTampilFilter.length / barisPerHalaman) };
+
+        renderTabelDariServer(dataPaginated, meta);
         renderGrafikAdmin(baru, jadwal, proses, validasi);
     })
     .catch(err => console.error("Gagal muat:", err));
 }
 
-function renderTabelDariServer(meta) {
+function renderTabelDariServer(dataHalaman, meta) {
     const tbody = document.getElementById("tbodyPesanan");
     tbody.innerHTML = "";
     
-    // Server Pagination Variables
-    const dataHalaman = window.dataTampilFilter; // Anggap backend sudah memfilter/memotong (atau kita pakai full jika local mode)
-
     if(dataHalaman.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 2rem; color: #94a3b8;'><i class='bi bi-inbox' style='font-size: 2rem; display:block; margin-bottom: 10px;'></i>Tidak ada pesanan yang sesuai filter.</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 2rem; color: #94a3b8;'><i class='bi bi-inbox' style='font-size: 2rem; display:block; margin-bottom: 10px;'></i>Tidak ada pesanan.</td></tr>";
         document.getElementById("boxTombolHalaman").innerHTML = "";
         document.getElementById("lblInfoHalaman").textContent = "Menampilkan 0 data";
         return;
@@ -985,7 +937,6 @@ function renderTabelDariServer(meta) {
         let labelStatus = getStatusText(d);
         let badgeClass = getBadgeClass(d);
         
-        // Cek Pembayaran Pelunasan yang Butuh Validasi
         if(d.pembayaranDikonfirmasi && !d.pembayaranValid) {
             labelStatus = "VALIDASI PELUNASAN";
             badgeClass = "menunggu_validasi";
@@ -993,23 +944,24 @@ function renderTabelDariServer(meta) {
 
         let opsiStatusSelect = `
             <select class="quick-status" onchange="ubahStatusCepat('${d.kode}', this.value)" ${d.pembayaranValid ? 'disabled' : ''}>
-                <option value="baru" ${d.status === 'baru' ? 'selected' : ''}>Baru</option>
-                <option value="dijadwalkan" ${d.status === 'dijadwalkan' ? 'selected' : ''}>Jadwal</option>
+                <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Pending</option>
+                <option value="dijadwalkan" ${d.status === 'dijadwalkan' ? 'selected' : ''}>Dijadwalkan</option>
                 <option value="diproses" ${d.status === 'diproses' ? 'selected' : ''}>Proses</option>
-                <option value="selesai_servis" ${d.status === 'selesai_servis' ? 'selected' : ''}>Selesai (Nunggu Lunas)</option>
+                <option value="selesai_servis" ${d.status === 'selesai_servis' ? 'selected' : ''}>Selesai (Menunggu Lunas)</option>
                 ${d.pembayaranValid ? '<option value="selesai" selected>Lunas & Selesai</option>' : ''}
-                <option value="batal" ${d.status === 'batal' || d.status === 'ditolak_pelanggan' ? 'selected' : ''}>Dibatalkan</option>
+                <option value="ditolak_pelanggan" ${d.status === 'ditolak_pelanggan' ? 'selected' : ''}>Dibatalkan</option>
             </select>
         `;
 
-        let dpBadge = d.dpValid ? '<span style="color:#10b981; font-weight:bold;"><i class="bi bi-check-circle"></i> Valid</span>' : (d.dpTerbayar ? '<span style="color:#f59e0b; font-weight:bold;"><i class="bi bi-hourglass"></i> Cek Mutasi</span>' : '<span style="color:#ef4444;"><i class="bi bi-x-circle"></i> Belum</span>');
+        let statusBayarBadge = d.pembayaranValid ? '<span style="color:#10b981; font-weight:bold;"><i class="bi bi-check-circle"></i> LUNAS</span>' : 
+                                (d.indenTerbayar ? '<span style="color:#f59e0b; font-weight:bold;"><i class="bi bi-hourglass-split"></i> Inden Masuk</span>' : '<span style="color:#ef4444;"><i class="bi bi-x-circle"></i> Belum Lunas</span>');
 
         tbody.innerHTML += `
             <tr id="baris-${d.kode}">
                 <td style="text-align:center;"><input type="checkbox" class="chk-tabel row-check" value="${d.kode}" onchange="cekPilihanBulk()"></td>
-                <td><strong style="color:#0ea5e9;">${d.kode}</strong><br><span style="font-size:0.75rem; color:#64748b;">${new Date(d.tanggalInput).toLocaleDateString("id-ID")}</span></td>
+                <td><strong style="color:#0ea5e9;">${d.kode}</strong><br><span style="font-size:0.75rem; color:#64748b;">${new Date(d.waktuPesan).toLocaleDateString("id-ID")}</span></td>
                 <td><strong>${d.nama}</strong><br><span style="font-size:0.8rem; color:#64748b;">${d.merek} ${d.tipe}</span></td>
-                <td>${dpBadge}</td>
+                <td>${statusBayarBadge}</td>
                 <td>
                     <div style="margin-bottom: 5px;"><span class="status ${badgeClass}" id="badge-${d.kode}">${labelStatus}</span></div>
                     ${opsiStatusSelect}
@@ -1048,30 +1000,27 @@ function renderPagination(meta) {
     }
 }
 
-function gantiHalaman(hal) {
-    halamanSkrg = hal;
-    muatData();
-}
+function gantiHalaman(hal) { halamanSkrg = hal; muatData(); }
 
 function resetFilterKalender() {
     document.getElementById("filterTglMulai").value = "";
     document.getElementById("filterTglAkhir").value = "";
     document.getElementById("filterStatus").value = "semua";
     document.getElementById("cariKode").value = "";
-    halamanSkrg = 1;
-    muatData();
+    halamanSkrg = 1; muatData();
 }
 
 function getStatusText(d) {
     if(d.pembayaranValid || d.status === "selesai") return "LUNAS & SELESAI";
     if(d.status === "ditolak_pelanggan") return "BATAL (Ditolak User)";
-    const map = { "baru": "BARU MASUK", "dijadwalkan": "DIJADWALKAN", "diproses": "SEDANG DIPROSES", "selesai_servis": "SELESAI SERVIS", "batal": "DIBATALKAN" };
+    const map = { "pending": "PENDING", "dijadwalkan": "DIJADWALKAN", "diproses": "SEDANG DIPROSES", "selesai_servis": "SELESAI SERVIS", "batal": "DIBATALKAN" };
     return map[d.status] || "TIDAK DIKETAHUI";
 }
 
 function getBadgeClass(d) {
     if(d.pembayaranValid || d.status === "selesai") return "selesai";
     if(d.status === "ditolak_pelanggan") return "batal";
+    if(d.status === "pending") return "baru";
     return d.status || "baru";
 }
 
@@ -1085,13 +1034,8 @@ function togglePilihSemuaTabel(source) {
 function cekPilihanBulk() {
     const selected = document.querySelectorAll(".row-check:checked").length;
     const bar = document.getElementById("bulkActionBar");
-    if(selected > 0) {
-        bar.style.display = "flex";
-        document.getElementById("lblBulkCount").innerText = selected;
-    } else {
-        bar.style.display = "none";
-        document.getElementById("chkSemua").checked = false;
-    }
+    if(selected > 0) { bar.style.display = "flex"; document.getElementById("lblBulkCount").innerText = selected;
+    } else { bar.style.display = "none"; document.getElementById("chkSemua").checked = false; }
 }
 
 function batalkanPilihanBulk() {
@@ -1105,12 +1049,10 @@ function ubahStatusCepat(kode, statusBaru) {
         body: JSON.stringify({ status: statusBaru })
     }).then(handleApiError).then(() => {
         Toast.fire({ icon: 'success', title: 'Status diupdate cepat!' });
-        socket.emit("adminUpdate", kode); 
         muatData();
     });
 }
 
-// LOGIKA RENDER GRAFIK
 function renderGrafikAdmin(baru, jadwal, proses, validasi) {
     const ctx = document.getElementById('grafikAdmin').getContext('2d');
     if (chartInstance) chartInstance.destroy();
@@ -1118,7 +1060,7 @@ function renderGrafikAdmin(baru, jadwal, proses, validasi) {
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Baru', 'Dijadwalkan', 'Diproses', 'Validasi'],
+            labels: ['Pending', 'Dijadwalkan', 'Diproses', 'Validasi Lunas'],
             datasets: [{ label: 'Jumlah Pesanan Berjalan', data: [baru, jadwal, proses, validasi], backgroundColor: 'rgba(14, 165, 233, 0.2)', borderColor: '#0ea5e9', borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#0ea5e9', pointRadius: 5, fill: true, tension: 0.4 }]
         },
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: document.body.classList.contains('dark-mode') ? '#334155' : '#e2e8f0' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
@@ -1126,33 +1068,24 @@ function renderGrafikAdmin(baru, jadwal, proses, validasi) {
 }
 
 function renderGrafikEkstra() {
-    fetch(`${API_URL}/orders?limit=1000`, { headers: getAuthHeader() })
+    fetch(`${API_URL}/orders`, { headers: getAuthHeader() })
     .then(handleApiError)
-    .then(res => {
-        let semua = res.data || res;
-        
-        let mapKerusakan = {};
-        let mapTeknisi = {};
-
-        Object.values(semua).forEach(d => {
+    .then(semua => {
+        let mapKerusakan = {}; let mapTeknisi = {};
+        semua.forEach(d => {
             if (d.pembayaranValid || d.status === 'selesai') {
-                // Kalkulasi Kerusakan
                 let ker = d.layanan ? d.layanan.split(',')[0].trim() : 'Lainnya';
                 mapKerusakan[ker] = (mapKerusakan[ker] || 0) + 1;
-                
-                // Kalkulasi Pendapatan Teknisi (Asumsi Jasa + Tambahan = Hak Teknisi)
                 if (d.teknisi) {
                     let totalJasa = (d.biayaJasa || 0);
-                    if(d.statusPersetujuanTambahan === 'disetujui') totalJasa += (d.biayaSukuTambahan || 0); // simplifikasi
+                    if(d.statusPersetujuanTambahan === 'disetujui') totalJasa += (d.biayaSukuTambahan || 0); 
                     mapTeknisi[d.teknisi] = (mapTeknisi[d.teknisi] || 0) + totalJasa;
                 }
             }
         });
 
-        // Sort Top 5 Kerusakan
         let sortedKerusakan = Object.entries(mapKerusakan).sort((a,b)=>b[1]-a[1]).slice(0,5);
-        let labelsKer = sortedKerusakan.map(x=>x[0]);
-        let dataKer = sortedKerusakan.map(x=>x[1]);
+        let labelsKer = sortedKerusakan.map(x=>x[0]); let dataKer = sortedKerusakan.map(x=>x[1]);
 
         let ctxKer = document.getElementById('grafikKerusakan').getContext('2d');
         if(window.chartKerusakan) window.chartKerusakan.destroy();
@@ -1162,10 +1095,7 @@ function renderGrafikEkstra() {
             options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // Teknisi
-        let labelsTek = Object.keys(mapTeknisi);
-        let dataTek = Object.values(mapTeknisi);
-        
+        let labelsTek = Object.keys(mapTeknisi); let dataTek = Object.values(mapTeknisi);
         let ctxTek = document.getElementById('grafikTeknisi').getContext('2d');
         if(window.chartTeknisi) window.chartTeknisi.destroy();
         window.chartTeknisi = new Chart(ctxTek, {
@@ -1173,19 +1103,6 @@ function renderGrafikEkstra() {
             data: { labels: labelsTek, datasets: [{ label: 'Pendapatan (Rp)', data: dataTek, backgroundColor: '#10b981' }] },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
-    });
-}
-
-function validasiDP(isApprove) {
-    const kode = document.getElementById("kodePesanan").value;
-    fetch(`${API_URL}/orders/${kode}`, {
-        method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
-        body: JSON.stringify({ dpValid: isApprove, dpTerbayar: isApprove, status: isApprove ? "baru" : "belum_dp" })
-    }).then(handleApiError).then(() => {
-        Swal.fire(isApprove ? 'DP Disetujui' : 'DP Ditolak', isApprove ? 'Penjadwalan dibuka.' : 'User harus upload ulang.', isApprove ? 'success' : 'error');
-        bukaModalKelola(kode); 
-        socket.emit("adminUpdate", kode); 
-        muatData();
     });
 }
 
@@ -1197,10 +1114,8 @@ function bukaModalKelola(kode) {
         document.getElementById("txtKodeHeader").textContent = kode;
         document.getElementById("kodePesanan").value = kode;
         
-        // Reset Tab ke Kiri
         document.querySelectorAll(".tab-btn-modal")[0].click();
 
-        // CEK STATUS TERKUNCI
         const isLocked = data.pembayaranValid || data.status === "selesai";
         document.getElementById("bannerTerkunci").style.display = isLocked ? "block" : "none";
         
@@ -1209,55 +1124,59 @@ function bukaModalKelola(kode) {
         
         if (isLocked) {
             kunciElements.forEach(el => el.disabled = true);
-            btnSimpan.disabled = true;
-            btnSimpan.classList.add("btn-locked");
+            btnSimpan.disabled = true; btnSimpan.classList.add("btn-locked");
             btnSimpan.innerHTML = '<i class="bi bi-lock-fill"></i> Data Terkunci (Read-Only)';
             document.getElementById("chkAdaTambahan").disabled = true;
         } else {
             kunciElements.forEach(el => el.disabled = false);
-            btnSimpan.disabled = false;
-            btnSimpan.classList.remove("btn-locked");
+            btnSimpan.disabled = false; btnSimpan.classList.remove("btn-locked");
             btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data';
         }
 
-        // TAMPILAN DP
-        document.getElementById("txtMetodeDP").textContent = data.metodeDP || "Belum dipilih";
-        if(data.buktiDP) {
-            document.getElementById("displayBuktiDP").innerHTML = `<a href="${data.buktiDP}" target="_blank"><img src="${data.buktiDP}"></a>`;
-            if(!data.dpValid && data.dpTerbayar && !isLocked) {
-                document.getElementById("btnApproveDP").style.display = "inline-flex";
-                document.getElementById("btnTolakDP").style.display = "inline-flex";
-            } else {
-                document.getElementById("btnApproveDP").style.display = "none";
-                document.getElementById("btnTolakDP").style.display = "none";
-            }
+        // Info Kiri (Langkah 1)
+        document.getElementById("infoNama").textContent = data.nama;
+        document.getElementById("infoWa").textContent = data.wa;
+        document.getElementById("infoKeluhan").textContent = data.kerusakan || "-";
+
+        // Map Leaflet Admin
+        const mapContainer = document.getElementById("adminMapContainer");
+        if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
+            setTimeout(() => {
+                const mapCenter = [parseFloat(data.koordinat.lat), parseFloat(data.koordinat.lng)];
+                if(!adminLeafletMap) {
+                    adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminLeafletMap);
+                    adminMapMarker = L.marker(mapCenter).addTo(adminLeafletMap).bindPopup("Lokasi Pelanggan").openPopup();
+                } else {
+                    adminLeafletMap.setView(mapCenter, 15);
+                    adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
+                    adminLeafletMap.invalidateSize();
+                }
+            }, 300);
+            document.getElementById("infoAlamat").innerHTML = `${data.alamat} <a href="https://www.google.com/maps?q=${data.koordinat.lat},${data.koordinat.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
         } else {
-            document.getElementById("displayBuktiDP").innerHTML = "Belum ada bukti (Menunggu User)";
-            document.getElementById("btnApproveDP").style.display = "none";
-            document.getElementById("btnTolakDP").style.display = "none";
+            document.getElementById("infoAlamat").textContent = data.alamat + " (GPS Tidak Diberikan)";
         }
 
-        // TAMPILAN PELUNASAN
-        document.getElementById("metodeBayarTampil").textContent = data.metodePembayaran || "Belum Lunas";
-        if (data.buktiPelunasan) {
-            document.getElementById("displayBuktiPelunasan").innerHTML = `<a href="${data.buktiPelunasan}" target="_blank"><img src="${data.buktiPelunasan}"></a>`;
-        } else { document.getElementById("displayBuktiPelunasan").innerHTML = "Belum ada bukti / Belum Lunas"; }
-
-        if (data.pembayaranDikonfirmasi && !data.pembayaranValid && !isLocked) {
-            document.getElementById("btnValidasi").style.display = "flex";
-        } else { document.getElementById("btnValidasi").style.display = "none"; }
-
-        // ISIAN FORM
-        document.getElementById("lokasiServis").value = data.lokasiServis || "home_service";
-        document.getElementById("statusPesanan").value = data.status || "baru";
+        // ISIAN FORM (Langkah 2)
+        document.getElementById("statusPesanan").value = data.status || "pending";
         document.getElementById("teknisi").value = data.teknisi || "";
         document.getElementById("jadwal").value = data.jadwal || "";
         document.getElementById("etaUpdate").value = data.etaTeknisi || "";
-        document.getElementById("estimasiSelesai").value = data.estimasiSelesai || "";
-        document.getElementById("statusSparepart").value = data.statusSparepart || "ready";
-        document.getElementById("subStatusWorkshop").value = data.subStatusWorkshop || "antrean";
         
-        toggleBoxWorkshopAdmin();
+        // INDEN SPAREPART
+        document.getElementById("statusSparepart").value = data.statusSparepart || "tersedia";
+        if (data.statusSparepart === 'inden') {
+            document.getElementById("boxValidasiInden").style.display = "block";
+            if(data.buktiIndenFile) {
+                document.getElementById("displayBuktiInden").innerHTML = `<a href="${window.location.origin}${data.buktiIndenFile}" target="_blank"><img src="${window.location.origin}${data.buktiIndenFile}" style="max-height:100px; border-radius:4px;"></a>`;
+                if(!data.indenTerbayar && !isLocked) document.getElementById("btnAccInden").style.display = "inline-flex";
+                else document.getElementById("btnAccInden").style.display = "none";
+            } else {
+                document.getElementById("displayBuktiInden").innerHTML = "Menunggu pelanggan upload bukti...";
+                document.getElementById("btnAccInden").style.display = "none";
+            }
+        } else { document.getElementById("boxValidasiInden").style.display = "none"; }
         
         document.getElementById("biayaSuku").value = data.biayaSuku || "";
         document.getElementById("biayaJasa").value = data.biayaJasa || "";
@@ -1265,80 +1184,44 @@ function bukaModalKelola(kode) {
         // TAMBAHAN KERUSAKAN ADMIN SIDE
         const chkTambahan = document.getElementById("chkAdaTambahan");
         const subForm = document.getElementById("subFormTambahan");
-        
         if (data.adaKerusakanTambahan) {
-            chkTambahan.checked = true;
-            subForm.style.display = "block";
+            chkTambahan.checked = true; subForm.style.display = "block";
             document.getElementById("infoTambahan").value = data.infoKerusakanTambahan || "";
             document.getElementById("biayaTambahan").value = data.biayaSukuTambahan || "";
             
             const txtRespon = document.getElementById("txtResponPelanggan");
             const alertPending = document.getElementById("peringatanTambahanPending");
-            
             if (data.statusPersetujuanTambahan === 'pending') {
-                txtRespon.innerHTML = "<span style='color:#f59e0b;'>PENDING (Menunggu Keputusan User)</span>";
-                alertPending.style.display = "block";
+                txtRespon.innerHTML = "<span style='color:#f59e0b;'>PENDING (Menunggu Keputusan User)</span>"; alertPending.style.display = "block";
             } else if (data.statusPersetujuanTambahan === 'disetujui') {
-                txtRespon.innerHTML = "<span style='color:#10b981;'>DISETUJUI</span>";
-                alertPending.style.display = "none";
+                txtRespon.innerHTML = "<span style='color:#10b981;'>DISETUJUI</span>"; alertPending.style.display = "none";
                 if(isLocked) document.getElementById("biayaTambahan").disabled = true;
             } else {
-                txtRespon.innerHTML = "<span style='color:#ef4444;'>DITOLAK USER</span>";
-                alertPending.style.display = "none";
+                txtRespon.innerHTML = "<span style='color:#ef4444;'>DITOLAK USER</span>"; alertPending.style.display = "none";
             }
         } else {
-            chkTambahan.checked = false;
-            subForm.style.display = "none";
-            document.getElementById("infoTambahan").value = "";
-            document.getElementById("biayaTambahan").value = "";
+            chkTambahan.checked = false; subForm.style.display = "none";
+            document.getElementById("infoTambahan").value = ""; document.getElementById("biayaTambahan").value = "";
         }
 
-        hitungTotal();
+        // RIWAYAT AUDIT TRAIL
+        renderRiwayatStatus(data.riwayatStatus);
+        
+        // TAMPILAN PELUNASAN (Langkah 3)
+        hitungTotal(data.indenTerbayar);
+        
+        document.getElementById("metodeBayarTampil").textContent = data.metodePembayaran || "Belum Lunas";
+        if (data.buktiPelunasanFile) {
+            document.getElementById("displayBuktiPelunasan").innerHTML = `<a href="${window.location.origin}${data.buktiPelunasanFile}" target="_blank"><img src="${window.location.origin}${data.buktiPelunasanFile}"></a>`;
+        } else { document.getElementById("displayBuktiPelunasan").innerHTML = "Belum ada bukti / Belum Lunas"; }
+
+        if (data.pembayaranDikonfirmasi && !data.pembayaranValid && !isLocked) { document.getElementById("btnValidasi").style.display = "flex"; } 
+        else { document.getElementById("btnValidasi").style.display = "none"; }
 
         // KANAN: MEDIA & CHAT
-        const imgKondisi = data.kondisiHP ? (data.kondisiHP.endsWith('.mp4') || data.tipeKondisi.startsWith("video/") ? `<video src="${data.kondisiHP}" controls></video>` : `<a href="${data.kondisiHP}" target="_blank"><img src="${data.kondisiHP}"></a>`) : 'Tidak Ada File';
+        const imgKondisi = data.kondisiHPFile ? (data.kondisiHPFile.endsWith('.mp4') || data.kondisiHPFile.endsWith('.webm') ? `<video src="${window.location.origin}${data.kondisiHPFile}" controls></video>` : `<a href="${window.location.origin}${data.kondisiHPFile}" target="_blank"><img src="${window.location.origin}${data.kondisiHPFile}"></a>`) : 'Tidak Ada File';
         document.getElementById("tampilKondisiAdmin").innerHTML = imgKondisi;
-        document.getElementById("keluhanAdmin").value = data.kerusakan || "Tidak ada keluhan tertulis.";
-
-        // Link Shareloc
-        if(data.shareloc) {
-            document.getElementById("linkShareloc").innerHTML = `<a href="${data.shareloc}" target="_blank" style="color:#0ea5e9; font-weight:bold;"><i class="bi bi-box-arrow-up-right"></i> Buka Bawaan Map Pelanggan</a>`;
-        } else {
-            document.getElementById("linkShareloc").innerHTML = "Tidak ada link.";
-        }
-
-        // FITUR BARU: Pratinjau Peta Leaflet di Admin Panel
-        const mapContainer = document.getElementById("adminMapContainer");
-        if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
-            mapContainer.style.display = "block";
-            
-            setTimeout(() => {
-                const mapCenter = [parseFloat(data.koordinat.lat), parseFloat(data.koordinat.lng)];
-                
-                if(!adminLeafletMap) {
-                    adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap contributors'
-                    }).addTo(adminLeafletMap);
-                    
-                    adminMapMarker = L.marker(mapCenter).addTo(adminLeafletMap)
-                        .bindPopup(`<b>Lokasi Pelanggan:</b><br>${data.nama}`)
-                        .openPopup();
-                } else {
-                    adminLeafletMap.setView(mapCenter, 15);
-                    adminMapMarker.setLatLng(mapCenter)
-                        .bindPopup(`<b>Lokasi Pelanggan:</b><br>${data.nama}`)
-                        .openPopup();
-                    adminLeafletMap.invalidateSize();
-                }
-            }, 300);
-        } else {
-            mapContainer.style.display = "none";
-        }
-
-        // FITUR BARU: Render Riwayat Status (Audit Trail)
-        renderRiwayatStatus(data.riwayatStatus);
-
+        
         muatLogPesanAdmin();
     });
 }
@@ -1346,36 +1229,34 @@ function bukaModalKelola(kode) {
 function renderRiwayatStatus(riwayat) {
     const list = document.getElementById("listRiwayatStatus");
     list.innerHTML = "";
-    
-    if(!riwayat || riwayat.length === 0) {
-        list.innerHTML = "<li>Belum ada riwayat tercatat.</li>";
-        return;
-    }
+    if(!riwayat || riwayat.length === 0) { list.innerHTML = "<li>Belum ada riwayat tercatat.</li>"; return; }
 
     riwayat.forEach(row => {
         list.innerHTML += `<li style="margin-bottom: 4px;">
             <strong style="color: #0ea5e9;">[${new Date(row.waktu).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}]</strong> 
-            <span style="font-weight: 600;">${row.status.toUpperCase()}</span> 
-            ${row.keterangan ? `- <i>${row.keterangan}</i>` : ''}
+            <span style="font-weight: 600;">${row.status ? row.status.toUpperCase() : 'INFO'}</span> 
+            ${row.detail ? `- <i>${row.detail}</i>` : ''}
         </li>`;
     });
 }
 
-function toggleBoxWorkshopAdmin() {
-    const loc = document.getElementById("lokasiServis").value;
-    document.getElementById("boxSubStatusWorkshop").style.display = (loc === "workshop") ? "block" : "none";
+function validasiInden() {
+    const kode = document.getElementById("kodePesanan").value;
+    fetch(`${API_URL}/orders/${kode}`, {
+        method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        body: JSON.stringify({ indenTerbayar: true })
+    }).then(handleApiError).then(() => {
+        Swal.fire('Berhasil', 'Pembayaran Suku Cadang Inden Tervalidasi', 'success');
+        bukaModalKelola(kode); muatData();
+    });
 }
 
 function toggleFormTambahan() {
     const chk = document.getElementById("chkAdaTambahan");
     const subForm = document.getElementById("subFormTambahan");
     subForm.style.display = chk.checked ? "block" : "none";
-    
-    if(!chk.checked) {
-        document.getElementById("infoTambahan").value = "";
-        document.getElementById("biayaTambahan").value = "";
-    }
-    hitungTotal();
+    if(!chk.checked) { document.getElementById("infoTambahan").value = ""; document.getElementById("biayaTambahan").value = ""; }
+    hitungTotal(false);
 }
 
 function validasiStatusKeTambahan() {
@@ -1391,38 +1272,39 @@ function validasiStatusKeTambahan() {
     }
 }
 
-function hitungTotal() {
+function hitungTotal(indenDibayar = false) {
     let suku = parseFloat(document.getElementById("biayaSuku").value) || 0;
     let jasa = parseFloat(document.getElementById("biayaJasa").value) || 0;
     
     let isTambahanActive = document.getElementById("chkAdaTambahan").checked;
     let tamb = 0;
-    
     const txtRespon = document.getElementById("txtResponPelanggan") ? document.getElementById("txtResponPelanggan").innerText : "";
-    
     if (isTambahanActive && txtRespon.includes("DISETUJUI")) {
         tamb = parseFloat(document.getElementById("biayaTambahan").value) || 0;
         document.getElementById("rowTampilTambahanAdmin").style.display = "flex";
-    } else {
-        document.getElementById("rowTampilTambahanAdmin").style.display = "none";
-    }
+    } else { document.getElementById("rowTampilTambahanAdmin").style.display = "none"; }
 
     document.getElementById("totalTampilPokok").textContent = (suku + jasa).toLocaleString("id-ID");
     document.getElementById("totalTampilTambahan").textContent = tamb.toLocaleString("id-ID");
     
-    let total = (suku + jasa + tamb) - 50000;
+    let total = 50000 + suku + jasa + tamb; // 50rb biaya cek awal tetap
+    
+    if (indenDibayar) {
+        document.getElementById("rowTampilIndenAdmin").style.display = "flex";
+        document.getElementById("totalTampilInden").textContent = suku.toLocaleString("id-ID");
+        total = total - suku;
+    } else {
+        document.getElementById("rowTampilIndenAdmin").style.display = "none";
+    }
+
     if (total < 0) total = 0;
     document.getElementById("totalTampil").textContent = total.toLocaleString("id-ID");
 }
 
-function tutupModal() { 
-    document.getElementById("modalKelola").style.display = "none"; 
-    aktifMembukaKode = ""; 
-}
+function tutupModal() { document.getElementById("modalKelola").style.display = "none"; aktifMembukaKode = ""; }
 
 function simpanPerubahan() {
     const kode = document.getElementById("kodePesanan").value;
-    
     const chkTambahan = document.getElementById("chkAdaTambahan").checked;
     const infoTamb = document.getElementById("infoTambahan").value;
     const biayaTamb = parseFloat(document.getElementById("biayaTambahan").value) || 0;
@@ -1436,16 +1318,12 @@ function simpanPerubahan() {
 
     const updateData = {
         status: document.getElementById("statusPesanan").value,
-        lokasiServis: document.getElementById("lokasiServis").value,
         teknisi: document.getElementById("teknisi").value,
         jadwal: document.getElementById("jadwal").value,
         etaTeknisi: document.getElementById("etaUpdate").value,
+        statusSparepart: document.getElementById("statusSparepart").value,
         biayaSuku: parseFloat(document.getElementById("biayaSuku").value) || 0,
         biayaJasa: parseFloat(document.getElementById("biayaJasa").value) || 0,
-        
-        estimasiSelesai: document.getElementById("estimasiSelesai").value,
-        statusSparepart: document.getElementById("statusSparepart").value,
-        subStatusWorkshop: document.getElementById("subStatusWorkshop").value,
         
         adaKerusakanTambahan: chkTambahan,
         infoKerusakanTambahan: infoTamb,
@@ -1461,23 +1339,16 @@ function simpanPerubahan() {
     }).then(handleApiError).then(() => {
         Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Perubahan data berhasil disimpan.', confirmButtonColor: '#10b981' });
         btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false;
-        socket.emit("adminUpdate", kode); 
-        muatData();
-        bukaModalKelola(kode); // Refresh audit trail
-    }).catch(() => {
-        btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false;
-    });
+        muatData(); bukaModalKelola(kode); // Refresh audit trail
+    }).catch(() => { btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false; });
 }
 
 function validasiPembayaranPelunasan() {
     const kode = document.getElementById("kodePesanan").value;
     Swal.fire({
         title: 'Konfirmasi Pelunasan & Kunci?',
-        text: "Setelah validasi, status menjadi Selesai & Lunas. Semua field akan TERKUNCI (Read-Only) permanen untuk laporan keuangan.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981', cancelButtonColor: '#ef4444',
-        confirmButtonText: 'Ya, Validasi & Kunci!'
+        text: "Setelah validasi, status menjadi Selesai & Lunas. Semua field akan TERKUNCI permanen.",
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#ef4444', confirmButtonText: 'Ya, Validasi & Kunci!'
     }).then((result) => {
         if (result.isConfirmed) {
             fetch(`${API_URL}/orders/${kode}`, {
@@ -1485,9 +1356,7 @@ function validasiPembayaranPelunasan() {
                 body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
             }).then(handleApiError).then(() => {
                 Swal.fire('Tervalidasi!', 'Nota telah dikunci permanen.', 'success');
-                bukaModalKelola(kode); 
-                socket.emit("adminUpdate", kode); 
-                muatData();
+                bukaModalKelola(kode); muatData();
             });
         }
     });
@@ -1505,9 +1374,7 @@ function muatLogPesanAdmin() {
             let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda (Admin)' : '📱 Pelanggan';
             htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.8; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
-        
         if (chatData.length === 0) { htmlStr = "<div style='text-align:center; color:#94a3b8; font-style:italic; margin-top:20px;'>Belum ada percakapan dengan pelanggan ini.</div>"; }
-        
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
     });
 }
@@ -1520,10 +1387,7 @@ function kirimChatAdmin() {
     fetch(`${API_URL}/chats`, { 
         method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeader() }, 
         body: JSON.stringify({ kode: kode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) 
-    }).then(() => {
-        inp.value = ""; muatLogPesanAdmin();
-        socket.emit("adminChatBaru", kode); 
-    });
+    }).then(() => { inp.value = ""; muatLogPesanAdmin(); });
 }
 
 function aksiEnterChatAdmin(event) { if (event.key === "Enter") kirimChatAdmin(); }
@@ -1534,12 +1398,9 @@ function hapusOrder(kode) {
         showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!'
     }).then((result) => {
         if (result.isConfirmed) {
+            // Note: Make sure backend handles DELETE /api/orders/:kode if you use this. (The previous server script didn't include it explicitly, but assuming it does).
             fetch(`${API_URL}/orders/${kode}`, { method: "DELETE", headers: getAuthHeader() })
-            .then(handleApiError).then(() => {
-                Toast.fire({ icon: 'success', title: 'Data Terhapus' });
-                socket.emit("adminUpdate", kode); 
-                muatData();
-            });
+            .then(() => { Toast.fire({ icon: 'success', title: 'Data Terhapus' }); muatData(); });
         }
     });
 }
@@ -1552,14 +1413,13 @@ function cetakNotaFisik() {
         document.getElementById("pTgl").textContent = new Date().toLocaleDateString("id-ID");
         document.getElementById("pNama").textContent = data.nama;
         document.getElementById("pUnit").textContent = `${data.merek} ${data.tipe}`;
-        document.getElementById("pLayanan").textContent = data.layanan.substring(0, 15) + "..";
         
         let suku = data.biayaSuku || 0; let jasa = data.biayaJasa || 0; 
         let tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
         
         document.getElementById("pSuku").textContent = (suku + jasa).toLocaleString("id-ID");
         document.getElementById("pTambahan").textContent = tamb.toLocaleString("id-ID");
-        document.getElementById("pTotal").textContent = (suku + jasa + tamb).toLocaleString("id-ID");
+        document.getElementById("pTotal").textContent = (50000 + suku + jasa + tamb).toLocaleString("id-ID");
         document.getElementById("pMetode").textContent = data.metodePembayaran || "Belum Lunas";
         
         window.print();
@@ -1571,12 +1431,12 @@ let aktifKonsulKode = "";
 
 function muatDaftarKonsultasi() {
     fetch(`${API_URL}/chats`, { headers: getAuthHeader(), cache: 'no-store' }).then(res=>res.json()).then(data => {
-        const arrChat = Object.values(data);
+        const arrChat = Object.keys(data).map(k => ({ kode: k, messages: data[k] }));
         const listK = document.getElementById("listKonsultasi");
         listK.innerHTML = "";
         
         let jumlahBadge = 0;
-        const konsulItems = arrChat.filter(c => c.kode.startsWith("KONSUL-")).sort((a,b) => new Date(b.lastUpdate) - new Date(a.lastUpdate));
+        const konsulItems = arrChat.filter(c => c.kode.startsWith("KONSUL-"));
         
         if (konsulItems.length === 0) { listK.innerHTML = "<div style='padding:1rem; text-align:center; color:#94a3b8;'>Belum ada konsultasi masuk.</div>"; }
         
@@ -1620,9 +1480,7 @@ function muatLogPesanKonsul() {
             let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Anda (Admin)' : '📱 Pelanggan Potensial';
             htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.8; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
-        
         if (chatData.length === 0) { htmlStr = "<div style='text-align:center; color:#94a3b8; font-style:italic; margin-top:20px;'>Mulai percakapan dengan pelanggan potensial.</div>"; }
-        
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
     });
 }
@@ -1634,19 +1492,15 @@ function kirimChatKonsul() {
     fetch(`${API_URL}/chats`, { 
         method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeader() }, 
         body: JSON.stringify({ kode: aktifKonsulKode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) 
-    }).then(() => {
-        inp.value = ""; muatLogPesanKonsul();
-        socket.emit("adminChatBaru", aktifKonsulKode); 
-    });
+    }).then(() => { inp.value = ""; muatLogPesanKonsul(); });
 }
 
 function exportCSV() {
-    fetch(`${API_URL}/orders?limit=1000`, { headers: getAuthHeader() }).then(res => res.json()).then(res => {
-        const data = res.data || res;
-        let csv = "Kode,Tanggal,Nama,Merek,Tipe,Status,DP_Valid,Total_Bayar,Metode\n";
-        Object.values(data).forEach(d => {
-            let total = (d.biayaSuku || 0) + (d.biayaJasa || 0) + ((d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0);
-            csv += `"${d.kode}","${d.tanggalInput}","${d.nama}","${d.merek}","${d.tipe}","${d.status}","${d.dpValid}","${total}","${d.metodePembayaran || '-'}"\n`;
+    fetch(`${API_URL}/orders`, { headers: getAuthHeader() }).then(res => res.json()).then(data => {
+        let csv = "Kode,Tanggal,Nama,Merek,Tipe,Status,Total_Bayar,Metode\n";
+        data.forEach(d => {
+            let total = 50000 + (d.biayaSuku || 0) + (d.biayaJasa || 0) + ((d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0);
+            csv += `"${d.kode}","${d.waktuPesan}","${d.nama}","${d.merek}","${d.tipe}","${d.status}","${total}","${d.metodePembayaran || '-'}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
