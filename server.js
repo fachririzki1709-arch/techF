@@ -88,7 +88,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// --- SCHEMA & MODEL (Dimodifikasi: Hapus DP, Tambah Pengecekan & Inden) ---
+// --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
     shareloc: { type: String, default: "" }, 
@@ -150,13 +150,14 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
+// ✅ PERBAIKAN 1: ENDPOINT ORDERS DIKEMBALIKAN DALAM BENTUK ARRAY MURNI
 app.get('/api/orders', verifyAdmin, async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 2000; 
         const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
-        const ordersObject = {};
-        dataOrders.forEach(order => { if (order.kode) ordersObject[order.kode] = order; });
-        res.json(ordersObject);
+        
+        // Memastikan langsung mengembalikan format Array agar sesuai dan bisa dibaca oleh Frontend Admin (Tabel tidak crash)
+        res.json(dataOrders); 
     } catch (error) { res.status(500).json({ error: "Gagal memuat data pesanan" }); }
 });
 
@@ -192,7 +193,6 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
         io.emit("updateDashboardAdmin");
         res.status(201).json({ message: "Data tersimpan" });
     } catch (error) {
-        // PERBAIKAN: Penanganan error detail agar "Sistem Sibuk" tidak menyembunyikan penyebab aslinya
         console.error("❌ ERROR SAAT POST /api/orders:", error);
         res.status(500).json({ error: "Gagal simpan pesanan: " + error.message }); 
     }
@@ -249,7 +249,6 @@ app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 
         io.emit("updateDashboardAdmin");
         res.json({ message: "Update berhasil" });
     } catch (error) { 
-        // PERBAIKAN: Penanganan error detail untuk update pesanan
         console.error("❌ ERROR SAAT PUT /api/orders/:kode:", error);
         res.status(500).json({ error: "Gagal update: " + error.message }); 
     }
