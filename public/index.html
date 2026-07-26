@@ -784,13 +784,24 @@
 
 <script>
 let petaPelanggan, markerPelanggan;
+
 function inisialisasiPetaLeaflet() {
-    if(petaPelanggan) return; 
+    // Jika peta sudah ada, kita hanya perlu memberitahu Leaflet agar merender ulang ukurannya (solusi blank abu-abu)
+    if(petaPelanggan) {
+        petaPelanggan.invalidateSize();
+        return; 
+    }
     
-    const latAwal = -6.816666;
-    const lngAwal = 107.133333;
+    // Tarik data kordinat dari input tersembunyi (berguna jika user kembali dari tab lain, atau me-restore draft)
+    const latDraft = document.getElementById('latLokasi').value;
+    const lngDraft = document.getElementById('lngLokasi').value;
     
-    petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 13);
+    // Gunakan koordinat draft jika ada, jika kosong gunakan default daerah Cianjur
+    const latAwal = latDraft ? parseFloat(latDraft) : -6.816666;
+    const lngAwal = lngDraft ? parseFloat(lngDraft) : 107.133333;
+    
+    // Buat peta baru dengan level zoom 15 agar lebih dekat dan akurat
+    petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 15);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -959,11 +970,6 @@ function restoreDraft() {
             if(data.lat && data.lng) {
                 document.getElementById("latLokasi").value = data.lat;
                 document.getElementById("lngLokasi").value = data.lng;
-                if(markerPelanggan && petaPelanggan) {
-                    const savedPos = new L.LatLng(data.lat, data.lng);
-                    markerPelanggan.setLatLng(savedPos);
-                    petaPelanggan.setView(savedPos, 14);
-                }
             }
 
             document.getElementById("merek").value = data.merek || "";
@@ -991,10 +997,13 @@ function dapatkanLokasiOtomatis() {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
-            if(markerPelanggan && petaPelanggan) {
+            if(petaPelanggan) {
                 const myLocation = new L.LatLng(lat, lng);
                 markerPelanggan.setLatLng(myLocation);
-                petaPelanggan.setView(myLocation, 15);
+                // Zoom lebih dalam (level 16) untuk akurasi pin point
+                petaPelanggan.setView(myLocation, 16);
+                // Paksa pembaruan ukuran jika tampilan sedikit lag
+                setTimeout(() => petaPelanggan.invalidateSize(), 100);
             }
             
             document.getElementById('latLokasi').value = lat;
@@ -1012,7 +1021,8 @@ function dapatkanLokasiOtomatis() {
             if(error.code === 1) pesanError = 'Izin lokasi (GPS) ditolak oleh Anda. Mohon izinkan pada browser.';
             Swal.fire('Gagal GPS', pesanError, 'error');
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        // Waktu tunggu diperpanjang menjadi 15 detik agar perangkat dapat mengunci GPS lebih baik pada jaringan yang lambat
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 }
 
@@ -1166,11 +1176,11 @@ function nextStep() {
     if (currentStep === 2) { kirimPesanan(); } else {
         if (currentStep < 6) { 
             currentStep++; simpanDraft(); updateProgress(); showContent(); 
+            // Jika berhasil masuk ke Langkah 2, inisialisasi / resize peta
             if(currentStep === 2) {
                 setTimeout(() => {
                     inisialisasiPetaLeaflet();
-                    petaPelanggan.invalidateSize();
-                }, 200);
+                }, 300);
             }
         }
     }
@@ -1314,10 +1324,10 @@ function kirimPesanan() {
     formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
     formData.append('layanan', layananTerpilih || "Belum dipilih");
     
-    // Multi-file upload untuk kondisi awal perangkat
+    // Perbaikan nama field upload agar sesuai dengan Backend (kondisiHPFile)
     const fileInput = document.getElementById("fileKondisi");
     if(fileInput.files.length > 0) {
-        formData.append('kondisiHP', fileInput.files[0]);
+        formData.append('kondisiHPFile', fileInput.files[0]);
     }
     formData.append('tipeKondisi', tipeFile || "");
 
