@@ -1131,9 +1131,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if(aktifOrder) {
             kodeSaya = aktifOrder;
             document.getElementById("heroLandingPage").style.display = "none";
-            document.getElementById("lacakCepatBox").style.display = "none";
+            
+            // PASTIKAN INI BLOCK
+            document.getElementById("lacakCepatBox").style.display = "block"; 
             document.getElementById("publicReviewsSection").style.display = "none";
             document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
+            
+            // PERBAIKAN: Paksa layar tetap di Step 3 saat direfresh
+            currentStep = 3; 
+            updateProgress(); 
+            showContent();
+            
             cekStatus();
             aktifkanSistemChat();
         } else {
@@ -1408,19 +1416,26 @@ function prosesLacakDenganKode(kode) {
         kodeSaya = data.kode;
         localStorage.setItem("kodeAktifPelanggan", kodeSaya);
         document.getElementById("heroLandingPage").style.display = "none";
-        document.getElementById("lacakCepatBox").style.display = "none";
+        
+        // PASTIKAN INI BLOCK AGAR KOTAK LACAK TETAP TAMPIL
+        document.getElementById("lacakCepatBox").style.display = "block"; 
         document.getElementById("publicReviewsSection").style.display = "none";
         document.getElementById("kodePesanan").textContent = kodeSaya;
         document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         
-        aktifkanSistemChat(); cekStatus();
+        // PERBAIKAN: Paksa layar pindah ke Step 3 (Lacak Pesanan) secara langsung
+        currentStep = 3; 
+        updateProgress(); 
+        showContent();
+
+        aktifkanSistemChat(); 
+        cekStatus();
     })
     .catch(() => {
         Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar di sistem kami!', confirmButtonColor: '#ef4444' });
         window.history.replaceState({}, document.title, window.location.pathname);
     });
 }
-
 function responsTambahan(aksi) {
     let payload = {};
     let pesan = '';
@@ -1532,7 +1547,7 @@ function cekStatus() {
         if (currentStep === 6) { isiDataFaktur(data); return; }
         if (data.status === "ditolak_pelanggan") { currentStep = 6; updateProgress(); showContent(); isiDataFaktur(data); return; }
 
-        if (data.status === "baru") {
+        if (data.status === "baru" || data.status === "pending") {
             targetStep = 3;
             document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> Pesanan diterima! Menunggu penjadwalan...</p>";
             document.getElementById("tampilJadwal").style.display = "none";
