@@ -1132,12 +1132,12 @@ document.addEventListener("DOMContentLoaded", () => {
             kodeSaya = aktifOrder;
             document.getElementById("heroLandingPage").style.display = "none";
             
-            // PASTIKAN INI BLOCK
-            document.getElementById("lacakCepatBox").style.display = "block"; 
+            // UBAH KEMBALI MENJADI NONE AGAR MENGHILANG SAAT MELACAK
+            document.getElementById("lacakCepatBox").style.display = "none"; 
+            
             document.getElementById("publicReviewsSection").style.display = "none";
             document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
             
-            // PERBAIKAN: Paksa layar tetap di Step 3 saat direfresh
             currentStep = 3; 
             updateProgress(); 
             showContent();
@@ -1417,13 +1417,13 @@ function prosesLacakDenganKode(kode) {
         localStorage.setItem("kodeAktifPelanggan", kodeSaya);
         document.getElementById("heroLandingPage").style.display = "none";
         
-        // PASTIKAN INI BLOCK AGAR KOTAK LACAK TETAP TAMPIL
-        document.getElementById("lacakCepatBox").style.display = "block"; 
+        // UBAH KEMBALI MENJADI NONE AGAR MENGHILANG SAAT MELACAK
+        document.getElementById("lacakCepatBox").style.display = "none"; 
+        
         document.getElementById("publicReviewsSection").style.display = "none";
         document.getElementById("kodePesanan").textContent = kodeSaya;
         document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         
-        // PERBAIKAN: Paksa layar pindah ke Step 3 (Lacak Pesanan) secara langsung
         currentStep = 3; 
         updateProgress(); 
         showContent();
@@ -1431,6 +1431,11 @@ function prosesLacakDenganKode(kode) {
         aktifkanSistemChat(); 
         cekStatus();
     })
+    .catch(() => {
+        Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar di sistem kami!', confirmButtonColor: '#ef4444' });
+        window.history.replaceState({}, document.title, window.location.pathname);
+    });
+}
     .catch(() => {
         Swal.fire({ icon: 'error', title: 'Tidak Ditemukan', text: 'Kode tidak terdaftar di sistem kami!', confirmButtonColor: '#ef4444' });
         window.history.replaceState({}, document.title, window.location.pathname);
