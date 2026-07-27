@@ -93,11 +93,20 @@ mongoose.connect(MONGO_URI)
 
 // --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
-    kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
+    kode: String, 
+    nama: String, 
+    wa: String, 
+    merek: String, 
+    tipe: String, 
+    kerusakan: String, 
+    layanan: String,
     shareloc: { type: String, default: "" }, 
-    status: { type: String, default: "baru" },
+    status: { type: String, default: "pending" }, // Ubah default jadi "pending" agar konsisten dengan admin
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
-    teknisi: String, jadwal: String, lokasiServis: String,
+    waktuPesan: { type: Date, default: Date.now }, // <--- TAMBAHKAN INI AGAR URUTAN WAKTU AKURAT
+    teknisi: String, 
+    jadwal: String, 
+    lokasiServis: String,
     buktiPelunasan: String,  
     etaTeknisi: { type: String, default: "" },
     rating: { type: Number, default: 0 },
@@ -116,7 +125,7 @@ const OrderSchema = new mongoose.Schema({
     tipeKondisi: { type: String, default: "" },
     subStatusWorkshop: { type: String, default: "antrean" },
     estimasiSelesai: { type: String, default: "" },
-    statusSparepart: { type: String, default: "ready" },
+    statusSparepart: { type: String, default: "tersedia" },
     buktiBayarInden: { type: String, default: "" },
     metodeBayarInden: { type: String, default: "" },
     indenTerbayar: { type: Boolean, default: false },
@@ -181,7 +190,7 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
 
         const dataOrder = req.body;
         
-        if (req.files && req.files['kondisiHPFile']) {
+       if (req.files && req.files['kondisiHPFile']) {
             dataOrder.kondisiHP = `/uploads/${req.files['kondisiHPFile'][0].filename}`;
             dataOrder.tipeKondisi = req.files['kondisiHPFile'][0].mimetype;
         } else if (dataOrder.kondisiHP && dataOrder.kondisiHP.startsWith('data:')) {
@@ -189,10 +198,11 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
         }
 
         dataOrder.biayaPengecekan = 50000;
-        dataOrder.riwayatStatus = [{ status: "baru", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }];
+        dataOrder.waktuPesan = new Date(); // <--- Paksa set waktu saat data masuk
+        dataOrder.riwayatStatus = [{ status: "pending", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }];
 
         const dataBaru = new Order(dataOrder);
-        await dataBaru.save();
+        await dataBaru.save(); // Simpan ke MongoDB
         
         if(req.body.kodeKonsultasi) {
             await Chat.updateMany(
@@ -202,7 +212,8 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
         }
 
         io.emit("updateDashboardAdmin");
-        res.status(201).json({ message: "Data tersimpan" });
+        
+        res.status(201).json({ message: "Data tersimpan", kode: dataBaru.kode });
     } catch (error) {
         console.error("❌ ERROR SAAT POST /api/orders:", error);
         res.status(500).json({ error: "Gagal simpan pesanan: " + error.message }); 
