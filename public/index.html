@@ -786,42 +786,41 @@
 let petaPelanggan, markerPelanggan;
 
 function inisialisasiPetaLeaflet() {
-    // FIX BLANK MAPS: Beri jeda dan panggil invalidateSize agar Leaflet merender ulang ukurannya dengan sempurna
-    setTimeout(() => {
-        if(!petaPelanggan) {
-            const latDraft = document.getElementById('latLokasi').value;
-            const lngDraft = document.getElementById('lngLokasi').value;
-            
-            const latAwal = latDraft ? parseFloat(latDraft) : -6.816666;
-            const lngAwal = lngDraft ? parseFloat(lngDraft) : 107.133333;
-            
-            petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 15);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(petaPelanggan);
-            
-            markerPelanggan = L.marker([latAwal, lngAwal], {draggable: true}).addTo(petaPelanggan);
-            
-            document.getElementById('latLokasi').value = latAwal;
-            document.getElementById('lngLokasi').value = lngAwal;
-            
-            markerPelanggan.on('dragend', function(e) {
-                const posisi = markerPelanggan.getLatLng();
-                document.getElementById('latLokasi').value = posisi.lat;
-                document.getElementById('lngLokasi').value = posisi.lng;
-                simpanDraft();
-            });
-            
-            petaPelanggan.on('click', function(e) {
-                markerPelanggan.setLatLng(e.latlng);
-                document.getElementById('latLokasi').value = e.latlng.lat;
-                document.getElementById('lngLokasi').value = e.latlng.lng;
-                simpanDraft();
-            });
-        }
+    if(petaPelanggan) {
         petaPelanggan.invalidateSize();
-    }, 300);
+        return; 
+    }
+    
+    const latDraft = document.getElementById('latLokasi').value;
+    const lngDraft = document.getElementById('lngLokasi').value;
+    
+    const latAwal = latDraft ? parseFloat(latDraft) : -6.816666;
+    const lngAwal = lngDraft ? parseFloat(lngDraft) : 107.133333;
+    
+    petaPelanggan = L.map('mapPelanggan').setView([latAwal, lngAwal], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(petaPelanggan);
+    
+    markerPelanggan = L.marker([latAwal, lngAwal], {draggable: true}).addTo(petaPelanggan);
+    
+    document.getElementById('latLokasi').value = latAwal;
+    document.getElementById('lngLokasi').value = lngAwal;
+    
+    markerPelanggan.on('dragend', function(e) {
+        const posisi = markerPelanggan.getLatLng();
+        document.getElementById('latLokasi').value = posisi.lat;
+        document.getElementById('lngLokasi').value = posisi.lng;
+        simpanDraft();
+    });
+    
+    petaPelanggan.on('click', function(e) {
+        markerPelanggan.setLatLng(e.latlng);
+        document.getElementById('latLokasi').value = e.latlng.lat;
+        document.getElementById('lngLokasi').value = e.latlng.lng;
+        simpanDraft();
+    });
 }
 
 function klikMenuHome() {
@@ -1171,7 +1170,9 @@ function nextStep() {
         if (currentStep < 6) { 
             currentStep++; simpanDraft(); updateProgress(); showContent(); 
             if(currentStep === 2) {
-                inisialisasiPetaLeaflet();
+                setTimeout(() => {
+                    inisialisasiPetaLeaflet();
+                }, 300);
             }
         }
     }
