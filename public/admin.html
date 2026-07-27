@@ -281,7 +281,6 @@
         <button class="btn-login" aria-label="Masuk ke Panel" onclick="prosesLogin()">Masuk Ke Panel Secure</button>
     </div>
 </div>
-
 <div id="mainPanelWrapper">
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="app-container">
@@ -381,9 +380,10 @@
                         
                         <div class="filter-grup">
                             <label for="filterStatus">Status:</label>
+                            <!-- PERBAIKAN: value="pending" agar cocok dengan default DB -->
                             <select id="filterStatus" onchange="muatData()" style="width: 170px;">
                                 <option value="semua">Semua Status</option>
-                                <option value="baru">Baru Masuk</option>
+                                <option value="pending">Baru Masuk</option>
                                 <option value="dijadwalkan">Dijadwalkan</option>
                                 <option value="diproses">Diproses</option>
                                 <option value="selesai_servis">Selesai Servis</option>
@@ -670,7 +670,6 @@
         </div>
     </div>
 </div>
-
 <script>
 const API_URL = window.location.origin + "/api";
 let aktifMembukaKode = "";
@@ -808,8 +807,6 @@ function getAuthHeader() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // --- FITUR MIGRASI & SINKRONISASI SERVER ---
-    // Menghapus sisa data order di localStorage dari versi lama agar admin 100% menggunakan API / MongoDB
     let adaDataLama = false;
     Object.keys(localStorage).forEach(key => {
         if (key !== 'adminTema') { 
@@ -818,11 +815,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
     if (adaDataLama) {
-        console.log("✅ Sisa data LocalStorage dibersihkan. Halaman kini 100% tersinkronisasi murni dengan Database Server.");
+        console.log("✅ Sisa data LocalStorage dibersihkan.");
     }
-    // -------------------------------------------
 
-    tampilkanDashboardUtama();
+    // PERBAIKAN: Melakukan validasi token yang tersimpan
+    // Jika tidak ada token (contoh setelah logout), arahkan kembali ke form login
+    if (sessionStorage.getItem("adminToken")) {
+        tampilkanDashboardUtama();
+    } else {
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.getElementById("mainPanelWrapper").style.display = "none";
+    }
+
     document.addEventListener('click', function(event) {
         const notifWrapper = document.querySelector('.notif-wrapper');
         if (notifWrapper && !notifWrapper.contains(event.target)) document.getElementById('notifDropdownPanel').classList.remove('show');
@@ -861,7 +865,7 @@ function prosesLogin() {
 
 function prosesLogout() {
     sessionStorage.removeItem("adminToken");
-    location.reload();
+    location.reload(); // Memuat ulang halaman, script DOMContentLoaded akan memastikan beralih ke form Login
 }
 
 function aksiEnterLogin(event) { if (event.key === "Enter") prosesLogin(); }
@@ -873,7 +877,12 @@ function tampilkanDashboardUtama() {
     muatDaftarKonsultasi(); 
 }
 
+// PERBAIKAN: Penanganan Sesi Berakhir (Error 401 Unauthorized)
 function handleApiError(res) {
+    if (res.status === 401 || res.status === 403) {
+        prosesLogout(); // Lakukan paksa logout ke layar login
+        throw new Error("Sesi tidak valid / kedaluwarsa");
+    }
     if(!res.ok) throw new Error("Gagal mengambil data");
     return res.json();
 }
@@ -887,6 +896,10 @@ function debounceMuatData() {
 function muatData() {
     fetch(`${API_URL}/orders?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(res => {
+        if (res.status === 401 || res.status === 403) {
+            prosesLogout(); // Pastikan admin ditendang jika token ditolak saat mereload tabel
+            throw new Error("Sesi tidak valid");
+        }
         if(!res.ok) throw new Error("Gagal mengambil data dari server");
         return res.json();
     })
@@ -905,6 +918,8 @@ function muatData() {
         // Custom sort by newest/oldest Date
         const tipeUrutan = document.getElementById("urutTanggal").value;
         let urutanData = [...semua].sort((a, b) => new Date(b.waktuPesan || 0) - new Date(a.waktuPesan || 0));
+
+        if(tipeUrutan === "terlama") urutanData.reverse();
 
         urutanData.forEach(d => {
             if (filterCari && !d.kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
@@ -952,6 +967,7 @@ function muatData() {
         const meta = { total: window.dataTampilFilter.length, page: halamanSkrg, totalPages: Math.ceil(window.dataTampilFilter.length / barisPerHalaman) };
 
         renderTabelDariServer(dataPaginated, meta);
+        renderGrafikAdmin(baru, jadwal, proses, validasi);
     })
     .catch(err => console.error("Gagal sinkronisasi data admin:", err));
 }
@@ -1431,7 +1447,7 @@ function hapusOrder(kode) {
         showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Note: Make sure backend handles DELETE /api/orders/:kode if you use this. (The previous server script didn't include it explicitly, but assuming it does).
+            // Note: Make sure backend handles DELETE /api/orders/:kode if you use this. 
             fetch(`${API_URL}/orders/${kode}`, { method: "DELETE", headers: getAuthHeader() })
             .then(() => { Toast.fire({ icon: 'success', title: 'Data Terhapus' }); muatData(); });
         }
@@ -1529,7 +1545,7 @@ function kirimChatKonsul() {
 }
 
 function exportCSV() {
-    fetch(`${API_URL}/orders`, { headers: getAuthHeader() }).then(res => res.json()).then(data => {
+    fetch(`${API_URL}/orders`, { headers: getAuthHeader() }).then(handleApiError).then(data => {
         let csv = "Kode,Tanggal,Nama,Merek,Tipe,Status,Total_Bayar,Metode\n";
         data.forEach(d => {
             let total = 50000 + (d.biayaSuku || 0) + (d.biayaJasa || 0) + ((d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0);
@@ -1545,4 +1561,3 @@ function exportCSV() {
 </script>
 </body>
 </html>
-a
