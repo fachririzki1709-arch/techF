@@ -101,6 +101,8 @@ const OrderSchema = new mongoose.Schema({
     kerusakan: String, 
     layanan: String,
     shareloc: { type: String, default: "" }, 
+    lat: { type: String, default: "" }, // Tambahkan baris ini
+    lng: { type: String, default: "" }, // Tambahkan baris ini
     status: { type: String, default: "pending" }, // Ubah default jadi "pending" agar konsisten dengan admin
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     waktuPesan: { type: Date, default: Date.now }, // <--- TAMBAHKAN INI AGAR URUTAN WAKTU AKURAT
@@ -189,6 +191,8 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
         }
 
         const dataOrder = req.body;
+        if(req.body['koordinat[lat]']) dataOrder.lat = req.body['koordinat[lat]'];
+        if(req.body['koordinat[lng]']) dataOrder.lng = req.body['koordinat[lng]'];
         
        if (req.files && req.files['kondisiHPFile']) {
             dataOrder.kondisiHP = `/uploads/${req.files['kondisiHPFile'][0].filename}`;
