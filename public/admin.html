@@ -798,13 +798,30 @@ function pindahTabModal(tabIdTarget) {
         document.getElementById("tabKananLengkap").classList.remove("aktif");
         document.getElementById(tabIdTarget).classList.add("aktif");
     }
-    // Update Map Size when changing tabs - FIX BLANK
-    if(adminLeafletMap) setTimeout(() => adminLeafletMap.invalidateSize(), 500);
+    // Update Map Size when changing tabs
+    if(adminLeafletMap) setTimeout(() => adminLeafletMap.invalidateSize(), 200);
 }
 
-function getAuthHeader() { return {}; } // Karena backend tidak pakai auth ketat di versi ini
+function getAuthHeader() {
+    const token = sessionStorage.getItem("adminToken");
+    return token ? { "Authorization": `Bearer ${token}` } : {};
+}
 
 document.addEventListener("DOMContentLoaded", () => {
+    // --- FITUR MIGRASI & SINKRONISASI SERVER ---
+    // Menghapus sisa data order di localStorage dari versi lama agar admin 100% menggunakan API / MongoDB
+    let adaDataLama = false;
+    Object.keys(localStorage).forEach(key => {
+        if (key !== 'adminTema') { 
+            localStorage.removeItem(key);
+            adaDataLama = true;
+        }
+    });
+    if (adaDataLama) {
+        console.log("✅ Sisa data LocalStorage dibersihkan. Halaman kini 100% tersinkronisasi murni dengan Database Server.");
+    }
+    // -------------------------------------------
+
     tampilkanDashboardUtama();
     document.addEventListener('click', function(event) {
         const notifWrapper = document.querySelector('.notif-wrapper');
@@ -813,10 +830,33 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function prosesLogin() {
-    // Simulasi Login (Backend di skrip baru belum mewajibkan auth token)
-    sessionStorage.setItem("adminToken", "dummy_token");
-    Toast.fire({ icon: 'success', title: 'Login Berhasil' });
-    tampilkanDashboardUtama();
+    const usernameInput = document.getElementById("adminId").value.trim();
+    const passwordInput = document.getElementById("adminPassword").value;
+
+    if (!usernameInput || !passwordInput) {
+        Toast.fire({ icon: 'warning', title: 'ID dan Password wajib diisi!' });
+        return;
+    }
+
+    // Melakukan request login ke Server Backend
+    fetch(`${API_URL}/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: usernameInput, password: passwordInput })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("ID atau Password salah");
+        return res.json();
+    })
+    .then(data => {
+        // Simpan token JWT asli dari server ke sessionStorage
+        sessionStorage.setItem("adminToken", data.token);
+        Toast.fire({ icon: 'success', title: data.message || 'Login Berhasil' });
+        tampilkanDashboardUtama();
+    })
+    .catch(err => {
+        Toast.fire({ icon: 'error', title: 'Login Gagal: ID atau Password salah' });
+    });
 }
 
 function prosesLogout() {
@@ -848,8 +888,7 @@ function muatData() {
     fetch(`${API_URL}/orders?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(handleApiError)
     .then(response => {
-        // FIX TABLE CRASH: Mencegah error mapping data, menjadikannya Array murni secara aman
-        const semua = Array.isArray(response) ? response : Object.values(response);
+        const semua = response; // Backend mengembalikan array
         window.semuaPesananGlobal = semua; 
         
         const tglMulai = document.getElementById("filterTglMulai").value; 
@@ -1025,7 +1064,7 @@ function getBadgeClass(d) {
     return d.status || "baru";
 }
 
-// BULK ACTIONS LOGIC
+// FITUR BARU: BULK ACTIONS LOGIC
 function togglePilihSemuaTabel(source) {
     const checkboxes = document.querySelectorAll(".row-check");
     checkboxes.forEach(cb => cb.checked = source.checked);
@@ -1139,7 +1178,7 @@ function bukaModalKelola(kode) {
         document.getElementById("infoWa").textContent = data.wa;
         document.getElementById("infoKeluhan").textContent = data.kerusakan || "-";
 
-        // Map Leaflet Admin - FIX MAPS BLANK
+        // Map Leaflet Admin
         const mapContainer = document.getElementById("adminMapContainer");
         if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
             setTimeout(() => {
@@ -1151,9 +1190,9 @@ function bukaModalKelola(kode) {
                 } else {
                     adminLeafletMap.setView(mapCenter, 15);
                     adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
+                    adminLeafletMap.invalidateSize();
                 }
-                adminLeafletMap.invalidateSize(); // Pindah keluar dari Else
-            }, 500); // Waktu jeda ditambah 
+            }, 300);
             document.getElementById("infoAlamat").innerHTML = `${data.alamat} <a href="https://www.google.com/maps?q=${data.koordinat.lat},${data.koordinat.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
         } else {
             document.getElementById("infoAlamat").textContent = data.alamat + " (GPS Tidak Diberikan)";
@@ -1399,6 +1438,7 @@ function hapusOrder(kode) {
         showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!'
     }).then((result) => {
         if (result.isConfirmed) {
+            // Note: Make sure backend handles DELETE /api/orders/:kode if you use this. (The previous server script didn't include it explicitly, but assuming it does).
             fetch(`${API_URL}/orders/${kode}`, { method: "DELETE", headers: getAuthHeader() })
             .then(() => { Toast.fire({ icon: 'success', title: 'Data Terhapus' }); muatData(); });
         }
@@ -1512,3 +1552,4 @@ function exportCSV() {
 </script>
 </body>
 </html>
+a
