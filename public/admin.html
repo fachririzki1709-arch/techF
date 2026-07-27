@@ -1188,27 +1188,31 @@ function bukaModalKelola(kode) {
         document.getElementById("infoKeluhan").textContent = data.kerusakan || "-";
 
         // Map Leaflet Admin
-const mapContainer = document.getElementById("adminMapContainer");
-if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
-    setTimeout(() => {
-        const mapCenter = [parseFloat(data.koordinat.lat), parseFloat(data.koordinat.lng)];
-        if(!adminLeafletMap) {
-            adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminLeafletMap);
-            adminMapMarker = L.marker(mapCenter).addTo(adminLeafletMap).bindPopup("Lokasi Pelanggan").openPopup();
+// Map Leaflet Admin
+        const mapContainer = document.getElementById("adminMapContainer");
+        // UBAH: Hapus 'data.koordinat', ganti menjadi 'data.lat' dan 'data.lng'
+        if(data.lat && data.lng) {
+            setTimeout(() => {
+                // UBAH: Ambil koordinat langsung dari data.lat dan data.lng
+                const mapCenter = [parseFloat(data.lat), parseFloat(data.lng)];
+                if(!adminLeafletMap) {
+                    adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminLeafletMap);
+                    adminMapMarker = L.marker(mapCenter).addTo(adminLeafletMap).bindPopup("Lokasi Pelanggan").openPopup();
+                } else {
+                    adminLeafletMap.setView(mapCenter, 15);
+                    adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
+                    
+                    // INI PERBAIKAN UTAMANYA: Paksa render ulang ukuran peta
+                    adminLeafletMap.invalidateSize(); 
+                }
+            }, 300);
+            // UBAH: Sesuaikan link Google Maps agar menggunakan data.lat dan data.lng
+            document.getElementById("infoAlamat").innerHTML = `Titik GPS <a href="https://www.google.com/maps?q=${data.lat},${data.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
         } else {
-            adminLeafletMap.setView(mapCenter, 15);
-            adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
-            
-            // INI PERBAIKAN UTAMANYA: Paksa render ulang ukuran peta
-            adminLeafletMap.invalidateSize(); 
+            // Hapus data.alamat karena variabel alamat tidak ada di database Anda
+            document.getElementById("infoAlamat").textContent = "Lokasi: GPS Tidak Diberikan";
         }
-    }, 300);
-    document.getElementById("infoAlamat").innerHTML = `${data.alamat} <a href="https://www.google.com/maps?q=${data.koordinat.lat},${data.koordinat.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
-} else {
-    document.getElementById("infoAlamat").textContent = data.alamat + " (GPS Tidak Diberikan)";
-}
-
         // ISIAN FORM (Langkah 2)
         document.getElementById("statusPesanan").value = data.status || "pending";
         document.getElementById("teknisi").value = data.teknisi || "";
