@@ -15,17 +15,15 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+
+// PENGATURAN TRUST PROXY (Wajib diletakkan di atas sebelum rate-limit atau middleware lain)
 app.set('trust proxy', 1); 
 
-//  MIDDLEWARE ---
+// --- MIDDLEWARE UTAMA ---
+app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(cors());
 
-const cors = require('cors');
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 // Rate Limiting
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
@@ -93,7 +91,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// --- SCHEMA & MODEL (Dimodifikasi: Hapus DP, Tambah Pengecekan & Inden) ---
+// --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
     shareloc: { type: String, default: "" }, 
@@ -131,7 +129,6 @@ const ChatSchema = new mongoose.Schema({
 });
 const Chat = mongoose.model('Chat', ChatSchema, 'chats');
 
-// --- SCHEMA & MODEL UNTUK SINKRONISASI LOCALSTORAGE ---
 const UserSessionSchema = new mongoose.Schema({
     deviceId: { type: String, required: true, unique: true },
     kodeAktifPelanggan: { type: String, default: "" },
@@ -190,7 +187,6 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
             dataOrder.kondisiHP = simpanBase64KeFile(dataOrder.kondisiHP, 'KONDISI_' + dataOrder.kode);
         }
 
-        // Default Audit Trail
         dataOrder.biayaPengecekan = 50000;
         dataOrder.riwayatStatus = [{ status: "baru", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }];
 
@@ -207,7 +203,6 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
         io.emit("updateDashboardAdmin");
         res.status(201).json({ message: "Data tersimpan" });
     } catch (error) {
-        // PERBAIKAN: Penanganan error detail agar "Sistem Sibuk" tidak menyembunyikan penyebab aslinya
         console.error("❌ ERROR SAAT POST /api/orders:", error);
         res.status(500).json({ error: "Gagal simpan pesanan: " + error.message }); 
     }
@@ -232,7 +227,6 @@ app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 
         if (dataUpdate.buktiBayarInden && dataUpdate.buktiBayarInden.startsWith('data:')) dataUpdate.buktiBayarInden = simpanBase64KeFile(dataUpdate.buktiBayarInden, 'INDEN_' + req.params.kode);
         if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
 
-        // Audit Trail System
         const existing = await Order.findOne({ kode: req.params.kode });
         if (existing) {
             if (dataUpdate.status && existing.status !== dataUpdate.status) {
@@ -264,7 +258,6 @@ app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 
         io.emit("updateDashboardAdmin");
         res.json({ message: "Update berhasil" });
     } catch (error) { 
-        // PERBAIKAN: Penanganan error detail untuk update pesanan
         console.error("❌ ERROR SAAT PUT /api/orders/:kode:", error);
         res.status(500).json({ error: "Gagal update: " + error.message }); 
     }
@@ -321,7 +314,6 @@ app.get('/api/reviews', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
 });
 
-// --- API SINKRONISASI LOCALSTORAGE ---
 app.post('/api/sync', async (req, res) => {
     try {
         const { deviceId, kodeAktifPelanggan, kodeKonsultasiPelanggan, draftFormServis } = req.body;
