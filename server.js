@@ -166,10 +166,11 @@ app.get('/api/orders', verifyAdmin, async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 2000; 
         const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
-        const ordersObject = {};
-        dataOrders.forEach(order => { if (order.kode) ordersObject[order.kode] = order; });
-        res.json(ordersObject);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat data pesanan" }); }
+        res.json(dataOrders); // <--- Langsung mengirim Array ke Panel Admin
+    } catch (error) { 
+        console.error("❌ ERROR GET /api/orders:", error);
+        res.status(500).json({ error: "Gagal memuat data pesanan" }); 
+    }
 });
 
 app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]), async (req, res) => {
