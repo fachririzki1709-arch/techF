@@ -884,7 +884,7 @@ function debounceMuatData() {
     timeoutCari = setTimeout(() => { halamanSkrg = 1; muatData(); }, 350); 
 }
 
-unction muatData() {
+function muatData() {
     fetch(`${API_URL}/orders?_t=${Date.now()}`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(res => {
         if(!res.ok) throw new Error("Gagal mengambil data dari server");
