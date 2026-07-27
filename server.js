@@ -88,7 +88,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// --- SCHEMA & MODEL ---
+// --- SCHEMA & MODEL (Dimodifikasi: Hapus DP, Tambah Pengecekan & Inden) ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
     shareloc: { type: String, default: "" }, 
@@ -126,6 +126,16 @@ const ChatSchema = new mongoose.Schema({
 });
 const Chat = mongoose.model('Chat', ChatSchema, 'chats');
 
+// --- SCHEMA & MODEL UNTUK SINKRONISASI LOCALSTORAGE ---
+const UserSessionSchema = new mongoose.Schema({
+    deviceId: { type: String, required: true, unique: true },
+    kodeAktifPelanggan: { type: String, default: "" },
+    kodeKonsultasiPelanggan: { type: String, default: "" },
+    draftFormServis: { type: Object, default: {} },
+    lastSync: { type: Date, default: Date.now }
+});
+const UserSession = mongoose.model('UserSession', UserSessionSchema, 'user_sessions');
+
 // --- ROUTE API ---
 const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
 const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
@@ -150,14 +160,13 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
-// ✅ PERBAIKAN 1: ENDPOINT ORDERS DIKEMBALIKAN DALAM BENTUK ARRAY MURNI
 app.get('/api/orders', verifyAdmin, async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 2000; 
         const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
-        
-        // Memastikan langsung mengembalikan format Array agar sesuai dan bisa dibaca oleh Frontend Admin (Tabel tidak crash)
-        res.json(dataOrders); 
+        const ordersObject = {};
+        dataOrders.forEach(order => { if (order.kode) ordersObject[order.kode] = order; });
+        res.json(ordersObject);
     } catch (error) { res.status(500).json({ error: "Gagal memuat data pesanan" }); }
 });
 
@@ -193,6 +202,7 @@ app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]),
         io.emit("updateDashboardAdmin");
         res.status(201).json({ message: "Data tersimpan" });
     } catch (error) {
+        // PERBAIKAN: Penanganan error detail agar "Sistem Sibuk" tidak menyembunyikan penyebab aslinya
         console.error("❌ ERROR SAAT POST /api/orders:", error);
         res.status(500).json({ error: "Gagal simpan pesanan: " + error.message }); 
     }
@@ -249,6 +259,7 @@ app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 
         io.emit("updateDashboardAdmin");
         res.json({ message: "Update berhasil" });
     } catch (error) { 
+        // PERBAIKAN: Penanganan error detail untuk update pesanan
         console.error("❌ ERROR SAAT PUT /api/orders/:kode:", error);
         res.status(500).json({ error: "Gagal update: " + error.message }); 
     }
@@ -303,6 +314,49 @@ app.get('/api/reviews', async (req, res) => {
         const reviews = await Order.find({ rating: { $gt: 0 } }).select('nama rating ulasan merek tipe').limit(15).sort({ _id: -1 });
         res.json(reviews);
     } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
+});
+
+// --- API SINKRONISASI LOCALSTORAGE ---
+app.post('/api/sync', async (req, res) => {
+    try {
+        const { deviceId, kodeAktifPelanggan, kodeKonsultasiPelanggan, draftFormServis } = req.body;
+        
+        if (!deviceId) {
+            return res.status(400).json({ error: "Device ID wajib disertakan" });
+        }
+
+        const updateData = {
+            kodeAktifPelanggan: kodeAktifPelanggan || "",
+            kodeKonsultasiPelanggan: kodeKonsultasiPelanggan || "",
+            draftFormServis: draftFormServis || {},
+            lastSync: new Date()
+        };
+
+        const session = await UserSession.findOneAndUpdate(
+            { deviceId: deviceId },
+            { $set: updateData },
+            { new: true, upsert: true }
+        );
+        
+        res.status(200).json({ message: "Sinkronisasi berhasil disave ke server", session });
+    } catch (error) {
+        console.error("❌ ERROR SAAT SYNC:", error);
+        res.status(500).json({ error: "Gagal melakukan sinkronisasi: " + error.message });
+    }
+});
+
+app.get('/api/sync/:deviceId', async (req, res) => {
+    try {
+        const session = await UserSession.findOne({ deviceId: req.params.deviceId });
+        
+        if (!session) {
+            return res.status(404).json({ message: "Data sesi tidak ditemukan di server" });
+        }
+        
+        res.status(200).json(session);
+    } catch (error) {
+        res.status(500).json({ error: "Gagal mengambil data sinkronisasi" });
+    }
 });
 
 app.get('*', (req, res) => {
