@@ -299,16 +299,16 @@
             <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari perangkat Anda.</p>
         </div>
 
-        <!-- Kolom Lacak Cepat (Ketik Kode atau Scan Barcode) -->
-        <div class="lacak-cepat-container" id="lacakCepatBox">
-            <h3><i class="bi bi-search" style="color: #0ea5e9;"></i> Lacak Pesanan / Cek Faktur</h3>
-            <p style="font-size: 0.9rem; color: #64748b; margin-top: 5px;">Ketik kode pemesanan Anda atau klik tombol Scan Barcode untuk melacak status servis.</p>
-            <div class="lacak-input-group">
-                <input type="text" id="inputLacakCepat" placeholder="Contoh: HS-2026..." onkeypress="if(event.key === 'Enter') prosesLacakCepat()">
-                <button onclick="prosesLacakCepat()"><i class="bi bi-search"></i> Lacak</button>
-                <button type="button" onclick="bukaScannerQR()"><i class="bi bi-upc-scan"></i> Scan Barcode</button>
-            </div>
-        </div>
+       <!-- Kolom Lacak Cepat (Ketik Kode atau Scan Barcode) -->
+<div class="lacak-cepat-container" id="lacakCepatBox">
+    <h3><i class="bi bi-search" style="color: #0ea5e9;"></i> Lacak Pesanan / Cek Faktur</h3>
+    <p style="font-size: 0.9rem; color: #64748b; margin-top: 5px;">Ketik kode pemesanan Anda atau klik tombol Scan Barcode untuk melacak status servis.</p>
+    <div class="lacak-input-group">
+        <input type="text" id="inputLacakCepat" placeholder="Contoh: HS-2026..." onkeypress="if(event.key === 'Enter') prosesLacakCepat()">
+        <button onclick="prosesLacakCepat()"><i class="bi bi-search"></i> Lacak</button>
+        <button type="button" onclick="bukaScannerQR()"><i class="bi bi-upc-scan"></i> Scan Barcode</button>
+    </div>
+</div>
 
         <div class="container" id="mainOrderContainer">
             <div class="progress-container">
