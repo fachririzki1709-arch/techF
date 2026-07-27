@@ -1188,24 +1188,26 @@ function bukaModalKelola(kode) {
         document.getElementById("infoKeluhan").textContent = data.kerusakan || "-";
 
         // Map Leaflet Admin
-        const mapContainer = document.getElementById("adminMapContainer");
-        if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
-            setTimeout(() => {
-                const mapCenter = [parseFloat(data.koordinat.lat), parseFloat(data.koordinat.lng)];
-                if(!adminLeafletMap) {
-                    adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminLeafletMap);
-                    adminMapMarker = L.marker(mapCenter).addTo(adminLeafletMap).bindPopup("Lokasi Pelanggan").openPopup();
-                } else {
-                    adminLeafletMap.setView(mapCenter, 15);
-                    adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
-                    adminLeafletMap.invalidateSize();
-                }
-            }, 300);
-            document.getElementById("infoAlamat").innerHTML = `${data.alamat} <a href="https://www.google.com/maps?q=${data.koordinat.lat},${data.koordinat.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
+const mapContainer = document.getElementById("adminMapContainer");
+if(data.koordinat && data.koordinat.lat && data.koordinat.lng) {
+    setTimeout(() => {
+        const mapCenter = [parseFloat(data.koordinat.lat), parseFloat(data.koordinat.lng)];
+        if(!adminLeafletMap) {
+            adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminLeafletMap);
+            adminMapMarker = L.marker(mapCenter).addTo(adminLeafletMap).bindPopup("Lokasi Pelanggan").openPopup();
         } else {
-            document.getElementById("infoAlamat").textContent = data.alamat + " (GPS Tidak Diberikan)";
+            adminLeafletMap.setView(mapCenter, 15);
+            adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
+            
+            // INI PERBAIKAN UTAMANYA: Paksa render ulang ukuran peta
+            adminLeafletMap.invalidateSize(); 
         }
+    }, 300);
+    document.getElementById("infoAlamat").innerHTML = `${data.alamat} <a href="https://www.google.com/maps?q=${data.koordinat.lat},${data.koordinat.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
+} else {
+    document.getElementById("infoAlamat").textContent = data.alamat + " (GPS Tidak Diberikan)";
+}
 
         // ISIAN FORM (Langkah 2)
         document.getElementById("statusPesanan").value = data.status || "pending";
