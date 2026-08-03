@@ -329,31 +329,39 @@
                     <!-- Kategori HP -->
                     <div class="kategori-card hp">
                         <h4><i class="bi bi-phone-vibrate"></i> Layanan Smartphone</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Pembersihan (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l1').click(); event.stopPropagation();"><label><input type="checkbox" id="l1" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Ganti Layar (LCD)</label><span class="harga">Mulai Rp 350rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l2').click(); event.stopPropagation();"><label><input type="checkbox" id="l2" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Ganti Baterai</label><span class="harga">Mulai Rp 150rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l3').click(); event.stopPropagation();"><label><input type="checkbox" id="l3" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Perbaikan Sistem / Software</label><span class="harga">Mulai Rp 100rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l4').click(); event.stopPropagation();"><label><input type="checkbox" id="l4" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Pembersihan (Water Damage)</label><span class="harga">Mulai Rp 80rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l5').click(); event.stopPropagation();"><label><input type="checkbox" id="l5" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Flexible / Konektor Charger</label><span class="harga">Mulai Rp 80rb</span></div>
                     </div>
                     
                     <!-- Kategori Elektronik -->
                     <div class="kategori-card elektronik">
                         <h4><i class="bi bi-plug"></i> Elektronik Rumah Tangga</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Rice Cooker</label><span class="harga">Mulai Rp 50rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l6').click(); event.stopPropagation();"><label><input type="checkbox" id="l6" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Servis Dispenser</label><span class="harga">Mulai Rp 50rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l7').click(); event.stopPropagation();"><label><input type="checkbox" id="l7" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Servis Blender</label><span class="harga">Mulai Rp 40rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l8').click(); event.stopPropagation();"><label><input type="checkbox" id="l8" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Servis Rice Cooker</label><span class="harga">Mulai Rp 50rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l9').click(); event.stopPropagation();"><label><input type="checkbox" id="l9" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Servis Kipas Angin</label><span class="harga">Mulai Rp 40rb</span></div>
                     </div>
 
                     <!-- Kategori Komputer & Laptop -->
                     <div class="kategori-card komputer">
                         <h4><i class="bi bi-laptop"></i> Komputer & Laptop</h4>
-                        <div class="layanan-item" onclick="document.getElementById('l10').click(); event.stopPropagation();"><label><input type="checkbox" id="l10" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Install OS / Software</label><span class="harga">Mulai Rp 100rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l11').click(); event.stopPropagation();"><label><input type="checkbox" id="l11" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Ganti Keyboard / Baterai</label><span class="harga">Mulai Rp 200rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l12').click(); event.stopPropagation();"><label><input type="checkbox" id="l12" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Upgrade SSD / RAM</label><span class="harga">Mulai Rp 150rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l13').click(); event.stopPropagation();"><label><input type="checkbox" id="l13" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Mati Total / No Display</label><span class="harga">Mulai Rp 250rb</span></div>
-                        <div class="layanan-item" onclick="document.getElementById('l14').click(); event.stopPropagation();"><label><input type="checkbox" id="l14" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft()"> Cleaning & Thermal Paste</label><span class="harga">Mulai Rp 150rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l10').click(); event.stopPropagation();"><label><input type="checkbox" id="l10" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Install OS / Software</label><span class="harga">Mulai Rp 100rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l11').click(); event.stopPropagation();"><label><input type="checkbox" id="l11" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Ganti Keyboard / Baterai</label><span class="harga">Mulai Rp 200rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l12').click(); event.stopPropagation();"><label><input type="checkbox" id="l12" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Upgrade SSD / RAM</label><span class="harga">Mulai Rp 150rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l13').click(); event.stopPropagation();"><label><input type="checkbox" id="l13" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Mati Total / No Display</label><span class="harga">Mulai Rp 250rb</span></div>
+                        <div class="layanan-item" onclick="document.getElementById('l14').click(); event.stopPropagation();"><label><input type="checkbox" id="l14" onclick="event.stopPropagation()" onchange="updateBrandOptions(); simpanDraft(); updateEstimasiHarga();"> Cleaning & Thermal Paste</label><span class="harga">Mulai Rp 150rb</span></div>
                     </div>
+                </div>
+
+                <!-- KALKULATOR ESTIMASI HARGA DINAMIS -->
+                <div id="estimasiTotalBox" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:1.2rem; border-radius:8px; margin:1rem 0; text-align:center;">
+                    <h4 style="color:#166534; margin-bottom:5px;"><i class="bi bi-calculator"></i> Estimasi Biaya Perbaikan Awal</h4>
+                    <p style="font-size:0.9rem; color:#475569;">Perkiraan di bawah ini sudah termasuk biaya pengecekan tetap sebesar Rp 50.000.</p>
+                    <p style="font-size:1.3rem; font-weight:800; color:#15803d; margin-top:10px;">Estimasi Mulai: Rp <span id="lblEstimasiMin">0</span></p>
+                    <p style="font-size:0.75rem; color:#64748b; margin-top:5px;">*Harga final dapat berubah setelah teknisi melakukan pengecekan langsung.</p>
                 </div>
 
                 <div class="info catatan"><i class="bi bi-info-circle-fill"></i> <span><strong>ℹ️ Catatan:</strong> Biaya pengecekan tetap sebesar Rp 50.000 akan ditambahkan ke kalkulasi total tagihan servis.</span></div>
@@ -379,8 +387,15 @@
                 <label>Alamat Lengkap</label>
                 <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
 
-                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi Peta (Geser pin ke alamat Anda)</label>
-                <p style="font-size: 0.8rem; color: #64748b; margin-top: -8px; margin-bottom: 8px;">Akurasi peta membantu teknisi kami menemukan lokasi Anda lebih cepat.</p>
+                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Cari & Titik Lokasi Peta (Geser pin ke alamat Anda)</label>
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: -8px; margin-bottom: 8px;">Ketik nama jalan lalu klik cari, atau geser pin langsung di peta.</p>
+                
+                <!-- FITUR SEARCH PETA AUTOCOMPLETE -->
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <input type="text" id="inputCariAlamatMap" placeholder="Ketik area/jalan (Misal: Cianjur Kota)..." style="margin:0; flex:1;">
+                    <button type="button" class="btn btn-primary" style="margin:0; padding:0.6rem 1.2rem;" onclick="cariAlamatMapOSM()"><i class="bi bi-search"></i> Cari</button>
+                </div>
+
                 <div id="mapPelanggan" style="height: 250px; width: 100%; border-radius: 8px; margin-bottom: 1rem; z-index: 1; border: 2px solid #e2e8f0;"></div>
                 
                 <input type="hidden" id="latLokasi">
@@ -485,6 +500,9 @@
                     <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
                     <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
                 </div>
+
+                <!-- TOMBOL PEMBATALAN OLEH USER -->
+                <button id="btnBatalPesananUser" class="btn btn-danger" onclick="batalkanPesananSistem()" style="margin-top: 1.5rem; width: 100%; justify-content: center; display: none;"><i class="bi bi-x-octagon"></i> Batalkan Pesanan Ini</button>
             </div>
 
             <!-- STEP 4: PROSES -->
@@ -823,6 +841,88 @@ function inisialisasiPetaLeaflet() {
     });
 }
 
+// === TAMBAHAN: FITUR SEARCH PETA AUTOCOMPLETE ===
+function cariAlamatMapOSM() {
+    const query = document.getElementById("inputCariAlamatMap").value.trim();
+    if(!query) return Swal.fire('Kosong', 'Masukkan nama jalan atau area yang ingin dicari.', 'warning');
+    
+    const btn = event.currentTarget;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+    
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+    .then(res => res.json())
+    .then(data => {
+        btn.innerHTML = originalHtml;
+        if(data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
+            const myLocation = new L.LatLng(lat, lng);
+            
+            if(petaPelanggan) {
+                markerPelanggan.setLatLng(myLocation);
+                petaPelanggan.setView(myLocation, 16);
+            }
+            document.getElementById('latLokasi').value = lat;
+            document.getElementById('lngLokasi').value = lng;
+            simpanDraft();
+            Swal.fire('Ditemukan', 'Pin peta telah digeser ke lokasi pencarian.', 'success');
+        } else {
+            Swal.fire('Tidak ditemukan', 'Alamat tidak ditemukan di peta. Coba kata kunci lain.', 'error');
+        }
+    }).catch(() => {
+        btn.innerHTML = originalHtml;
+        Swal.fire('Error', 'Gagal memuat layanan peta.', 'error');
+    });
+}
+
+// === TAMBAHAN: FITUR KALKULATOR ESTIMASI HARGA ===
+function updateEstimasiHarga() {
+    let totalMin = 0;
+    const cbList = document.querySelectorAll("input[type=checkbox]:checked");
+    cbList.forEach(cb => {
+        const parentLabel = cb.parentElement.parentElement;
+        const hargaSpan = parentLabel.querySelector('.harga');
+        if(hargaSpan) {
+            const labelText = hargaSpan.innerText;
+            const match = labelText.match(/(\d+)/); 
+            if(match) totalMin += parseInt(match[1]) * 1000;
+        }
+    });
+    
+    const estBox = document.getElementById("estimasiTotalBox");
+    if(totalMin > 0) {
+        estBox.style.display = "block";
+        document.getElementById("lblEstimasiMin").innerText = (totalMin + 50000).toLocaleString('id-ID');
+    } else {
+        estBox.style.display = "none";
+    }
+}
+
+// === TAMBAHAN: FITUR BATALKAN PESANAN ===
+function batalkanPesananSistem() {
+    Swal.fire({
+        title: 'Batalkan Pesanan?',
+        text: "Pesanan yang dibatalkan tidak bisa dikembalikan.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Ya, Batalkan'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${API_URL}/orders/${kodeSaya}/cancel`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'ditolak_pelanggan' })
+            }).then(() => {
+                Swal.fire('Dibatalkan!', 'Pesanan Anda telah dibatalkan.', 'success');
+                cekStatus();
+            });
+        }
+    });
+}
+
 function klikMenuHome() {
     tampilHalaman('home');
     if (!localStorage.getItem("kodeAktifPelanggan")) {
@@ -976,6 +1076,7 @@ function restoreDraft() {
             
             data.layanan.forEach(id => { const cb = document.getElementById(id); if(cb) cb.checked = true; });
             updateBrandOptions(); toggleMerekLainnya();
+            updateEstimasiHarga();
         } catch(e){}
     }
 }
@@ -1546,6 +1647,15 @@ function cekStatus() {
         let targetStep = currentStep;
         if (currentStep === 6) { isiDataFaktur(data); return; }
         if (data.status === "ditolak_pelanggan") { currentStep = 6; updateProgress(); showContent(); isiDataFaktur(data); return; }
+
+        const btnBatal = document.getElementById("btnBatalPesananUser");
+        if(btnBatal) {
+            if (data.status === "baru" || data.status === "pending") {
+                btnBatal.style.display = "flex";
+            } else {
+                btnBatal.style.display = "none";
+            }
+        }
 
         if (data.status === "baru" || data.status === "pending") {
             targetStep = 3;
