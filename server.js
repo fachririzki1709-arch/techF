@@ -14,26 +14,31 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { 
+    cors: { 
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE"]
+    } 
+});
 
-// PENGATURAN TRUST PROXY (Wajib diletakkan di atas sebelum rate-limit atau middleware lain)
 app.set('trust proxy', 1); 
 
-// --- MIDDLEWARE UTAMA ---
+// Middleware Keamanan & Parsing
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Rate Limiting
+// Rate Limiter untuk Mencegah Spam API
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
-    max: 300, 
-    message: { error: "Terlalu banyak request dari IP ini, coba lagi nanti." },
+    max: 500, 
+    message: { error: "Terlalu banyak request dari IP ini, coba beberapa saat lagi." },
     standardHeaders: true,
     legacyHeaders: false,
 });
 app.use('/api', apiLimiter);
 
+// Header Anti-Cache untuk API
 app.use('/api', (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -41,7 +46,7 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
-// --- KONFIGURASI FOLDER FRONTEND & UPLOADS ---
+// Konfigurasi Direktori Statis & Uploads
 const publicPath = path.join(__dirname, 'public');
 const uploadPath = path.join(publicPath, 'uploads');
 app.use(express.static(publicPath));
@@ -50,9 +55,11 @@ if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-// Konfigurasi Multer
+// Konfigurasi Penyimpanan File dengan Multer
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) { cb(null, uploadPath); },
+    destination: function (req, file, cb) { 
+        cb(null, uploadPath); 
+    },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname) || '.jpg';
         cb(null, file.fieldname + '_' + Date.now() + ext);
@@ -63,67 +70,54 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-function simpanBase64KeFile(base64String, prefix) {
-    if (!base64String || !base64String.startsWith('data:')) return base64String;
-    try {
-        const matches = base64String.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-        if (!matches || matches.length !== 3) return "";
-        let ext = matches[1].split('/')[1] || 'png';
-        if (ext === 'jpeg') ext = 'jpg';
-        
-        const buffer = Buffer.from(matches[2], 'base64');
-        const filename = `${prefix}_${Date.now()}.${ext}`;
-        const filepath = path.join(uploadPath, filename);
-        
-        fs.writeFileSync(filepath, buffer);
-        return `/uploads/${filename}`;
-    } catch (err) { return ""; }
-}
-
-// --- WEBSOCKET ---
+// WebSocket Connection Handler
 io.on('connection', (socket) => {
-    console.log("🟢 Klien terhubung ke WebSocket");
+    console.log("🟢 Klien terhubung ke WebSocket:", socket.id);
+    
+    socket.on('disconnect', () => {
+        console.log("🔴 Klien terputus dari WebSocket:", socket.id);
+    });
 });
 
-// --- KONEKSI MONGODB ---
+// Koneksi Database MongoDB
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/db_servis_hp"; 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// --- SCHEMA & MODEL ---
+// Definisi Skema Database (Mongoose Schemas)
 const OrderSchema = new mongoose.Schema({
-    kode: String, 
-    nama: String, 
-    wa: String, 
-    merek: String, 
-    tipe: String, 
-    kerusakan: String, 
-    layanan: String,
+    kode: { type: String, required: true, unique: true }, 
+    nama: { type: String, required: true }, 
+    wa: { type: String, required: true }, 
+    merek: { type: String, required: true }, 
+    tipe: { type: String, required: true }, 
+    kerusakan: { type: String, default: "" }, 
+    layanan: { type: String, default: "" },
     shareloc: { type: String, default: "" }, 
-    lat: { type: String, default: "" }, // Tambahkan baris ini
-    lng: { type: String, default: "" }, // Tambahkan baris ini
-    status: { type: String, default: "pending" }, // Ubah default jadi "pending" agar konsisten dengan admin
+    lat: { type: String, default: "" },
+    lng: { type: String, default: "" },
+    status: { type: String, default: "pending" }, 
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
-    waktuPesan: { type: Date, default: Date.now }, // <--- TAMBAHKAN INI AGAR URUTAN WAKTU AKURAT
-    teknisi: String, 
-    jadwal: String, 
-    lokasiServis: String,
-    buktiPelunasan: String,  
+    waktuPesan: { type: Date, default: Date.now }, 
+    teknisi: { type: String, default: "" }, 
+    jadwal: { type: String, default: "" }, 
+    lokasiServis: { type: String, default: "home_service" },
+    buktiPelunasan: { type: String, default: "" },  
     etaTeknisi: { type: String, default: "" },
     rating: { type: Number, default: 0 },
     ulasan: { type: String, default: "" },
     biayaSuku: { type: Number, default: 0 },
     biayaJasa: { type: Number, default: 0 },
     biayaPengecekan: { type: Number, default: 50000 },
-    metodePembayaran: String,
+    metodePembayaran: { type: String, default: "" },
     pembayaranDikonfirmasi: { type: Boolean, default: false },
     pembayaranValid: { type: Boolean, default: false },
     adaKerusakanTambahan: { type: Boolean, default: false },
-    infoKerusakanTambahan: String,
+    infoKerusakanTambahan: { type: String, default: "" },
     biayaSukuTambahan: { type: Number, default: 0 },
     statusPersetujuanTambahan: { type: String, default: "pending" },
-    kondisiHP: String,
+    kondisiHP: { type: String, default: "" },
     tipeKondisi: { type: String, default: "" },
     subStatusWorkshop: { type: String, default: "antrean" },
     estimasiSelesai: { type: String, default: "" },
@@ -136,33 +130,50 @@ const OrderSchema = new mongoose.Schema({
 const Order = mongoose.model('Order', OrderSchema, 'orders');
 
 const ChatSchema = new mongoose.Schema({
-    kode: String, pengirim: String, teks: String, waktu: String
+    kode: String, 
+    pengirim: String, 
+    teks: String, 
+    waktu: String
 });
 const Chat = mongoose.model('Chat', ChatSchema, 'chats');
 
-const UserSessionSchema = new mongoose.Schema({
-    deviceId: { type: String, required: true, unique: true },
-    kodeAktifPelanggan: { type: String, default: "" },
-    kodeKonsultasiPelanggan: { type: String, default: "" },
-    draftFormServis: { type: Object, default: {} },
-    lastSync: { type: Date, default: Date.now }
-});
-const UserSession = mongoose.model('UserSession', UserSessionSchema, 'user_sessions');
+// --- FUNGSI HELPER WHATSAPP GATEWAY (Webhook) ---
+async function kirimNotifikasiWA(noWa, pesanTeks) {
+    console.log(`[WA Gateway Simulasi] Mengirim ke ${noWa}: ${pesanTeks}`);
+    try {
+        /* Uncomment dan sesuaikan token jika menggunakan penyedia layanan Fonnte / Wablas / Watzap
+        const response = await fetch('https://api.fonnte.com/send', {
+            method: 'POST',
+            headers: { 'Authorization': 'TOKEN_ANDA_DISINI' },
+            body: new URLSearchParams({ target: noWa, message: pesanTeks, countryCode: '62' })
+        });
+        const result = await response.json();
+        console.log("Status WA Fonnte:", result);
+        */
+    } catch(err) {
+        console.error("Gagal mengirim WA:", err);
+    }
+}
 
-// --- ROUTE API ---
+// Konfigurasi Admin & Middleware JWT
 const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
 const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
 
 function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; 
-    if (!token) return res.status(401).json({ message: "Akses Ditolak" });
+    if (!token) return res.status(401).json({ message: "Akses Ditolak: Token tidak ditemukan" });
+    
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ message: "Token Tidak Valid" });
+        if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
+        req.adminUser = user;
         next(); 
     });
 }
 
+// API ROUTES
+
+// Endpoint Login Admin
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
     if (username === "admin" && bcrypt.compareSync(password, ADMIN_HASH)) {
@@ -173,95 +184,116 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
+// Endpoint Statistik untuk Dashboard Admin
+app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
+    try {
+        const totalPesanan = await Order.countDocuments();
+        const pesananPending = await Order.countDocuments({ status: { $in: ['pending', 'baru'] } });
+        const pesananDiproses = await Order.countDocuments({ status: 'diproses' });
+        const pesananSelesai = await Order.countDocuments({ status: 'selesai' });
+        
+        res.json({
+            totalPesanan,
+            pesananPending,
+            pesananDiproses,
+            pesananSelesai
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal memuat statistik dashboard" });
+    }
+});
+
+// Endpoint Menampilkan Ulasan Publik di Homepage
+app.get('/api/reviews', async (req, res) => {
+    try {
+        const reviews = await Order.find({ rating: { $gt: 0 } }).select('nama merek tipe rating ulasan waktuPesan').sort({ _id: -1 }).limit(10);
+        res.json(reviews);
+    } catch (error) {
+        res.status(500).json({ error: "Gagal memuat ulasan pelanggan" });
+    }
+});
+
+// Endpoint Mengambil Seluruh Daftar Pesanan (Admin Only)
 app.get('/api/orders', verifyAdmin, async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 2000; 
         const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
-        res.json(dataOrders); // <--- Langsung mengirim Array ke Panel Admin
+        res.json(dataOrders); 
     } catch (error) { 
-        console.error("❌ ERROR GET /api/orders:", error);
         res.status(500).json({ error: "Gagal memuat data pesanan" }); 
     }
 });
 
-app.post('/api/orders', upload.fields([{ name: 'kondisiHPFile', maxCount: 1 }]), async (req, res) => {
+// Endpoint Membuat Pesanan Baru (Pelanggan)
+app.post('/api/orders', upload.any(), async (req, res) => {
     try {
-        if (!req.body.nama || !req.body.wa || !req.body.merek) {
-            return res.status(400).json({ error: "Data wajib tidak lengkap" });
-        }
-
         const dataOrder = req.body;
         if(req.body['koordinat[lat]']) dataOrder.lat = req.body['koordinat[lat]'];
         if(req.body['koordinat[lng]']) dataOrder.lng = req.body['koordinat[lng]'];
         
-       if (req.files && req.files['kondisiHPFile']) {
-            dataOrder.kondisiHP = `/uploads/${req.files['kondisiHPFile'][0].filename}`;
-            dataOrder.tipeKondisi = req.files['kondisiHPFile'][0].mimetype;
-        } else if (dataOrder.kondisiHP && dataOrder.kondisiHP.startsWith('data:')) {
-            dataOrder.kondisiHP = simpanBase64KeFile(dataOrder.kondisiHP, 'KONDISI_' + dataOrder.kode);
+        if (req.files && req.files.length > 0) {
+            const fileKondisi = req.files.find(f => f.fieldname === 'kondisiHPFile');
+            if (fileKondisi) {
+                dataOrder.kondisiHP = `/uploads/${fileKondisi.filename}`;
+            }
         }
 
         dataOrder.biayaPengecekan = 50000;
-        dataOrder.waktuPesan = new Date(); // <--- Paksa set waktu saat data masuk
+        dataOrder.waktuPesan = new Date(); 
         dataOrder.riwayatStatus = [{ status: "pending", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }];
 
         const dataBaru = new Order(dataOrder);
-        await dataBaru.save(); // Simpan ke MongoDB
+        await dataBaru.save(); 
         
-        if(req.body.kodeKonsultasi) {
-            await Chat.updateMany(
-                { kode: req.body.kodeKonsultasi },
-                { $set: { kode: dataBaru.kode } }
-            );
-        }
+        const pesanWA = `Halo ${dataBaru.nama},\n\nTerima kasih telah memesan servis di SF Tech.\nKode Resi Anda: *${dataBaru.kode}*\n\nSilakan lacak status perbaikan Anda melalui website kami.`;
+        kirimNotifikasiWA(dataBaru.wa, pesanWA);
 
         io.emit("updateDashboardAdmin");
-        
-        res.status(201).json({ message: "Data tersimpan", kode: dataBaru.kode });
+        res.status(201).json({ message: "Data pesanan berhasil disimpan", kode: dataBaru.kode });
     } catch (error) {
-        console.error("❌ ERROR SAAT POST /api/orders:", error);
-        res.status(500).json({ error: "Gagal simpan pesanan: " + error.message }); 
+        res.status(500).json({ error: "Gagal menyimpan pesanan: " + error.message }); 
     }
 });
 
+// Endpoint Detail Pesanan Berdasarkan Kode Resi
 app.get('/api/orders/:kode', async (req, res) => {
     try {
         const pesanan = await Order.findOne({ kode: req.params.kode });
         if(!pesanan) return res.status(404).json({ error: "Pesanan tidak ditemukan" });
         res.json(pesanan);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat pesanan" }); }
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal memuat detail pesanan" }); 
+    }
 });
 
-app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 1 }, { name: 'buktiPelunasanFile', maxCount: 1 }]), async (req, res) => {
+// Endpoint Pembaruan Status & Data Pesanan
+app.put('/api/orders/:kode', upload.any(), async (req, res) => {
     try {
         const dataUpdate = req.body;
-
-        if (req.files) {
-            if (req.files['buktiIndenFile']) dataUpdate.buktiBayarInden = `/uploads/${req.files['buktiIndenFile'][0].filename}`;
-            if (req.files['buktiPelunasanFile']) dataUpdate.buktiPelunasan = `/uploads/${req.files['buktiPelunasanFile'][0].filename}`;
+        
+        if (req.files && req.files.length > 0) {
+            const fInden = req.files.find(f => f.fieldname === 'buktiInden');
+            if (fInden) dataUpdate.buktiBayarInden = `/uploads/${fInden.filename}`;
+            
+            const fLunas = req.files.find(f => f.fieldname === 'buktiPelunasan');
+            if (fLunas) dataUpdate.buktiPelunasan = `/uploads/${fLunas.filename}`;
         }
-        if (dataUpdate.buktiBayarInden && dataUpdate.buktiBayarInden.startsWith('data:')) dataUpdate.buktiBayarInden = simpanBase64KeFile(dataUpdate.buktiBayarInden, 'INDEN_' + req.params.kode);
-        if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
 
         const existing = await Order.findOne({ kode: req.params.kode });
-        if (existing) {
-            if (dataUpdate.status && existing.status !== dataUpdate.status) {
-                await Order.updateOne(
-                    { kode: req.params.kode }, 
-                    { $push: { riwayatStatus: { status: dataUpdate.status, detail: "Pembaruan progres", waktu: new Date().toISOString() } } }
-                );
-            }
-            if (dataUpdate.statusPersetujuanTambahan && existing.statusPersetujuanTambahan !== dataUpdate.statusPersetujuanTambahan) {
-                let det = "Pelanggan mengubah persetujuan";
-                if(dataUpdate.statusPersetujuanTambahan === 'disetujui') det = "Pelanggan menyetujui tambahan biaya";
-                if(dataUpdate.statusPersetujuanTambahan === 'ditolak_lanjut') det = "Pelanggan menolak biaya tambahan (lanjut servis awal)";
-                if(dataUpdate.statusPersetujuanTambahan === 'ditolak_batal') det = "Pelanggan membatalkan seluruh servis (terkena biaya cek)";
-                
-                await Order.updateOne(
-                    { kode: req.params.kode }, 
-                    { $push: { riwayatStatus: { status: existing.status, detail: det, waktu: new Date().toISOString() } } }
-                );
-            }
+        
+        if (existing && dataUpdate.status && existing.status !== dataUpdate.status) {
+            await Order.updateOne(
+                { kode: req.params.kode }, 
+                { $push: { riwayatStatus: { status: dataUpdate.status, detail: "Pembaruan progres", waktu: new Date().toISOString() } } }
+            );
+
+            let statusTeks = dataUpdate.status;
+            if(statusTeks === 'dijadwalkan') statusTeks = 'DIJADWALKAN - Teknisi akan segera meluncur';
+            if(statusTeks === 'diproses') statusTeks = 'SEDANG DIPROSES';
+            if(statusTeks === 'selesai_servis') statusTeks = 'SELESAI DIPERBAIKI - Menunggu Pelunasan';
+
+            const pesanUpdate = `Pembaruan Status Servis SF Tech!\n\nPesanan dengan kode *${req.params.kode}* Anda saat ini berstatus:\n*${statusTeks.toUpperCase()}*\n\nSilakan cek website untuk rincian lebih lanjut.`;
+            kirimNotifikasiWA(existing.wa, pesanUpdate);
         }
 
         const updateData = await Order.findOneAndUpdate(
@@ -272,111 +304,107 @@ app.put('/api/orders/:kode', upload.fields([{ name: 'buktiIndenFile', maxCount: 
         
         io.emit("updateDataPelanggan", updateData.kode);
         io.emit("updateDashboardAdmin");
-        res.json({ message: "Update berhasil" });
+        res.json({ message: "Update pesanan berhasil", updateData });
     } catch (error) { 
-        console.error("❌ ERROR SAAT PUT /api/orders/:kode:", error);
-        res.status(500).json({ error: "Gagal update: " + error.message }); 
+        res.status(500).json({ error: "Gagal memperbarui pesanan: " + error.message }); 
     }
 });
 
+// Endpoint Unggah Bukti Transfer Suku Cadang Inden
+app.put('/api/orders/:kode/inden', upload.single('buktiInden'), async (req, res) => {
+    try {
+        let updateFields = {};
+        if (req.file) {
+            updateFields.buktiBayarInden = `/uploads/${req.file.filename}`;
+        }
+        const updated = await Order.findOneAndUpdate(
+            { kode: req.params.kode },
+            { $set: updateFields },
+            { new: true }
+        );
+        io.emit("updateDashboardAdmin");
+        res.json({ message: "Bukti inden berhasil diunggah", updated });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal mengunggah bukti inden" });
+    }
+});
+
+// Endpoint Pembatalan Pesanan oleh Pelanggan
+app.put('/api/orders/:kode/cancel', async (req, res) => {
+    try {
+        const { status } = req.body;
+        const existing = await Order.findOne({ kode: req.params.kode });
+        
+        if (existing && (existing.status === 'baru' || existing.status === 'pending')) {
+            await Order.updateOne(
+                { kode: req.params.kode }, 
+                { 
+                    $set: { status: status || 'ditolak_pelanggan' },
+                    $push: { riwayatStatus: { status: status || 'ditolak_pelanggan', detail: "Dibatalkan oleh Pelanggan via Website", waktu: new Date().toISOString() } } 
+                }
+            );
+            
+            io.emit("updateDashboardAdmin");
+            res.json({ message: "Pembatalan pesanan berhasil" });
+        } else {
+            res.status(400).json({ error: "Pesanan ini sudah diproses dan tidak dapat dibatalkan secara mandiri." });
+        }
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal membatalkan pesanan" }); 
+    }
+});
+
+// Endpoint Memberikan Rating & Ulasan Pelayanan
+app.post('/api/orders/:kode/rating', async (req, res) => {
+    try {
+        const { rating, ulasan } = req.body;
+        const updated = await Order.findOneAndUpdate(
+            { kode: req.params.kode },
+            { $set: { rating: Number(rating), ulasan: ulasan || "" } },
+            { new: true }
+        );
+        io.emit("updateDashboardAdmin");
+        res.json({ message: "Rating dan ulasan berhasil disimpan", updated });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal menyimpan rating" });
+    }
+});
+
+// Endpoint Hapus Pesanan (Admin Only)
 app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
     try {
         await Order.findOneAndDelete({ kode: req.params.kode });
         io.emit("updateDashboardAdmin");
-        res.json({ message: "Hapus berhasil" });
-    } catch (error) { res.status(500).json({ error: "Gagal hapus" }); }
+        res.json({ message: "Pesanan berhasil dihapus" });
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal menghapus pesanan" }); 
+    }
 });
 
-app.get('/api/chats/konsultasi/list', verifyAdmin, async (req, res) => {
-    try {
-        const chats = await Chat.find({ kode: { $regex: '^KONSUL-' } }).sort({ _id: 1 });
-        const grouped = {};
-        chats.forEach(c => {
-            if(!grouped[c.kode]) grouped[c.kode] = [];
-            grouped[c.kode].push(c);
-        });
-        res.json(grouped);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat konsultasi" }); }
-});
-
+// Endpoint Kirim Pesan Chat
 app.post('/api/chats', async (req, res) => {
     try {
         const chatBaru = new Chat(req.body);
         await chatBaru.save();
         io.emit("chatBaruDiterima", { kode: chatBaru.kode, pengirim: chatBaru.pengirim });
-        res.status(201).json({ message: "Chat terkirim" });
-    } catch (error) { res.status(500).json({ error: "Gagal kirim chat" }); }
+        res.status(201).json({ message: "Pesan chat terkirim" });
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal mengirim pesan chat" }); 
+    }
 });
 
+// Endpoint Ambil Log Chat Berdasarkan Kode Pesanan/Konsultasi
 app.get('/api/chats/:kode', async (req, res) => {
     try {
         const logChat = await Chat.find({ kode: req.params.kode });
         res.json(logChat);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat chat" }); }
-});
-
-app.post('/api/orders/:kode/rating', async (req, res) => {
-    try {
-        const { rating, ulasan } = req.body;
-        await Order.findOneAndUpdate({ kode: req.params.kode }, { $set: { rating, ulasan } });
-        res.json({ message: "Rating berhasil disimpan" });
-    } catch (error) { res.status(500).json({ error: "Gagal simpan rating" }); }
-});
-
-app.get('/api/reviews', async (req, res) => {
-    try {
-        const reviews = await Order.find({ rating: { $gt: 0 } }).select('nama rating ulasan merek tipe').limit(15).sort({ _id: -1 });
-        res.json(reviews);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
-});
-
-app.post('/api/sync', async (req, res) => {
-    try {
-        const { deviceId, kodeAktifPelanggan, kodeKonsultasiPelanggan, draftFormServis } = req.body;
-        
-        if (!deviceId) {
-            return res.status(400).json({ error: "Device ID wajib disertakan" });
-        }
-
-        const updateData = {
-            kodeAktifPelanggan: kodeAktifPelanggan || "",
-            kodeKonsultasiPelanggan: kodeKonsultasiPelanggan || "",
-            draftFormServis: draftFormServis || {},
-            lastSync: new Date()
-        };
-
-        const session = await UserSession.findOneAndUpdate(
-            { deviceId: deviceId },
-            { $set: updateData },
-            { new: true, upsert: true }
-        );
-        
-        res.status(200).json({ message: "Sinkronisasi berhasil disave ke server", session });
-    } catch (error) {
-        console.error("❌ ERROR SAAT SYNC:", error);
-        res.status(500).json({ error: "Gagal melakukan sinkronisasi: " + error.message });
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal memuat log chat" }); 
     }
 });
 
-app.get('/api/sync/:deviceId', async (req, res) => {
-    try {
-        const session = await UserSession.findOne({ deviceId: req.params.deviceId });
-        
-        if (!session) {
-            return res.status(404).json({ message: "Data sesi tidak ditemukan di server" });
-        }
-        
-        res.status(200).json(session);
-    } catch (error) {
-        res.status(500).json({ error: "Gagal mengambil data sinkronisasi" });
-    }
-});
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
-
+// Menjalankan Server Node.js
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-    console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+    console.log(`🚀 Server backend berjalan di http://localhost:${PORT}`);
 });
