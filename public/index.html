@@ -692,6 +692,73 @@
     <p>&copy; 2026 SF Tech Service. Semua Hak Dilindungi.</p>
 </footer>
 
+<div class="chat-widget minimized" id="chatWidgetPelanggan">
+    <div class="chat-header" id="headerDragChat">
+        <div class="chat-header-left">
+            <i class="bi bi-chat-dots-fill"></i> 
+            <span>Chat <span id="txtChatKode">-</span></span>
+        </div>
+        <button class="chat-toggle-btn" aria-label="Minimize Chat" id="btnToggleChat" onclick="event.stopPropagation(); toggleChatWidget();">
+            <i class="bi bi-dash-lg"></i>
+        </button>
+    </div>
+    <div class="chat-messages" id="boxPesanPelanggan"></div>
+    
+    <!-- TAMBAHAN: Elemen indikator typing yang sebelumnya terlewat -->
+    <div id="indikatorTyping" style="display:none; padding: 0.4rem 1rem; font-size: 0.8rem; color: #64748b; font-style: italic; background: #f8fafc; border-top: 1px solid #e2e8f0;">Admin sedang mengetik...</div>
+    
+    <div class="chat-input-row">
+        <input type="text" aria-label="Ketik pesan chat" id="inputPesanPelanggan" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') kirimChatPelanggan()" oninput="emitTypingUser()">
+        <button aria-label="Kirim Chat" onclick="kirimChatPelanggan()"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
+
+<!-- TEMPLATE HIDDEN KARTU -->
+<div style="position: absolute; left: -9999px; top: 0;">
+    <div id="pdfCardTemplate" style="width: 400px; height: 680px; background-color: #f4f4f5; border-radius: 18px; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative;">
+        
+        <div style="width: 100%; height: 200px; position: relative;">
+            <svg viewBox="0 0 400 200" preserveAspectRatio="none" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                <path d="M0,150 Q200,200 400,150 L400,0 L0,0 Z" fill="#0b3d91" />
+                <path d="M0,150 Q200,200 400,150" fill="none" stroke="#38bdf8" stroke-width="8" />
+            </svg>
+            <div style="position: absolute; top: 55px; width: 100%; text-align: center; color: white; display: flex; flex-direction: column; align-items: center;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 2px;">
+                    <svg width="45" height="35" viewBox="0 0 100 60" fill="white">
+                        <polygon points="10,60 40,0 60,0 30,60" />
+                        <polygon points="50,60 80,0 100,0 70,60" />
+                        <polygon points="10,35 45,35 55,20 20,20" />
+                    </svg>
+                    <h1 style="font-size: 30px; font-weight: 800; margin: 0; letter-spacing: 0.5px;">SF SERVICE</h1>
+                </div>
+                <p style="font-size: 13px; font-weight: 500; letter-spacing: 2.5px; margin: 0; opacity: 0.9; margin-left: 20px;">We Come, We Fix</p>
+            </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 10px; width: 100%;">
+            <h2 style="color: #0b2a5c; font-size: 24px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.25; text-align: center;">KARTU FAKTUR<br>DAN LAYANAN</h2>
+            <div style="width: 45px; height: 3px; background-color: #3b82f6; margin: 0 auto 25px auto;"></div>
+            <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px; display: inline-block;"><div id="pdfCardQrCode"></div></div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px; width: 80%;">
+                <div style="width: 46px; height: 46px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 22px; flex-shrink: 0;"><i class="bi bi-phone"></i></div>
+                <p style="font-size: 11.5px; color: #334155; font-weight: 600; margin: 0; line-height: 1.4; text-align: left;">Scan kode QR untuk<br>informasi faktur dan<br>layanan lainnya</p>
+            </div>
+        </div>
+
+        <div style="width: 100%; background: #0b3d91; padding: 22px 0; color: white; display: flex; align-items: center; justify-content: center; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;">
+                <div style="width: 22px; height: 22px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-whatsapp" style="font-size: 13px;"></i></div>
+                0888 9999 765
+            </div>
+            <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.4);"></div>
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;">
+                <div style="width: 22px; height: 22px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-instagram" style="font-size: 13px;"></i></div>
+                @SFSERVICE.CJR
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 let petaPelanggan, markerPelanggan;
 
@@ -733,6 +800,7 @@ function inisialisasiPetaLeaflet() {
     });
 }
 
+// === TAMBAHAN: FITUR SEARCH PETA AUTOCOMPLETE ===
 function cariAlamatMapOSM() {
     const query = document.getElementById("inputCariAlamatMap").value.trim();
     if(!query) return Swal.fire('Kosong', 'Masukkan nama jalan atau area yang ingin dicari.', 'warning');
@@ -969,20 +1037,15 @@ function emitTypingUser() {
 
 socket.on("userTyping", (data) => {
     if (data.kode === kodeSaya && data.pengirim === "admin") {
-        document.getElementById("indikatorTyping").style.display = "block";
+        const indikator = document.getElementById("indikatorTyping");
+        if (indikator) indikator.style.display = "block";
     }
 });
 
 socket.on("userStopTyping", (data) => {
     if (data.kode === kodeSaya && data.pengirim === "admin") {
-        document.getElementById("indikatorTyping").style.display = "none";
-    }
-});
-
-socket.on("updateDataPelanggan", (kode) => {
-    if(kode === kodeSaya) {
-        Swal.fire({ icon: 'info', title: 'Pembaruan Status!', text: 'Status pesanan Anda telah diperbarui oleh Admin.', confirmButtonColor: '#0ea5e9' });
-        tampilkanSkeleton(); setTimeout(() => cekStatus(), 600); 
+        const indikator = document.getElementById("indikatorTyping");
+        if (indikator) indikator.style.display = "none";
     }
 });
 
@@ -992,9 +1055,17 @@ socket.on("chatBaruDiterima", (data) => {
     if(kodeChat === kodeSaya) {
         if (pengirim === 'admin') {
             Toast.fire({ icon: 'success', title: 'Admin membalas pesan Anda' });
-            document.getElementById("indikatorTyping").style.display = "none"; 
+            const indikator = document.getElementById("indikatorTyping");
+            if (indikator) indikator.style.display = "none"; 
         }
         muatLogPesan();
+    }
+});
+
+socket.on("updateDataPelanggan", (kode) => {
+    if(kode === kodeSaya) {
+        Swal.fire({ icon: 'info', title: 'Pembaruan Status!', text: 'Status pesanan Anda telah diperbarui oleh Admin.', confirmButtonColor: '#0ea5e9' });
+        tampilkanSkeleton(); setTimeout(() => cekStatus(), 600); 
     }
 });
 
@@ -1701,9 +1772,14 @@ function unduhPDF() {
 const widgetChat = document.getElementById("chatWidgetPelanggan");
 const headerChat = document.getElementById("headerDragChat");
 let isDragging = false, isMoving = false, startX, startY;
+let isTouch = false; // Flag khusus mobile
 
 function onDragStart(e) {
     if(e.target.closest('.chat-toggle-btn')) return;
+    
+    // Cegah bentrok antara sentuhan HP dan klik Mouse
+    if(e.type === 'touchstart') isTouch = true;
+    if(e.type === 'mousedown' && isTouch) return; 
     
     isDragging = true;
     isMoving = false;
@@ -1730,7 +1806,10 @@ function onDragMove(e) {
     }
 }
 
-function onDragEnd() {
+function onDragEnd(e) {
+    // Reset flag khusus mobile
+    if(e && e.type === 'mouseup' && isTouch) { isTouch = false; return; }
+    
     if(!isDragging) return;
     if(!isMoving) { toggleChatWidget(); }
     isDragging = false;
