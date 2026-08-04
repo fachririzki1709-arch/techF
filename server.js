@@ -74,6 +74,16 @@ const upload = multer({
 io.on('connection', (socket) => {
     console.log("🟢 Klien terhubung ke WebSocket:", socket.id);
     
+    // Menerima update koordinat real-time dari pelanggan lalu mem-broadcast ke Admin
+    socket.on('updateLocation', (data) => { 
+        io.emit('updateLocationAdmin', data); 
+    });
+
+    // Menerima sinyal 'mengetik' lalu mem-broadcast ke pihak lawan
+    socket.on('typing', (data) => { 
+        io.emit('typing', data); 
+    });
+
     socket.on('disconnect', () => {
         console.log("🔴 Klien terputus dari WebSocket:", socket.id);
     });
@@ -136,6 +146,20 @@ const ChatSchema = new mongoose.Schema({
     waktu: String
 });
 const Chat = mongoose.model('Chat', ChatSchema, 'chats');
+
+// Skema Notifikasi Baru untuk Sinkronisasi DB
+const NotificationSchema = new mongoose.Schema({
+    pesan: String,
+    dibaca: { type: Boolean, default: false },
+    waktu: { type: Date, default: Date.now }
+});
+const Notification = mongoose.model('Notification', NotificationSchema, 'notifications');
+
+async function tambahNotifikasiDB(pesan) {
+    try {
+        await new Notification({ pesan }).save();
+    } catch(err) { console.error("Gagal menyimpan notifikasi", err); }
+}
 
 // --- FUNGSI HELPER WHATSAPP GATEWAY (Webhook) ---
 async function kirimNotifikasiWA(noWa, pesanTeks) {
@@ -203,6 +227,21 @@ app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
     }
 });
 
+// Endpoint Fetch & Update Notifikasi
+app.get('/api/admin/notifications', verifyAdmin, async (req, res) => {
+    try {
+        const notifs = await Notification.find().sort({ _id: -1 }).limit(50);
+        res.json(notifs);
+    } catch (error) { res.status(500).json({ error: "Gagal memuat notifikasi" }); }
+});
+
+app.put('/api/admin/notifications/read', verifyAdmin, async (req, res) => {
+    try {
+        await Notification.updateMany({ dibaca: false }, { $set: { dibaca: true } });
+        res.json({ message: "Semua notifikasi ditandai dibaca" });
+    } catch (error) { res.status(500).json({ error: "Gagal update notifikasi" }); }
+});
+
 // Endpoint Menampilkan Ulasan Publik di Homepage
 app.get('/api/reviews', async (req, res) => {
     try {
@@ -248,6 +287,7 @@ app.post('/api/orders', upload.any(), async (req, res) => {
         const pesanWA = `Halo ${dataBaru.nama},\n\nTerima kasih telah memesan servis di SF Tech.\nKode Resi Anda: *${dataBaru.kode}*\n\nSilakan lacak status perbaikan Anda melalui website kami.`;
         kirimNotifikasiWA(dataBaru.wa, pesanWA);
 
+        await tambahNotifikasiDB(`Pesanan Baru: ${dataBaru.kode} oleh ${dataBaru.nama}`);
         io.emit("updateDashboardAdmin");
         res.status(201).json({ message: "Data pesanan berhasil disimpan", kode: dataBaru.kode });
     } catch (error) {
@@ -263,6 +303,30 @@ app.get('/api/orders/:kode', async (req, res) => {
         res.json(pesanan);
     } catch (error) { 
         res.status(500).json({ error: "Gagal memuat detail pesanan" }); 
+    }
+});
+
+// Endpoint Bulk Actions (Admin Only)
+app.post('/api/orders/bulk', verifyAdmin, async (req, res) => {
+    try {
+        const { ids, action } = req.body;
+        if (!ids || ids.length === 0) return res.status(400).json({ error: "Tidak ada ID yang dipilih" });
+
+        if (action === 'selesai') {
+            await Order.updateMany(
+                { kode: { $in: ids } },
+                { $set: { pembayaranValid: true, status: 'selesai' } }
+            );
+            await tambahNotifikasiDB(`Aksi Massal: ${ids.length} pesanan ditandai selesai.`);
+        } else if (action === 'hapus') {
+            await Order.deleteMany({ kode: { $in: ids } });
+            await tambahNotifikasiDB(`Aksi Massal: ${ids.length} pesanan dihapus.`);
+        }
+
+        io.emit("updateDashboardAdmin");
+        res.json({ message: "Aksi massal berhasil diterapkan" });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal mengeksekusi aksi massal: " + error.message });
     }
 });
 
@@ -322,6 +386,7 @@ app.put('/api/orders/:kode/inden', upload.single('buktiInden'), async (req, res)
             { $set: updateFields },
             { new: true }
         );
+        await tambahNotifikasiDB(`Pembayaran Inden Masuk: ${req.params.kode}`);
         io.emit("updateDashboardAdmin");
         res.json({ message: "Bukti inden berhasil diunggah", updated });
     } catch (error) {
@@ -344,6 +409,7 @@ app.put('/api/orders/:kode/cancel', async (req, res) => {
                 }
             );
             
+            await tambahNotifikasiDB(`Pesanan Dibatalkan User: ${req.params.kode}`);
             io.emit("updateDashboardAdmin");
             res.json({ message: "Pembatalan pesanan berhasil" });
         } else {
@@ -363,6 +429,7 @@ app.post('/api/orders/:kode/rating', async (req, res) => {
             { $set: { rating: Number(rating), ulasan: ulasan || "" } },
             { new: true }
         );
+        await tambahNotifikasiDB(`Ulasan Baru (${rating} Bintang): ${req.params.kode}`);
         io.emit("updateDashboardAdmin");
         res.json({ message: "Rating dan ulasan berhasil disimpan", updated });
     } catch (error) {
@@ -386,6 +453,11 @@ app.post('/api/chats', async (req, res) => {
     try {
         const chatBaru = new Chat(req.body);
         await chatBaru.save();
+        
+        if(chatBaru.pengirim === 'user') {
+            await tambahNotifikasiDB(`Pesan Chat Baru dari ${chatBaru.kode}`);
+        }
+        
         io.emit("chatBaruDiterima", { kode: chatBaru.kode, pengirim: chatBaru.pengirim });
         res.status(201).json({ message: "Pesan chat terkirim" });
     } catch (error) { 
