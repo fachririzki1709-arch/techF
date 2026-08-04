@@ -57,7 +57,8 @@
         .notif-header { padding: 1rem; background: var(--bg-utama); font-weight: 700; font-size: 0.9rem; border-bottom: 1px solid var(--border-line); display: flex; justify-content: space-between; align-items: center;}
         .notif-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; }
         .notif-item { padding: 1rem; border-bottom: 1px solid var(--border-line); font-size: 0.85rem; transition: 0.2s; cursor: pointer; }
-        .notif-item:hover { background: var(--bg-utama); }
+        .notif-item.read { opacity: 0.6; background: var(--bg-utama); }
+        .notif-item:hover { background: var(--bg-utama); opacity: 1; }
         .notif-item-empty { padding: 2rem 1rem; text-align: center; color: #94a3b8; font-size: 0.85rem; font-style: italic; }
 
         .container { padding: 2rem 5%; width: 100%; max-width: 1400px; margin: 0 auto;}
@@ -141,7 +142,7 @@
         body.dark-mode .box-tambahan-admin { background: rgba(22, 101, 52, 0.05); border-color: rgba(22, 101, 52, 0.2); }
 
         .chat-admin-container {border: 2px solid var(--border-line); border-radius: 12px; background: var(--bg-utama); display: flex; flex-direction: column; height: 400px; margin-top: 1rem; overflow:hidden;}
-        .chat-admin-msg-box {flex: 1; overflow-y: auto; padding: 1.5rem; display:flex; flex-direction:column; gap:0.8rem;}
+        .chat-admin-msg-box {flex: 1; overflow-y: auto; padding: 1.5rem; display:flex; flex-direction:column; gap:0.8rem; scroll-behavior: smooth;}
         
         /* CANNED RESPONSES UI */
         .canned-wrapper { display: flex; gap: 8px; padding: 0.6rem 1rem; background: var(--bg-kartu); border-top: 2px solid var(--border-line); overflow-x: auto; scrollbar-width: none;}
@@ -405,9 +406,14 @@
                         <div>
                             <strong style="color: #1e40af;"><i class="bi bi-check2-square"></i> <span id="lblBulkCount">0</span> Pesanan Terpilih</strong>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <span style="font-size:0.85rem; color:#64748b; margin-right:10px; align-self:center;">(Fitur Batch Action Disiapkan)</span>
-                            <button class="btn btn-secondary" onclick="batalkanPilihanBulk()">Batal</button>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="bulkActionSelect" style="padding: 0.4rem; border-radius: 6px; font-size:0.85rem;">
+                                <option value="">-- Pilih Aksi Massal --</option>
+                                <option value="selesai">Tandai Lunas & Selesai</option>
+                                <option value="hapus">Hapus Pesanan</option>
+                            </select>
+                            <button class="btn btn-edit" style="padding: 0.4rem 0.8rem; margin: 0;" onclick="eksekusiBulk()">Terapkan</button>
+                            <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; margin: 0;" onclick="batalkanPilihanBulk()">Batal</button>
                         </div>
                     </div>
 
@@ -462,7 +468,7 @@
                             </div>
 
                             <div class="chat-admin-input-row">
-                                <input type="text" id="inputPesanKonsul" placeholder="Ketik pesan balasan..." onkeypress="if(event.key==='Enter') kirimChatKonsul()" disabled>
+                                <input type="text" id="inputPesanKonsul" placeholder="Ketik pesan balasan..." onkeypress="if(event.key==='Enter') kirimChatKonsul()" oninput="emitTypingAdmin(aktifKonsulKode)" disabled>
                                 <button aria-label="Kirim Chat Konsultasi" onclick="kirimChatKonsul()" id="btnKirimKonsul" disabled><i class="bi bi-send-fill"></i></button>
                             </div>
                         </div>
@@ -530,7 +536,10 @@
                     <div style="font-size: 0.9rem; margin-bottom: 10px;"><strong>Keluhan:</strong> <span id="infoKeluhan">-</span></div>
                     
                     <div style="background:var(--bg-utama); border: 1px solid var(--border-line); padding:0.8rem; border-radius:8px; margin-top: 10px;">
-                        <p style="font-size:0.85rem; margin-bottom:5px;"><strong>Peta Lokasi Leaflet:</strong></p>
+                        <p style="font-size:0.85rem; margin-bottom:5px; display:flex; justify-content:space-between;">
+                            <strong>Peta Lokasi Leaflet:</strong> 
+                            <span style="color:#10b981; font-weight:bold; font-size:0.75rem;"><i class="bi bi-broadcast"></i> GPS Real-time Aktif</span>
+                        </p>
                         <div id="adminMapContainer" style="height: 200px; width: 100%; border-radius: 6px; z-index: 1;"></div>
                         <p style="font-size:0.8rem; margin-top:8px; color: #64748b;" id="infoAlamat">-</p>
                     </div>
@@ -661,7 +670,7 @@
                     </div>
 
                     <div class="chat-admin-input-row">
-                        <input type="text" id="inputPesanAdmin" aria-label="Ketik balasan untuk pelanggan" placeholder="Ketik balasan pesan Anda..." onkeypress="aksiEnterChatAdmin(event)">
+                        <input type="text" id="inputPesanAdmin" aria-label="Ketik balasan untuk pelanggan" placeholder="Ketik balasan pesan Anda..." onkeypress="aksiEnterChatAdmin(event)" oninput="emitTypingAdmin(aktifMembukaKode)">
                         <button aria-label="Kirim Chat ke Pelanggan" onclick="kirimChatAdmin()"><i class="bi bi-send-fill"></i></button>
                     </div>
                 </div>
@@ -689,11 +698,53 @@ const Toast = Swal.mixin({
 
 const socket = io(window.location.origin);
 
+// ==== PENAMBAHAN REAL-TIME MAP & TYPING ===
+let typingTimerAdmin;
+function emitTypingAdmin(kodeTarget) {
+    if(!kodeTarget) return;
+    socket.emit('typing', { kode: kodeTarget, pengirim: 'admin' });
+}
+
+socket.on('typing', (data) => {
+    if (data.pengirim === 'user') {
+        let box = null;
+        if (data.kode === aktifMembukaKode) box = document.getElementById("boxPesanAdmin");
+        else if (data.kode === aktifKonsulKode) box = document.getElementById("boxPesanKonsul");
+
+        if (box) {
+            let typingEl = document.getElementById('typing-' + data.kode);
+            if (!typingEl) {
+                typingEl = document.createElement('div');
+                typingEl.id = 'typing-' + data.kode;
+                typingEl.className = 'msg-bubble msg-user';
+                typingEl.innerHTML = '<em>Pelanggan sedang mengetik...</em>';
+                box.appendChild(typingEl);
+                box.scrollTop = box.scrollHeight;
+            }
+            clearTimeout(typingTimerAdmin);
+            typingTimerAdmin = setTimeout(() => {
+                if(typingEl) typingEl.remove();
+            }, 1500);
+        }
+    }
+});
+
+socket.on('updateLocationAdmin', (data) => {
+    if (data.kode === aktifMembukaKode && adminMapMarker && adminLeafletMap) {
+        const newLatLng = [data.lat, data.lng];
+        adminMapMarker.setLatLng(newLatLng);
+        adminLeafletMap.setView(newLatLng);
+        console.log("📍 Koordinat terbaru pelanggan disinkronisasi:", newLatLng);
+    }
+});
+// ===========================================
+
 socket.on("updateDashboardAdmin", () => {
     muatData(); 
+    muatNotifikasi(); // Tarik notif terbaru dari DB
     Toast.fire({ icon: 'info', title: 'Sistem: Ada pembaruan data.' });
-    tambahNotifikasiSistem("Sistem: Ada pembaruan data pesanan/status.");
 });
+
 socket.on("updateDataAdmin", () => {
     muatData(); 
     if(aktifMembukaKode) {
@@ -707,36 +758,54 @@ socket.on("chatBaruDiterima", (data) => {
     
     if (pengirim === 'user') {
         Toast.fire({ icon: 'success', title: `Pesan baru dari ${kodeChat}` });
+        let typingEl = document.getElementById('typing-' + kodeChat);
+        if(typingEl) typingEl.remove(); // Hapus indikator typing setelah chat masuk
     }
 
     if(kodeChat === aktifMembukaKode) muatLogPesanAdmin();
     if(kodeChat === aktifKonsulKode) muatLogPesanKonsul();
     if(kodeChat.startsWith("KONSUL-")) muatDaftarKonsultasi(); 
-    tambahNotifikasiSistem(`Chat Baru masuk: ${kodeChat}`);
+    muatNotifikasi();
 });
 
 let jumlahNotifUnread = 0;
 function toggleNotifDropdown() { document.getElementById('notifDropdownPanel').classList.toggle('show'); }
-function bersihkanNotif() {
-    jumlahNotifUnread = 0;
-    document.getElementById('notifBadgeCounter').style.display = 'none';
-    document.getElementById('notifBadgeCounter').innerText = '0';
-    Toast.fire({ icon: 'success', title: 'Notifikasi ditandai dibaca' });
+
+// Modifikasi muatNotifikasi menarik dari DB Backend
+function muatNotifikasi() {
+    fetch(`${API_URL}/admin/notifications`, { headers: getAuthHeader() })
+    .then(res => res.json())
+    .then(data => {
+        const listContainer = document.getElementById("notifListContainer");
+        listContainer.innerHTML = "";
+        jumlahNotifUnread = 0;
+
+        if (data.length === 0) {
+            listContainer.innerHTML = '<div class="notif-item-empty" id="notifKosong">Tidak ada notifikasi baru</div>';
+        } else {
+            data.forEach(n => {
+                if (!n.dibaca) jumlahNotifUnread++;
+                listContainer.innerHTML += `
+                    <div class="notif-item ${n.dibaca ? 'read' : ''}">
+                        <div style="font-weight:600;"><i class="bi bi-info-circle-fill" style="color:#0ea5e9;"></i> ${n.pesan}</div>
+                        <div style="font-size:0.7rem; color:#64748b; margin-top:3px;">${new Date(n.waktu).toLocaleTimeString('id-ID')}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        const badge = document.getElementById('notifBadgeCounter');
+        badge.innerText = jumlahNotifUnread;
+        badge.style.display = jumlahNotifUnread > 0 ? 'flex' : 'none';
+    }).catch(err => console.error("Gagal menarik notifikasi", err));
 }
-function tambahNotifikasiSistem(pesan) {
-    const listContainer = document.getElementById("notifListContainer");
-    const labelKosong = document.getElementById("notifKosong");
-    if(labelKosong) labelKosong.style.display = 'none';
-    
-    const waktuStr = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-    const newEl = document.createElement("div");
-    newEl.className = "notif-item";
-    newEl.innerHTML = `<div style="font-weight:600;"><i class="bi bi-info-circle-fill" style="color:#0ea5e9;"></i> ${pesan}</div><div style="font-size:0.7rem; color:#64748b; margin-top:3px;">${waktuStr}</div>`;
-    
-    listContainer.prepend(newEl);
-    jumlahNotifUnread++;
-    document.getElementById('notifBadgeCounter').innerText = jumlahNotifUnread;
-    document.getElementById('notifBadgeCounter').style.display = 'flex';
+
+function bersihkanNotif() {
+    fetch(`${API_URL}/admin/notifications/read`, { method: "PUT", headers: getAuthHeader() })
+    .then(() => {
+        muatNotifikasi();
+        Toast.fire({ icon: 'success', title: 'Semua notifikasi ditandai dibaca' });
+    });
 }
 
 function toggleSidebar() {
@@ -867,6 +936,7 @@ function tampilkanDashboardUtama() {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("mainPanelWrapper").style.display = "block";
     muatData();
+    muatNotifikasi();
     muatDaftarKonsultasi(); 
 }
 
@@ -1080,6 +1150,38 @@ function batalkanPilihanBulk() {
     document.querySelectorAll(".chk-tabel").forEach(cb => cb.checked = false);
     cekPilihanBulk();
 }
+
+// ==== PENAMBAHAN FUNGSI EKSEKUSI BULK ACTIONS ====
+function eksekusiBulk() {
+    const action = document.getElementById("bulkActionSelect").value;
+    if(!action) return Swal.fire('Peringatan', 'Pilih aksi massal terlebih dahulu.', 'warning');
+    
+    const selectedIds = Array.from(document.querySelectorAll(".row-check:checked")).map(cb => cb.value);
+    if(selectedIds.length === 0) return;
+
+    Swal.fire({
+        title: 'Konfirmasi Aksi Massal', 
+        text: `Anda akan menerapkan perubahan pada ${selectedIds.length} pesanan terpilih. Lanjutkan?`, 
+        icon: 'warning', 
+        showCancelButton: true, 
+        confirmButtonColor: '#0ea5e9'
+    }).then(res => {
+        if(res.isConfirmed) {
+            fetch(`${API_URL}/orders/bulk`, {
+                method: 'POST', 
+                headers: { "Content-Type": "application/json", ...getAuthHeader() },
+                body: JSON.stringify({ ids: selectedIds, action: action })
+            })
+            .then(handleApiError)
+            .then(() => {
+                Toast.fire({icon: 'success', title: 'Aksi massal berhasil diterapkan!'});
+                batalkanPilihanBulk();
+                muatData();
+            });
+        }
+    });
+}
+// =================================================
 
 function ubahStatusCepat(kode, statusBaru) {
     fetch(`${API_URL}/orders/${kode}`, {
@@ -1415,6 +1517,13 @@ function muatLogPesanAdmin() {
             htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.8; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
         if (chatData.length === 0) { htmlStr = "<div style='text-align:center; color:#94a3b8; font-style:italic; margin-top:20px;'>Belum ada percakapan dengan pelanggan ini.</div>"; }
+        
+        // Mempertahankan elemen indikator typing jika ada sebelum direplace
+        const existingTyping = document.getElementById('typing-' + kode);
+        if (existingTyping) {
+            htmlStr += existingTyping.outerHTML;
+        }
+
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
     });
 }
@@ -1518,6 +1627,12 @@ function muatLogPesanKonsul() {
             htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.8; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
         if (chatData.length === 0) { htmlStr = "<div style='text-align:center; color:#94a3b8; font-style:italic; margin-top:20px;'>Mulai percakapan dengan pelanggan potensial.</div>"; }
+        
+        const existingTyping = document.getElementById('typing-' + aktifKonsulKode);
+        if (existingTyping) {
+            htmlStr += existingTyping.outerHTML;
+        }
+
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
     });
 }
