@@ -79,10 +79,23 @@ io.on('connection', (socket) => {
         io.emit('updateLocationAdmin', data); 
     });
 
+    // --- PERBAIKAN: Menyamakan penamaan event pengiriman lokasi GPS dari form sisi User ---
+    socket.on('streamLokasiUser', (data) => { 
+        io.emit('updateLocationAdmin', data); 
+    });
+    // --------------------------------------------------------------------------------------
+
     // Menerima sinyal 'mengetik' lalu mem-broadcast ke pihak lawan
     socket.on('typing', (data) => { 
-        io.emit('typing', data); 
+        io.emit('typing', data); // Untuk didengarkan oleh admin.html
+        io.emit('userTyping', data); // Untuk didengarkan oleh index.html
     });
+
+    // --- PERBAIKAN: Menangani event stopTyping indikator chat ---
+    socket.on('stopTyping', (data) => { 
+        io.emit('userStopTyping', data); 
+    });
+    // ------------------------------------------------------------
 
     socket.on('disconnect', () => {
         console.log("🔴 Klien terputus dari WebSocket:", socket.id);
@@ -267,6 +280,12 @@ app.get('/api/orders', verifyAdmin, async (req, res) => {
 app.post('/api/orders', upload.any(), async (req, res) => {
     try {
         const dataOrder = req.body;
+
+        // --- PERBAIKAN: Menangkap koordinat langsung dari FormData ---
+        if(req.body.lat) dataOrder.lat = req.body.lat;
+        if(req.body.lng) dataOrder.lng = req.body.lng;
+        // -------------------------------------------------------------
+
         if(req.body['koordinat[lat]']) dataOrder.lat = req.body['koordinat[lat]'];
         if(req.body['koordinat[lng]']) dataOrder.lng = req.body['koordinat[lng]'];
         
@@ -447,6 +466,23 @@ app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
         res.status(500).json({ error: "Gagal menghapus pesanan" }); 
     }
 });
+
+// --- PERBAIKAN: Endpoint untuk menarik semua riwayat chat (Dibutuhkan oleh panel admin) ---
+app.get('/api/chats', verifyAdmin, async (req, res) => {
+    try {
+        // Mengambil semua chat, diurutkan ascending (berdasarkan waktu) agar chat berurutan dengan benar di UI Admin
+        const allChats = await Chat.find().sort({ _id: 1 });
+        const grouped = {};
+        allChats.forEach(c => {
+            if (!grouped[c.kode]) grouped[c.kode] = [];
+            grouped[c.kode].push(c);
+        });
+        res.json(grouped);
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal memuat daftar chat" }); 
+    }
+});
+// ------------------------------------------------------------------------------------------
 
 // Endpoint Kirim Pesan Chat
 app.post('/api/chats', async (req, res) => {
