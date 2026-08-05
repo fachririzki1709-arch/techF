@@ -79,26 +79,23 @@ io.on('connection', (socket) => {
         io.emit('updateLocationAdmin', data); 
     });
 
-    // --- PERBAIKAN: Menyamakan penamaan event pengiriman lokasi GPS dari form sisi User ---
+    // Menyamakan penamaan event pengiriman lokasi GPS dari form sisi User
     socket.on('streamLokasiUser', (data) => { 
         io.emit('updateLocationAdmin', data); 
     });
-    // --------------------------------------------------------------------------------------
 
     // Menerima sinyal 'mengetik' lalu mem-broadcast ke pihak lawan
     socket.on('typing', (data) => { 
-        io.emit('typing', data); // Untuk didengarkan oleh admin.html
-        io.emit('userTyping', data); // Untuk didengarkan oleh index.html
+        io.emit('typing', data); 
+        io.emit('userTyping', data); 
     });
 
-    // --- PERBAIKAN: Menangani event stopTyping indikator chat ---
+    // Menangani event stopTyping indikator chat
     socket.on('stopTyping', (data) => { 
         io.emit('userStopTyping', data); 
     });
-    // ------------------------------------------------------------
 
     socket.on('disconnect', () => {
-        // --- PERBAIKAN: Log disconnect di-comment agar terminal tidak penuh saat deploy ---
         // console.log("🔴 Klien terputus dari WebSocket:", socket.id);
     });
 });
@@ -116,6 +113,7 @@ const OrderSchema = new mongoose.Schema({
     wa: { type: String, required: true }, 
     merek: { type: String, required: true }, 
     tipe: { type: String, required: true }, 
+    imeiSerial: { type: String, default: "" }, // ✨ Baru: No Seri / IMEI untuk Trust
     kerusakan: { type: String, default: "" }, 
     layanan: { type: String, default: "" },
     shareloc: { type: String, default: "" }, 
@@ -125,6 +123,7 @@ const OrderSchema = new mongoose.Schema({
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     waktuPesan: { type: Date, default: Date.now }, 
     teknisi: { type: String, default: "" }, 
+    teknisiFoto: { type: String, default: "" }, // ✨ Baru: Foto profil teknisi
     jadwal: { type: String, default: "" }, 
     lokasiServis: { type: String, default: "home_service" },
     buktiPelunasan: { type: String, default: "" },  
@@ -146,9 +145,11 @@ const OrderSchema = new mongoose.Schema({
     subStatusWorkshop: { type: String, default: "antrean" },
     estimasiSelesai: { type: String, default: "" },
     statusSparepart: { type: String, default: "tersedia" },
+    tanggalDatangPart: { type: String, default: "" }, // ✨ Baru: Estimasi Tanggal Part Inden Tiba
     buktiBayarInden: { type: String, default: "" },
     metodeBayarInden: { type: String, default: "" },
     indenTerbayar: { type: Boolean, default: false },
+    qcChecklist: { type: Object, default: {} }, // ✨ Baru: Data QC Checklist akhir
     riwayatStatus: { type: Array, default: [] }
 });
 const Order = mongoose.model('Order', OrderSchema, 'orders');
@@ -282,13 +283,13 @@ app.post('/api/orders', upload.any(), async (req, res) => {
     try {
         const dataOrder = req.body;
 
-        // --- PERBAIKAN: Menangkap koordinat langsung dari berbagai format input Form ---
+        // Menangkap koordinat langsung dari berbagai format input Form
         const latInput = req.body.lat || req.body['koordinat[lat]'] || (req.body.koordinat && req.body.koordinat.lat);
         const lngInput = req.body.lng || req.body['koordinat[lng]'] || (req.body.koordinat && req.body.koordinat.lng);
         
         dataOrder.lat = latInput || "";
         dataOrder.lng = lngInput || "";
-        // -----------------------------------------------------------------------------
+        dataOrder.imeiSerial = req.body.imeiSerial || ""; // ✨ Tangkap field imei
         
         if (req.files && req.files.length > 0) {
             const fileKondisi = req.files.find(f => f.fieldname === 'kondisiHPFile');
@@ -468,10 +469,9 @@ app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
     }
 });
 
-// --- PERBAIKAN: Endpoint untuk menarik semua riwayat chat (Dibutuhkan oleh panel admin) ---
+// Endpoint untuk menarik semua riwayat chat
 app.get('/api/chats', verifyAdmin, async (req, res) => {
     try {
-        // Mengambil semua chat, diurutkan ascending (berdasarkan waktu) agar chat berurutan dengan benar di UI Admin
         const allChats = await Chat.find().sort({ _id: 1 });
         const grouped = {};
         allChats.forEach(c => {
@@ -483,7 +483,6 @@ app.get('/api/chats', verifyAdmin, async (req, res) => {
         res.status(500).json({ error: "Gagal memuat daftar chat" }); 
     }
 });
-// ------------------------------------------------------------------------------------------
 
 // Endpoint Kirim Pesan Chat
 app.post('/api/chats', async (req, res) => {
