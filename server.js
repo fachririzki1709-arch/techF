@@ -98,7 +98,8 @@ io.on('connection', (socket) => {
     // ------------------------------------------------------------
 
     socket.on('disconnect', () => {
-        console.log("🔴 Klien terputus dari WebSocket:", socket.id);
+        // --- PERBAIKAN: Log disconnect di-comment agar terminal tidak penuh saat deploy ---
+        // console.log("🔴 Klien terputus dari WebSocket:", socket.id);
     });
 });
 
@@ -281,13 +282,13 @@ app.post('/api/orders', upload.any(), async (req, res) => {
     try {
         const dataOrder = req.body;
 
-        // --- PERBAIKAN: Menangkap koordinat langsung dari FormData ---
-        if(req.body.lat) dataOrder.lat = req.body.lat;
-        if(req.body.lng) dataOrder.lng = req.body.lng;
-        // -------------------------------------------------------------
-
-        if(req.body['koordinat[lat]']) dataOrder.lat = req.body['koordinat[lat]'];
-        if(req.body['koordinat[lng]']) dataOrder.lng = req.body['koordinat[lng]'];
+        // --- PERBAIKAN: Menangkap koordinat langsung dari berbagai format input Form ---
+        const latInput = req.body.lat || req.body['koordinat[lat]'] || (req.body.koordinat && req.body.koordinat.lat);
+        const lngInput = req.body.lng || req.body['koordinat[lng]'] || (req.body.koordinat && req.body.koordinat.lng);
+        
+        dataOrder.lat = latInput || "";
+        dataOrder.lng = lngInput || "";
+        // -----------------------------------------------------------------------------
         
         if (req.files && req.files.length > 0) {
             const fileKondisi = req.files.find(f => f.fieldname === 'kondisiHPFile');
