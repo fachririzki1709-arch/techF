@@ -447,7 +447,26 @@
                 <label>Kerusakan / Keluhan</label>
                 <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
 
-                <label>Unggah Kondisi Perangkat (Gambar/Video) [FormData Multi-File]</label>
+                <!-- ✨ SKEMA 1: BAST & HANDOVER -->
+                <label>Kelengkapan Bawaan (BAST) <span style="color:#64748b; font-size:0.8rem;">(Opsional)</span></label>
+                <input type="text" id="kelengkapanBAST" placeholder="Contoh: Unit, Charger, Dus, Softcase" oninput="simpanDraft()">
+                
+                <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
+                        <input type="checkbox" id="chkBAST" style="width: 22px; height: 22px; margin: 0; accent-color: #10b981;" onchange="simpanDraft()">
+                        <span>Saya menyetujui Berita Acara Serah Terima (BAST). Data kelengkapan dan kondisi fisik telah sesuai.</span>
+                    </label>
+                </div>
+
+                <!-- ✨ SKEMA 2: PRIVASI -->
+                <div style="margin-top: 1rem; padding: 1rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
+                        <input type="checkbox" id="chkPrivasi" style="width: 22px; height: 22px; margin: 0; accent-color: #166534;" onchange="simpanDraft()">
+                        <span style="color:#166534;"><strong>Aktifkan Mode Privasi Data.</strong> (Teknisi dilarang membuka galeri/file pribadi. Password layar hanya akan diminta via Live Chat jika dibutuhkan untuk pengetesan).</span>
+                    </label>
+                </div>
+
+                <label style="margin-top: 1.5rem; display: block;">Unggah Kondisi Perangkat (Gambar/Video) [FormData Multi-File]</label>
                 <input type="file" id="fileKondisi" accept="image/*,video/*" aria-label="Upload File Kondisi Perangkat" onchange="tampilPratinjau()">
                 <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file fisik video 10MB.</p>
                 <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
@@ -532,6 +551,25 @@
                 <div id="boxInfoEstimasi" style="display:none; background:#f0f9ff; border-left:4px solid #0ea5e9; padding:1.2rem; border-radius:8px; margin-bottom:1rem;">
                     <h4 style="color:#0369a1; font-size:1rem; margin-bottom:5px;"><i class="bi bi-calendar2-check"></i> Estimasi Pengerjaan</h4>
                     <p>Perkiraan selesai pada: <strong id="lblEstimasiSelesai" class="data-dinamis" style="color:#0f172a;">-</strong></p>
+                </div>
+
+                <!-- ✨ SKEMA 3: TRANSPARANSI WORKSHOP -->
+                <div id="boxTransparansi" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; padding:1.2rem; border-radius:8px; margin-bottom:1.5rem;">
+                    <h4 style="color:#0f172a; font-size:1rem; margin-bottom:10px;"><i class="bi bi-camera-video"></i> Media Transparansi Workshop</h4>
+                    <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Lihat bukti pengecekan awal (Unboxing) dan pergantian komponen pada perangkat Anda.</p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <a id="btnVideoUnboxing" href="#" target="_blank" class="btn btn-secondary" style="display:none; margin:0; font-size:0.85rem;"><i class="bi bi-play-circle-fill"></i> Video Unboxing</a>
+                        <a id="btnFotoPart" href="#" target="_blank" class="btn btn-secondary" style="display:none; margin:0; font-size:0.85rem;"><i class="bi bi-image"></i> Foto Suku Cadang</a>
+                    </div>
+                </div>
+
+                <!-- ✨ SKEMA 4: QC CHECKLIST -->
+                <div id="boxQCChecklist" style="display:none; background:#ffffff; border:1px solid #e2e8f0; padding:1.2rem; border-radius:8px; margin-bottom:1.5rem;">
+                    <h4 style="color:#0f172a; font-size:1rem; margin-bottom:10px;"><i class="bi bi-ui-checks"></i> Hasil Quality Control (QC)</h4>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">Admin telah melakukan pengecekan menyeluruh pada fungsi dasar perangkat:</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; font-weight: 600;" id="qcListItems">
+                        <!-- Disuntikkan via JS -->
+                    </div>
                 </div>
 
                 <div id="boxTrackingWorkshop" style="display:none; margin: 1.5rem 0; padding: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
@@ -667,17 +705,17 @@
         </div>
     </div>
 
-    <!-- Page Content (About & Profile) tetap seperti sebelumnya -->
+    <!-- Page Content (About & Profile) -->
     <div id="page-about" class="page-content container">
         <div class="content-box active" style="display:block; margin-top: 2rem;">
             <h2>Tentang Kami</h2>
-            <p>SF Tech Service adalah penyedia layanan perbaikan smartphone, PC/Laptop, dan alat elektronik rumah tangga profesional...</p>
+            <p>SF Tech Service adalah penyedia layanan perbaikan smartphone, PC/Laptop, dan alat elektronik rumah tangga profesional. Teknisi berpengalaman kami siap datang ke rumah Anda atau Anda bisa mengunjungi workshop kami secara langsung.</p>
         </div>
     </div>
     <div id="page-profile" class="page-content container">
         <div class="content-box active" style="display:block; margin-top: 2rem;">
             <h2>Profil Perusahaan & Galeri Servis</h2>
-            <p>Sejak didirikan, kami telah melayani ratusan pelanggan dan mengembalikan fungsi berbagai jenis perangkat...</p>
+            <p>Sejak didirikan, kami telah melayani ratusan pelanggan dan mengembalikan fungsi berbagai jenis perangkat elektronik.</p>
         </div>
     </div>
 </div>
@@ -1064,7 +1102,11 @@ function simpanDraft() {
         lat: document.getElementById("latLokasi").value, lng: document.getElementById("lngLokasi").value,
         merek: document.getElementById("merek").value, merekLainnya: document.getElementById("merekLainnya").value,
         tipe: document.getElementById("tipe").value, kerusakan: document.getElementById("kerusakan").value,
-        sk: document.getElementById("chkSyaratKetentuan").checked
+        sk: document.getElementById("chkSyaratKetentuan").checked,
+        // SKEMA 1 & 2
+        kelengkapan: document.getElementById("kelengkapanBAST").value,
+        bast: document.getElementById("chkBAST").checked,
+        privasi: document.getElementById("chkPrivasi").checked
     };
     localStorage.setItem("draftFormServis", JSON.stringify(draft));
 }
@@ -1089,6 +1131,11 @@ function restoreDraft() {
             document.getElementById("tipe").value = data.tipe || "";
             document.getElementById("kerusakan").value = data.kerusakan || "";
             document.getElementById("chkSyaratKetentuan").checked = data.sk || false;
+            
+            // SKEMA 1 & 2
+            document.getElementById("kelengkapanBAST").value = data.kelengkapan || "";
+            document.getElementById("chkBAST").checked = data.bast || false;
+            document.getElementById("chkPrivasi").checked = data.privasi || false;
             
             data.layanan.forEach(id => { const cb = document.getElementById(id); if(cb) cb.checked = true; });
             updateBrandOptions(); toggleMerekLainnya(); updateEstimasiHarga();
@@ -1352,6 +1399,11 @@ function kirimPesanan() {
     formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
     formData.append('layanan', layananTerpilih || "Belum dipilih");
     
+    // ✨ SKEMA 1 & 2 DITAMBAHKAN PADA PAYLOAD
+    formData.append('kelengkapan', document.getElementById("kelengkapanBAST").value.trim());
+    formData.append('statusBAST', document.getElementById("chkBAST").checked ? "disetujui" : "menunggu");
+    formData.append('privasi', document.getElementById("chkPrivasi").checked);
+    
     const fileInput = document.getElementById("fileKondisi");
     if(fileInput.files.length > 0) formData.append('kondisiHPFile', fileInput.files[0]);
     formData.append('tipeKondisi', tipeFile || "");
@@ -1511,6 +1563,39 @@ function cekStatus() {
             } else {
                 document.getElementById("boxKerusakanTambahan").style.display = "none";
             }
+        }
+
+        // ✨ SKEMA 3: Tampilkan Media Transparansi Workshop jika tersedia
+        const boxTransparansi = document.getElementById("boxTransparansi");
+        const btnVid = document.getElementById("btnVideoUnboxing");
+        const btnFoto = document.getElementById("btnFotoPart");
+        
+        if (data.videoUnboxingFile || data.fotoPartFile) {
+            if(boxTransparansi) boxTransparansi.style.display = "block";
+            if (data.videoUnboxingFile) { btnVid.style.display = "inline-flex"; btnVid.href = window.location.origin + data.videoUnboxingFile; } else { btnVid.style.display = "none"; }
+            if (data.fotoPartFile) { btnFoto.style.display = "inline-flex"; btnFoto.href = window.location.origin + data.fotoPartFile; } else { btnFoto.style.display = "none"; }
+        } else {
+            if(boxTransparansi) boxTransparansi.style.display = "none";
+        }
+
+        // ✨ SKEMA 4: Tampilkan QC Checklist jika tersedia
+        const boxQC = document.getElementById("boxQCChecklist");
+        if(data.qcChecklist && Object.keys(data.qcChecklist).length > 0) {
+            if(boxQC) boxQC.style.display = "block";
+            const qc = data.qcChecklist;
+            const qcContainer = document.getElementById("qcListItems");
+            if (qcContainer) {
+                qcContainer.innerHTML = `
+                    <div style="color:${qc.layar ? '#10b981' : '#94a3b8'}"><i class="bi ${qc.layar ? 'bi-check-circle-fill' : 'bi-circle'}"></i> Layar & Sentuhan</div>
+                    <div style="color:${qc.baterai ? '#10b981' : '#94a3b8'}"><i class="bi ${qc.baterai ? 'bi-check-circle-fill' : 'bi-circle'}"></i> Baterai & Charging</div>
+                    <div style="color:${qc.kamera ? '#10b981' : '#94a3b8'}"><i class="bi ${qc.kamera ? 'bi-check-circle-fill' : 'bi-circle'}"></i> Kamera D/B</div>
+                    <div style="color:${qc.sinyal ? '#10b981' : '#94a3b8'}"><i class="bi ${qc.sinyal ? 'bi-check-circle-fill' : 'bi-circle'}"></i> Sinyal & Wi-Fi</div>
+                    <div style="color:${qc.speaker ? '#10b981' : '#94a3b8'}"><i class="bi ${qc.speaker ? 'bi-check-circle-fill' : 'bi-circle'}"></i> Speaker & Mic</div>
+                    <div style="color:${qc.segel ? '#10b981' : '#94a3b8'}"><i class="bi ${qc.segel ? 'bi-check-circle-fill' : 'bi-circle'}"></i> Segel Internal Rapat</div>
+                `;
+            }
+        } else {
+            if(boxQC) boxQC.style.display = "none";
         }
 
         if(document.getElementById("tampilKondisiHP") && data.kondisiHP) {
