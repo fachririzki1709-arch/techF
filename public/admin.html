@@ -535,6 +535,18 @@
                     </div>
                     <div style="font-size: 0.9rem; margin-bottom: 10px;"><strong>Keluhan:</strong> <span id="infoKeluhan">-</span></div>
                     
+                    <!-- ✨ SKEMA 2: JAMINAN DATA PRIVASI -->
+                    <div id="infoPrivasiData" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:0.8rem; border-radius:8px; margin-top:10px; color:#166534; font-size:0.85rem;">
+                        <i class="bi bi-shield-lock-fill"></i> <strong>Mode Privasi Aktif:</strong> Pelanggan meminta jaminan data privasi. Dilarang keras membuka data pribadi (Galeri/Banking). Minta password layar HANYA via Chat.
+                    </div>
+
+                    <!-- ✨ SKEMA 1: BAST & HANDOVER -->
+                    <div id="infoBAST" style="background:var(--bg-utama); border:1px solid var(--border-line); padding:0.8rem; border-radius:8px; margin-top:10px; font-size:0.85rem;">
+                        <h5 style="margin-bottom:5px; color:var(--teks-utama);"><i class="bi bi-pen-fill"></i> BAST & Handover</h5>
+                        <p><strong>Kelengkapan:</strong> <span id="lblBASTKelengkapan">-</span></p>
+                        <p><strong>Status BAST:</strong> <span id="lblBASTStatus">-</span></p>
+                    </div>
+
                     <div style="background:var(--bg-utama); border: 1px solid var(--border-line); padding:0.8rem; border-radius:8px; margin-top: 10px;">
                         <p style="font-size:0.85rem; margin-bottom:5px; display:flex; justify-content:space-between;">
                             <strong>Peta Lokasi Leaflet:</strong> 
@@ -573,6 +585,19 @@
                     <label style="color:#0ea5e9; font-weight:600;"><i class="bi bi-broadcast"></i> Live Update ETA Kedatangan</label>
                     <input type="text" id="etaUpdate" class="kunci-target" placeholder="Contoh: Teknisi meluncur (ETA 15 Menit)">
                     
+                    <!-- ✨ SKEMA 4: QC CHECKLIST DIGITAL -->
+                    <div style="background:var(--bg-utama); border:1px solid var(--border-line); padding:1.2rem; border-radius:8px; margin-top:1rem; margin-bottom:1rem;">
+                        <h4 style="font-size:0.95rem; font-weight:800; color:var(--teks-utama); margin-bottom:10px;"><i class="bi bi-ui-checks"></i> Quality Control (QC) Checklist</h4>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <label><input type="checkbox" id="qc_layar" class="kunci-target chk-qc"> Layar & Sentuhan</label>
+                            <label><input type="checkbox" id="qc_baterai" class="kunci-target chk-qc"> Baterai & Charging</label>
+                            <label><input type="checkbox" id="qc_kamera" class="kunci-target chk-qc"> Kamera D/B</label>
+                            <label><input type="checkbox" id="qc_sinyal" class="kunci-target chk-qc"> Sinyal & Wi-Fi</label>
+                            <label><input type="checkbox" id="qc_speaker" class="kunci-target chk-qc"> Speaker & Mic</label>
+                            <label><input type="checkbox" id="qc_segel" class="kunci-target chk-qc"> Segel Internal Rapat</label>
+                        </div>
+                    </div>
+
                     <!-- MANAJEMEN INDEN -->
                     <div style="background:var(--bg-utama); border:1px solid var(--border-line); padding:1.2rem; border-radius:8px; margin-top:1rem; margin-bottom:1rem;">
                         <h4 style="font-size:0.95rem; font-weight:800; color:var(--teks-utama); margin-bottom:10px;"><i class="bi bi-box-seam"></i> Ketersediaan Suku Cadang</h4>
@@ -657,6 +682,23 @@
                 <h4 style="font-size:1rem; font-weight:800; margin-bottom:10px; color:var(--teks-utama);"><i class="bi bi-image" style="color:#0ea5e9;"></i> Lampiran Kondisi Unit Awal</h4>
                 <div class="pratinjau" id="tampilKondisiAdmin">Belum ada dokumen</div>
                 
+                <!-- ✨ SKEMA 3: TRANSPARANSI WORKSHOP -->
+                <h4 style="margin-top:1.5rem; border-top:2px dashed var(--border-line); padding-top:1.5rem; font-size:1rem; font-weight:800;"><i class="bi bi-camera-video-fill" style="color:#ef4444;"></i> Media Transparansi Workshop</h4>
+                <p style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">Unggah bukti video unboxing dan foto perbandingan suku cadang untuk dilihat pelanggan.</p>
+                <div style="display: flex; flex-direction: column; gap: 10px; background:var(--bg-utama); padding:1rem; border-radius:8px; border:1px solid var(--border-line);">
+                    <div>
+                        <label style="font-weight:600; font-size:0.85rem;">Upload Video Unboxing / Cek Awal (MP4)</label>
+                        <input type="file" id="fileVideoUnboxing" accept="video/mp4" class="kunci-target">
+                        <div id="linkVideoUnboxing" style="font-size:0.8rem;"></div>
+                    </div>
+                    <div>
+                        <label style="font-weight:600; font-size:0.85rem;">Upload Foto Suku Cadang (Lama vs Baru)</label>
+                        <input type="file" id="fileFotoPart" accept="image/*" class="kunci-target">
+                        <div id="linkFotoPart" style="font-size:0.8rem;"></div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="uploadMediaTransparansi()" id="btnUploadTransparansi"><i class="bi bi-cloud-upload"></i> Upload Media Transparansi</button>
+                </div>
+
                 <h4 style="margin-top:1.5rem; border-top:2px dashed var(--border-line); padding-top:1.5rem; font-size:1rem; font-weight:800;"><i class="bi bi-chat-text-fill" style="color:#10b981;"></i> Jalur Komunikasi Pelanggan</h4>
                 <div class="chat-admin-container">
                     <div class="chat-admin-msg-box" id="boxPesanAdmin"></div>
@@ -678,6 +720,7 @@
         </div>
     </div>
 </div>
+
 <script>
 const API_URL = window.location.origin + "/api";
 let aktifMembukaKode = "";
@@ -1031,6 +1074,7 @@ function muatData() {
     })
     .catch(err => console.error("Gagal sinkronisasi data admin:", err));
 }
+
 function renderTabelDariServer(dataHalaman, meta) {
     const tbody = document.getElementById("tbodyPesanan");
     tbody.innerHTML = "";
@@ -1267,11 +1311,27 @@ function bukaModalKelola(kode) {
             btnSimpan.disabled = true; btnSimpan.classList.add("btn-locked");
             btnSimpan.innerHTML = '<i class="bi bi-lock-fill"></i> Data Terkunci (Read-Only)';
             document.getElementById("chkAdaTambahan").disabled = true;
+            document.getElementById("btnUploadTransparansi").disabled = true;
         } else {
             kunciElements.forEach(el => el.disabled = false);
             btnSimpan.disabled = false; btnSimpan.classList.remove("btn-locked");
             btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data';
+            document.getElementById("btnUploadTransparansi").disabled = false;
         }
+
+        // ✨ SKEMA 1 & 2: BAST & Jaminan Data Privasi
+        document.getElementById("infoPrivasiData").style.display = data.privasi ? "block" : "none";
+        document.getElementById("lblBASTKelengkapan").textContent = data.kelengkapan || "Belum ada catatan";
+        document.getElementById("lblBASTStatus").innerHTML = data.statusBAST === "disetujui" ? "<span style='color:#10b981;'><i class='bi bi-check-circle-fill'></i> Disetujui Pelanggan (Segel Terpasang)</span>" : "<span style='color:#f59e0b;'>Menunggu / Belum Diserahkan</span>";
+        
+        // ✨ SKEMA 4: QC Checklist Data Load
+        const qc = data.qcChecklist || {};
+        document.getElementById("qc_layar").checked = qc.layar || false;
+        document.getElementById("qc_baterai").checked = qc.baterai || false;
+        document.getElementById("qc_kamera").checked = qc.kamera || false;
+        document.getElementById("qc_sinyal").checked = qc.sinyal || false;
+        document.getElementById("qc_speaker").checked = qc.speaker || false;
+        document.getElementById("qc_segel").checked = qc.segel || false;
 
         // Info Kiri (Langkah 1)
         document.getElementById("infoNama").textContent = data.nama;
@@ -1363,6 +1423,10 @@ function bukaModalKelola(kode) {
         // KANAN: MEDIA & CHAT
         const imgKondisi = data.kondisiHPFile ? (data.kondisiHPFile.endsWith('.mp4') || data.kondisiHPFile.endsWith('.webm') ? `<video src="${window.location.origin}${data.kondisiHPFile}" controls></video>` : `<a href="${window.location.origin}${data.kondisiHPFile}" target="_blank"><img src="${window.location.origin}${data.kondisiHPFile}"></a>`) : 'Tidak Ada File';
         document.getElementById("tampilKondisiAdmin").innerHTML = imgKondisi;
+        
+        // ✨ SKEMA 3: Media Transparansi Workshop (Load Links)
+        document.getElementById("linkVideoUnboxing").innerHTML = data.videoUnboxingFile ? `<a href="${window.location.origin}${data.videoUnboxingFile}" target="_blank" style="color:#0ea5e9;">Lihat Video Unboxing Terunggah</a>` : '<span style="color:#64748b;">Belum ada video.</span>';
+        document.getElementById("linkFotoPart").innerHTML = data.fotoPartFile ? `<a href="${window.location.origin}${data.fotoPartFile}" target="_blank" style="color:#0ea5e9;">Lihat Foto Suku Cadang Terunggah</a>` : '<span style="color:#64748b;">Belum ada foto part.</span>';
         
         muatLogPesanAdmin();
     });
@@ -1466,11 +1530,20 @@ function simpanPerubahan() {
         statusSparepart: document.getElementById("statusSparepart").value,
         biayaSuku: parseFloat(document.getElementById("biayaSuku").value) || 0,
         biayaJasa: parseFloat(document.getElementById("biayaJasa").value) || 0,
-        
         adaKerusakanTambahan: chkTambahan,
         infoKerusakanTambahan: infoTamb,
         biayaSukuTambahan: biayaTamb,
-        statusPersetujuanTambahan: chkTambahan ? statusPersetujuanLama : null 
+        statusPersetujuanTambahan: chkTambahan ? statusPersetujuanLama : null,
+        
+        // ✨ SKEMA 4: Simpan Data QC Checklist
+        qcChecklist: {
+            layar: document.getElementById("qc_layar").checked,
+            baterai: document.getElementById("qc_baterai").checked,
+            kamera: document.getElementById("qc_kamera").checked,
+            sinyal: document.getElementById("qc_sinyal").checked,
+            speaker: document.getElementById("qc_speaker").checked,
+            segel: document.getElementById("qc_segel").checked
+        }
     };
 
     const btnSimpan = document.getElementById("btnSimpanPerubahan");
@@ -1483,6 +1556,43 @@ function simpanPerubahan() {
         btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false;
         muatData(); bukaModalKelola(kode); 
     }).catch(() => { btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false; });
+}
+
+// ✨ SKEMA 3: Upload Fungsi Media Transparansi Workshop
+function uploadMediaTransparansi() {
+    const kode = document.getElementById("kodePesanan").value;
+    const fileVideo = document.getElementById("fileVideoUnboxing").files[0];
+    const fileFoto = document.getElementById("fileFotoPart").files[0];
+    
+    if(!fileVideo && !fileFoto) return Swal.fire('Perhatian', 'Pilih file video atau foto terlebih dahulu!', 'warning');
+    
+    const formData = new FormData();
+    if(fileVideo) formData.append('videoUnboxing', fileVideo);
+    if(fileFoto) formData.append('fotoPart', fileFoto);
+    
+    const btn = document.getElementById("btnUploadTransparansi");
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengunggah...';
+    btn.disabled = true;
+    
+    fetch(`${API_URL}/orders/${kode}/transparansi`, {
+        method: 'PUT',
+        headers: getAuthHeader(),
+        body: formData
+    })
+    .then(res => res.json())
+    .then(() => {
+        Swal.fire('Berhasil', 'Media transparansi berhasil diunggah.', 'success');
+        btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload Media Transparansi';
+        btn.disabled = false;
+        document.getElementById("fileVideoUnboxing").value = "";
+        document.getElementById("fileFotoPart").value = "";
+        bukaModalKelola(kode);
+    })
+    .catch(() => {
+        Swal.fire('Error', 'Gagal mengunggah media', 'error');
+        btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload Media Transparansi';
+        btn.disabled = false;
+    });
 }
 
 function validasiPembayaranPelunasan() {
