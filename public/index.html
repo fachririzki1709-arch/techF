@@ -1940,9 +1940,121 @@ document.addEventListener('mouseup', onDragEnd);
 headerChat.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
-function toggleTipeLayanan() { /* ... isi dari pesan sebelumnya ... */ }
-function toggleOpsiLanjutan() { /* ... isi dari pesan sebelumnya ... */ }
-function prosesScanAI(inputElement) { /* ... isi dari pesan sebelumnya ... */ }
+// --- FUNGSI UI UX LANGKAH 2 ---
+function toggleTipeLayanan() {
+    const tipe = document.querySelector('input[name="tipeLayanan"]:checked').value;
+    const areaLokasi = document.getElementById("areaLokasiForm");
+    const lblHome = document.getElementById("lblHomeService");
+    const lblWorkshop = document.getElementById("lblWorkshop");
+
+    if (tipe === "home_service") {
+        areaLokasi.style.display = "block";
+        lblHome.style.background = "#f0f9ff"; lblHome.style.borderColor = "#0ea5e9";
+        lblWorkshop.style.background = "#f8fafc"; lblWorkshop.style.borderColor = "#e2e8f0";
+        if(petaPelanggan) setTimeout(() => petaPelanggan.invalidateSize(), 300);
+    } else {
+        areaLokasi.style.display = "none";
+        lblWorkshop.style.background = "#f0f9ff"; lblWorkshop.style.borderColor = "#0ea5e9";
+        lblHome.style.background = "#f8fafc"; lblHome.style.borderColor = "#e2e8f0";
+    }
+    simpanDraft();
+}
+
+function toggleOpsiLanjutan() {
+    const area = document.getElementById("areaOpsiLanjutan");
+    const icon = document.getElementById("iconToggleOpsi");
+    
+    if (area.style.display === "none") {
+        area.style.display = "block";
+        icon.classList.replace("bi-chevron-down", "bi-chevron-up");
+    } else {
+        area.style.display = "none";
+        icon.classList.replace("bi-chevron-up", "bi-chevron-down");
+    }
+}
+
+// --- FUNGSI AUTO-DETECT AI (COMPUTER VISION) ---
+function prosesScanAI(inputElement) {
+    if (!inputElement.files || inputElement.files.length === 0) return;
+    
+    const file = inputElement.files[0];
+    const formData = new FormData();
+    formData.append('deviceImage', file);
+    
+    const btn = document.getElementById('btnUploadAI');
+    const loading = document.getElementById('aiLoadingIndicator');
+    
+    // Ubah tampilan tombol menjadi status loading
+    btn.style.display = 'none';
+    loading.style.display = 'block';
+    
+    // Kirim gambar ke server backend Node.js
+    fetch(`${API_URL}/ai/scan-device`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) throw new Error(data.error);
+        
+        // 1. Pengisian Merek Otomatis
+        const selectMerek = document.getElementById("merek");
+        let merekDitemukan = false;
+        
+        if (data.merek) {
+            const merekDeteksi = data.merek.toLowerCase();
+            for (let i = 0; i < selectMerek.options.length; i++) {
+                const optText = selectMerek.options[i].text.toLowerCase();
+                const optVal = selectMerek.options[i].value.toLowerCase();
+                
+                if (optText.includes(merekDeteksi) || optVal.includes(merekDeteksi)) {
+                    selectMerek.selectedIndex = i;
+                    merekDitemukan = true;
+                    break;
+                }
+            }
+            // Jika merek tidak ada di opsi utama, masukkan ke opsi "Lainnya"
+            if (!merekDitemukan && merekDeteksi) {
+                selectMerek.value = "Lainnya";
+                document.getElementById("merekLainnya").value = data.merek;
+            }
+            toggleMerekLainnya(); 
+            validasiInputRealTime(selectMerek, 'errMerek');
+        }
+        
+        // 2. Pengisian Tipe Perangkat
+        if (data.tipe && data.tipe !== "null") {
+            const elTipe = document.getElementById("tipe");
+            elTipe.value = data.tipe;
+            validasiInputRealTime(elTipe, 'errTipe');
+        }
+        
+        // 3. Pengisian IMEI / SN
+        if (data.imeiSerial && data.imeiSerial !== "null") {
+            const elImei = document.getElementById("imeiSerial");
+            if(elImei) elImei.value = data.imeiSerial;
+        }
+        
+        Swal.fire({
+            icon: 'success', 
+            title: 'Berhasil Dideteksi!',
+            text: `AI mendeteksi perangkat: ${data.merek || ''} ${data.tipe || ''}`,
+            confirmButtonColor: '#10b981'
+        });
+        
+        simpanDraft();
+    })
+    .catch(err => {
+        Swal.fire('Gagal', 'AI tidak dapat mendeteksi teks dari gambar ini. Pastikan foto jelas dan tidak blur.', 'error');
+        console.error("AI Error:", err);
+    })
+    .finally(() => {
+        // Kembalikan tampilan tombol seperti semula
+        btn.style.display = 'inline-flex';
+        loading.style.display = 'none';
+        inputElement.value = ""; 
+    });
+}
 </script>
 </body>
 </html>
