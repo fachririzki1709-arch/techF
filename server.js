@@ -230,7 +230,7 @@ app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) =
         if (!req.file) return res.status(400).json({ error: "Tidak ada gambar yang diunggah" });
         if (!genAI) return res.status(500).json({ error: "API Key AI belum dikonfigurasi pada server" });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // PROMPT DIUBAH: Fokus ke pengenalan fisik (backdoor, modul kamera) alih-alih screenshot teks
         const prompt = `Anda adalah asisten teknisi smartphone tingkat lanjut. 
@@ -585,7 +585,7 @@ async function prosesBalasanBot(kode, pesanUser) {
         }));
 
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             systemInstruction: "Anda adalah 'SF Bot', asisten virtual dari SF Tech Service (Layanan Servis HP, Laptop, dan Elektronik). Jawablah dengan bahasa Indonesia yang ramah, sopan, dan singkat maksimal 2 paragraf. Informasi dasar: Biaya pengecekan awal adalah Rp 50.000. Jika pelanggan bertanya hal terlalu teknis, ingin bernegosiasi harga, atau Anda tidak tahu jawabannya, mintalah pelanggan menunggu Admin atau Teknisi Manusia membalas."
         });
 
