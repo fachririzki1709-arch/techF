@@ -369,121 +369,155 @@
             </div>
 
             <!-- STEP 2: DATA DIRI & PERANGKAT -->
-            <div class="content-box" id="step-2">
-                <h3><i class="bi bi-person-vcard"></i> Data Pemesanan & Kondisi Perangkat</h3>
-                
-                <label>Nama Lengkap <span style="color:red;">*</span></label>
-                <input type="text" id="nama" placeholder="Contoh: Farhan" oninput="simpanDraft()">
-                <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
-                
-                <label>Nomor WhatsApp <span style="color:red;">*</span></label>
-                <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
-                <div class="error-text" id="errWa">Format nomor WhatsApp tidak valid (10-13 digit angka)</div>
-                
-                <label>Alamat Lengkap</label>
-                <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan" oninput="simpanDraft()"></textarea>
+            <div class="content-box" id="step-2" style="display:none;">
+    <h3><i class="bi bi-person-vcard"></i> Data Diri & Perangkat</h3>
+    
+    <!-- 1. PEMILIHAN METODE LAYANAN -->
+    <label>Metode Layanan Servis <span style="color:red;">*</span></label>
+    <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <label id="lblHomeService" style="flex:1; min-width:200px; border: 2px solid #0ea5e9; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f0f9ff; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
+            <input type="radio" name="tipeLayanan" value="home_service" checked onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;"> 
+            <span><i class="bi bi-house-gear-fill" style="color:#0ea5e9;"></i> Panggil Teknisi (Home Service)</span>
+        </label>
+        <label id="lblWorkshop" style="flex:1; min-width:200px; border: 2px solid #e2e8f0; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f8fafc; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
+            <input type="radio" name="tipeLayanan" value="workshop" onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;">
+            <span><i class="bi bi-shop" style="color:#64748b;"></i> Datang ke Workshop</span>
+        </label>
+    </div>
 
-                <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Cari & Titik Lokasi Peta (Geser pin ke alamat Anda)</label>
-                <p style="font-size: 0.8rem; color: #64748b; margin-top: -8px; margin-bottom: 8px;">Ketik nama jalan lalu klik cari, atau geser pin langsung di peta.</p>
-                
-                <!-- FITUR SEARCH PETA AUTOCOMPLETE -->
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input type="text" id="inputCariAlamatMap" placeholder="Ketik area/jalan (Misal: Cianjur Kota)..." style="margin:0; flex:1;">
-                    <button type="button" class="btn btn-primary" style="margin:0; padding:0.6rem 1.2rem;" onclick="cariAlamatMapOSM()"><i class="bi bi-search"></i> Cari</button>
-                </div>
+    <!-- 2. DATA UTAMA -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div>
+            <label>Nama Lengkap <span style="color:red;">*</span></label>
+            <input type="text" id="nama" placeholder="Contoh: Farhan" oninput="simpanDraft()">
+            <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
+        </div>
+        <div>
+            <label>Nomor WhatsApp <span style="color:red;">*</span></label>
+            <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
+            <div class="error-text" id="errWa">Format nomor WA tidak valid</div>
+        </div>
+    </div>
 
-                <div id="mapPelanggan" style="height: 250px; width: 100%; border-radius: 8px; margin-bottom: 1rem; z-index: 1; border: 2px solid #e2e8f0;"></div>
-                
-                <input type="hidden" id="latLokasi">
-                <input type="hidden" id="lngLokasi">
-                
-                <button type="button" class="btn" aria-label="Dapatkan Lokasi GPS" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; margin-bottom: 1.2rem; width: 100%; justify-content: center;"><i class="bi bi-crosshair"></i> Lacak & Gunakan GPS Saat Ini</button>
-                
-                <label>Merek Perangkat <span style="color:red;">*</span></label>
-                <select id="merek" onchange="toggleMerekLainnya()">
-                    <option value="">-- Silakan Pilih Kategori Merek --</option>
-                    <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
-                        <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
-                        <option value="OPPO">OPPO / Realme</option>
-                        <option value="Infinix">Infinix / Tecno</option>
-                        <option value="Samsung">Samsung</option>
-                        <option value="Vivo">Vivo</option>
-                        <option value="iPhone">Apple / iPhone</option>
-                        <option value="Asus">Asus / ROG</option>
-                    </optgroup>
-                    <optgroup id="optgroup-komputer" label="💻 Kategori Komputer & Laptop">
-                        <option value="Asus PC/Laptop">Asus / ROG Laptop</option>
-                        <option value="Acer">Acer / Predator</option>
-                        <option value="Lenovo">Lenovo / ThinkPad</option>
-                        <option value="HP">HP / Compaq</option>
-                        <option value="Dell">Dell / Alienware</option>
-                        <option value="Apple Mac">Apple / MacBook / iMac</option>
-                        <option value="MSI">MSI</option>
-                        <option value="Axioo/Zyrex">Axioo / Zyrex</option>
-                        <option value="Rakitan">PC Rakitan / Custom</option>
-                    </optgroup>
-                    <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
-                        <option value="Miyako">Miyako</option>
-                        <option value="Cosmos">Cosmos</option>
-                        <option value="Maspion">Maspion</option>
-                        <option value="Philips">Philips</option>
-                        <option value="Panasonic">Panasonic</option>
-                        <option value="Sharp">Sharp</option>
-                        <option value="Yong Ma">Yong Ma</option>
-                        <option value="Sekai">Sekai</option>
-                    </optgroup>
-                    <optgroup label="Lainnya">
-                        <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
-                    </optgroup>
-                </select>
-                <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda di sini..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
-                <div class="error-text" id="errMerek">Pilih salah satu merek perangkat!</div>
-                <div class="error-text" id="errMerekLainnya">Ketikkan merek perangkat Anda!</div>
-                
-                <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-                <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12 / Lenovo ThinkPad T480" oninput="simpanDraft()">
-                <div class="error-text" id="errTipe">Tipe perangkat wajib diisi!</div>
-                
-                <label>Kerusakan / Keluhan</label>
-                <textarea id="kerusakan" rows="2" placeholder="Jelaskan kerusakan yang terjadi (Mati total, tidak dingin, tombol rusak, dll)" oninput="simpanDraft()"></textarea>
+    <!-- 3. AREA LOKASI (Hanya tampil jika Home Service) -->
+    <div id="areaLokasiForm" style="display: block; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.2rem;">
+        <label>Alamat Lengkap Kunjungan</label>
+        <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan..." oninput="simpanDraft()"></textarea>
 
-                <!-- ✨ SKEMA 1: BAST & HANDOVER -->
-                <label>Kelengkapan Bawaan (BAST) <span style="color:#64748b; font-size:0.8rem;">(Opsional)</span></label>
-                <input type="text" id="kelengkapanBAST" placeholder="Contoh: Unit, Charger, Dus, Softcase" oninput="simpanDraft()">
-                
-                <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
-                        <input type="checkbox" id="chkBAST" style="width: 22px; height: 22px; margin: 0; accent-color: #10b981;" onchange="simpanDraft()">
-                        <span>Saya menyetujui Berita Acara Serah Terima (BAST). Data kelengkapan dan kondisi fisik telah sesuai.</span>
-                    </label>
-                </div>
+        <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi Peta GPS</label>
+        <div style="display:flex; gap:10px; margin-bottom:10px; margin-top:5px;">
+            <input type="text" id="inputCariAlamatMap" placeholder="Cari area (Misal: Sukaluyu)..." style="margin:0; flex:1;">
+            <button type="button" class="btn btn-primary" style="margin:0; padding:0.6rem 1.2rem;" onclick="cariAlamatMapOSM()"><i class="bi bi-search"></i></button>
+        </div>
 
-                <!-- ✨ SKEMA 2: PRIVASI -->
-                <div style="margin-top: 1rem; padding: 1rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
-                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
-                        <input type="checkbox" id="chkPrivasi" style="width: 22px; height: 22px; margin: 0; accent-color: #166534;" onchange="simpanDraft()">
-                        <span style="color:#166534;"><strong>Aktifkan Mode Privasi Data.</strong> (Teknisi dilarang membuka galeri/file pribadi. Password layar hanya akan diminta via Live Chat jika dibutuhkan untuk pengetesan).</span>
-                    </label>
-                </div>
+        <div id="mapPelanggan" style="height: 200px; width: 100%; border-radius: 8px; margin-bottom: 1rem; z-index: 1; border: 2px solid #e2e8f0;"></div>
+        <input type="hidden" id="latLokasi"><input type="hidden" id="lngLokasi">
+        <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; width: 100%; justify-content: center; margin: 0;"><i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini</button>
+    </div>
 
-                <label style="margin-top: 1.5rem; display: block;">Unggah Kondisi Perangkat (Gambar/Video) [FormData Multi-File]</label>
-                <input type="file" id="fileKondisi" accept="image/*,video/*" aria-label="Upload File Kondisi Perangkat" onchange="tampilPratinjau()">
-                <p style="font-size: 0.8rem; color: #ef4444; margin-bottom: 10px;">*Maksimal ukuran file fisik video 10MB.</p>
-                <div class="pratinjau" id="pratinjauFile">Belum ada file dipilih</div>
+    <!-- 🔥 UI Smart Scan AI 🔥 -->
+    <div style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #7dd3fc; text-align: center;">
+        <h4 style="color: #0369a1; margin-bottom: 5px; font-weight: 800;"><i class="bi bi-magic"></i> Auto-Isi Data (AI Vision)</h4>
+        <p style="font-size: 0.85rem; color: #0c4a6e; margin-bottom: 10px;">Unggah foto stiker bawah laptop atau screenshot 'Tentang Ponsel' agar AI mengisi form otomatis.</p>
+        
+        <input type="file" id="fileAIScan" accept="image/*" style="display: none;" onchange="prosesScanAI(this)">
+        <button type="button" class="btn" id="btnUploadAI" style="background: white; color: #0ea5e9; border: 2px solid #0ea5e9; font-weight: bold; width: 100%; justify-content: center;" onclick="document.getElementById('fileAIScan').click()">
+            <i class="bi bi-camera"></i> Pilih Foto / Screenshot Info Perangkat
+        </button>
+        <div id="aiLoadingIndicator" style="display: none; margin-top: 10px; font-size: 0.85rem; color: #0284c7; font-weight: bold;">
+            <i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite; display: inline-block;"></i> AI sedang menganalisis gambar...
+        </div>
+    </div>
 
-                <div style="margin-top: 1.5rem; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
-                        <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
-                        <span>Saya menyetujui Syarat & Ketentuan layanan perbaikan dan kalkulasi biaya pengecekan tetap sebesar Rp 50.000.</span>
-                    </label>
-                    <div class="error-text" id="errSK" style="margin-top: 8px;">Centang persetujuan Syarat & Ketentuan ini untuk melanjutkan!</div>
-                </div>
+    <!-- 4. DATA PERANGKAT -->
+    <label>Merek Perangkat <span style="color:red;">*</span></label>
+    <select id="merek" onchange="toggleMerekLainnya()">
+        <option value="">-- Silakan Pilih Kategori Merek --</option>
+        <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
+            <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
+            <option value="OPPO">OPPO / Realme</option>
+            <option value="Infinix">Infinix / Tecno</option>
+            <option value="Samsung">Samsung</option>
+            <option value="Vivo">Vivo</option>
+            <option value="iPhone">Apple / iPhone</option>
+            <option value="Asus">Asus / ROG</option>
+        </optgroup>
+        <optgroup id="optgroup-komputer" label="💻 Kategori Komputer & Laptop">
+            <option value="Asus PC/Laptop">Asus / ROG Laptop</option>
+            <option value="Acer">Acer / Predator</option>
+            <option value="Lenovo">Lenovo / ThinkPad</option>
+            <option value="HP">HP / Compaq</option>
+            <option value="Dell">Dell / Alienware</option>
+            <option value="Apple Mac">Apple / MacBook / iMac</option>
+            <option value="MSI">MSI</option>
+            <option value="Axioo/Zyrex">Axioo / Zyrex</option>
+            <option value="Rakitan">PC Rakitan / Custom</option>
+        </optgroup>
+        <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
+            <option value="Miyako">Miyako</option>
+            <option value="Cosmos">Cosmos</option>
+            <option value="Maspion">Maspion</option>
+            <option value="Philips">Philips</option>
+            <option value="Panasonic">Panasonic</option>
+            <option value="Sharp">Sharp</option>
+        </optgroup>
+        <optgroup label="Lainnya">
+            <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
+        </optgroup>
+    </select>
+    <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
+    <div class="error-text" id="errMerek">Pilih salah satu merek!</div>
+    <div class="error-text" id="errMerekLainnya">Ketikkan merek Anda!</div>
+    
+    <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
+    <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12" oninput="simpanDraft()">
+    <div class="error-text" id="errTipe">Tipe wajib diisi!</div>
 
-                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between;">
-                    <button class="btn btn-secondary" onclick="prevStep()"><i class="bi bi-arrow-left"></i> Kembali</button>
-                    <button class="btn btn-primary" id="btnKirimPesanan" onclick="kirimPesanan()"><i class="bi bi-send-check"></i> Kirim Pesanan</button>
-                </div>
-            </div>
+    <label>IMEI / Serial Number <span style="color:#64748b; font-size:0.8rem;">(Otomatis dari AI / Opsional)</span></label>
+    <input type="text" id="imeiSerial" placeholder="Contoh: 8645xxxx / SN: P2XXXX" oninput="simpanDraft()">
+    
+    <label>Keluhan / Kerusakan</label>
+    <textarea id="kerusakan" rows="2" placeholder="Jelaskan kendalanya" oninput="simpanDraft()"></textarea>
+
+    <!-- 5. OPSI LANJUTAN (BAST, PRIVASI, GAMBAR) -->
+    <button type="button" class="btn btn-secondary" onclick="toggleOpsiLanjutan()" style="width: 100%; justify-content: space-between; background: #e2e8f0; color: #334155; margin-bottom: 1.5rem; font-size: 0.9rem;">
+        <span><i class="bi bi-sliders"></i> Pengaturan Tambahan (Upload Foto, BAST, Privasi)</span>
+        <i class="bi bi-chevron-down" id="iconToggleOpsi"></i>
+    </button>
+    
+    <div id="areaOpsiLanjutan" style="display: none; padding: 1.2rem; background: white; border: 2px dashed #cbd5e1; border-radius: 8px; margin-bottom: 1.5rem;">
+        <label style="margin-top:0;">Unggah Kondisi (Foto/Video)</label>
+        <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
+        <div class="pratinjau" id="pratinjauFile" style="margin-top:0; padding:10px;">Belum ada file</div>
+
+        <label style="margin-top:1rem;">Kelengkapan Bawaan (BAST)</label>
+        <input type="text" id="kelengkapanBAST" placeholder="Contoh: Unit, Charger" oninput="simpanDraft()">
+        
+        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.85rem; margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 6px;">
+            <input type="checkbox" id="chkBAST" style="width: 18px; height: 18px; margin: 0; accent-color: #10b981;" onchange="simpanDraft()">
+            <span>Saya menyetujui BAST. Kondisi sesuai.</span>
+        </label>
+
+        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.85rem; margin-top: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px;">
+            <input type="checkbox" id="chkPrivasi" style="width: 18px; height: 18px; margin: 0; accent-color: #166534;" onchange="simpanDraft()">
+            <span style="color:#166534;"><strong>Aktifkan Mode Privasi.</strong></span>
+        </label>
+    </div>
+
+    <!-- 6. PERSETUJUAN -->
+    <div style="padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
+            <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
+            <span>Saya menyetujui Syarat & Ketentuan.</span>
+        </label>
+        <div class="error-text" id="errSK" style="margin-top: 8px;">Harap setujui Syarat & Ketentuan!</div>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; gap: 10px;">
+        <button class="btn btn-secondary" onclick="prevStep()" style="flex:1; justify-content:center; margin:0;"><i class="bi bi-arrow-left"></i> Kembali</button>
+        <button class="btn btn-primary" id="btnKirimPesanan" onclick="kirimPesanan()" style="flex:2; justify-content:center; margin:0;"><i class="bi bi-send-check"></i> Kirim Pesanan</button>
+    </div>
+</div>
 
             <!-- STEP 3: JADWAL & KARTU BARCODE -->
             <div class="content-box" id="step-3">
@@ -1394,6 +1428,8 @@ function kirimPesanan() {
     formData.append('shareloc', fallbackShareloc); 
     formData.append('koordinat[lat]', latData); 
     formData.append('koordinat[lng]', lngData); 
+    formData.append('lokasiServis', document.querySelector('input[name="tipeLayanan"]:checked').value); 
+    formData.append('imeiSerial', document.getElementById("imeiSerial") ? document.getElementById("imeiSerial").value.trim() : "");
     formData.append('merek', merekFinal);
     formData.append('tipe', document.getElementById("tipe").value.trim());
     formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
@@ -1904,6 +1940,9 @@ document.addEventListener('mouseup', onDragEnd);
 headerChat.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
+function toggleTipeLayanan() { /* ... isi dari pesan sebelumnya ... */ }
+function toggleOpsiLanjutan() { /* ... isi dari pesan sebelumnya ... */ }
+function prosesScanAI(inputElement) { /* ... isi dari pesan sebelumnya ... */ }
 </script>
 </body>
 </html>
