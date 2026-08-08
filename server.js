@@ -12,6 +12,10 @@ const { Server } = require('socket.io');
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 
+// 🔥 Inisialisasi Google Gemini AI 🔥
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { 
@@ -113,7 +117,7 @@ const OrderSchema = new mongoose.Schema({
     wa: { type: String, required: true }, 
     merek: { type: String, required: true }, 
     tipe: { type: String, required: true }, 
-    imeiSerial: { type: String, default: "" }, // ✨ Baru: No Seri / IMEI untuk Trust
+    imeiSerial: { type: String, default: "" }, 
     kerusakan: { type: String, default: "" }, 
     layanan: { type: String, default: "" },
     shareloc: { type: String, default: "" }, 
@@ -123,9 +127,9 @@ const OrderSchema = new mongoose.Schema({
     tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
     waktuPesan: { type: Date, default: Date.now }, 
     teknisi: { type: String, default: "" }, 
-    teknisiFoto: { type: String, default: "" }, // ✨ Baru: Foto profil teknisi
+    teknisiFoto: { type: String, default: "" }, 
     jadwal: { type: String, default: "" }, 
-    lokasiServis: { type: String, default: "home_service" },
+    lokasiServis: { type: String, default: "home_service" }, 
     buktiPelunasan: { type: String, default: "" },  
     etaTeknisi: { type: String, default: "" },
     rating: { type: Number, default: 0 },
@@ -145,11 +149,11 @@ const OrderSchema = new mongoose.Schema({
     subStatusWorkshop: { type: String, default: "antrean" },
     estimasiSelesai: { type: String, default: "" },
     statusSparepart: { type: String, default: "tersedia" },
-    tanggalDatangPart: { type: String, default: "" }, // ✨ Baru: Estimasi Tanggal Part Inden Tiba
+    tanggalDatangPart: { type: String, default: "" }, 
     buktiBayarInden: { type: String, default: "" },
     metodeBayarInden: { type: String, default: "" },
     indenTerbayar: { type: Boolean, default: false },
-    qcChecklist: { type: Object, default: {} }, // ✨ Baru: Data QC Checklist akhir
+    qcChecklist: { type: Object, default: {} }, 
     riwayatStatus: { type: Array, default: [] }
 });
 const Order = mongoose.model('Order', OrderSchema, 'orders');
@@ -210,7 +214,51 @@ function verifyAdmin(req, res, next) {
     });
 }
 
-// API ROUTES
+// 🔥 FUNGSI HELPER KONVERSI GAMBAR UNTUK AI 🔥
+function fileToGenerativePart(filePath, mimeType) {
+    return {
+        inlineData: {
+            data: fs.readFileSync(filePath).toString("base64"),
+            mimeType
+        },
+    };
+}
+
+// 🔥 ENDPOINT AI AUTO-SCAN PERANGKAT (VISION) 🔥
+app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Tidak ada gambar yang diunggah" });
+        if (!genAI) return res.status(500).json({ error: "API Key AI belum dikonfigurasi pada server" });
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        const prompt = `Analisis gambar ini (biasanya tangkapan layar 'Tentang Ponsel' atau stiker spesifikasi). Ekstrak informasi berikut dan kembalikan HANYA dalam format JSON yang valid (tanpa blok kode markdown):
+        {
+            "merek": "nama merek perangkat utama (misal: Samsung, Asus, Xiaomi, Apple)",
+            "tipe": "tipe/model detail perangkat (misal: Galaxy S21 Ultra, TUF Gaming F15, iPhone 13 Pro)",
+            "imeiSerial": "nomor IMEI atau Serial Number jika ada, jika tidak ada kosongkan"
+        }`;
+
+        const imagePart = fileToGenerativePart(req.file.path, req.file.mimetype);
+
+        const result = await model.generateContent([prompt, imagePart]);
+        let textResult = result.response.text();
+        
+        // Membersihkan format backtick markdown jika Gemini masih memberikannya
+        textResult = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
+        const parsedData = JSON.parse(textResult);
+        
+        // Hapus foto dari server setelah diproses agar storage tidak penuh
+        fs.unlinkSync(req.file.path);
+        res.json(parsedData);
+    } catch (error) {
+        console.error("AI Scan Error:", error);
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).json({ error: "Gagal memproses gambar dengan AI" });
+    }
+});
+
+// API ROUTES ADMIN
 
 // Endpoint Login Admin
 app.post('/api/admin/login', (req, res) => {
@@ -289,7 +337,10 @@ app.post('/api/orders', upload.any(), async (req, res) => {
         
         dataOrder.lat = latInput || "";
         dataOrder.lng = lngInput || "";
-        dataOrder.imeiSerial = req.body.imeiSerial || ""; // ✨ Tangkap field imei
+        
+        // Memastikan field tambahan tertangkap dari Form
+        dataOrder.imeiSerial = req.body.imeiSerial || ""; 
+        dataOrder.lokasiServis = req.body.lokasiServis || "home_service";
         
         if (req.files && req.files.length > 0) {
             const fileKondisi = req.files.find(f => f.fieldname === 'kondisiHPFile');
@@ -484,7 +535,7 @@ app.get('/api/chats', verifyAdmin, async (req, res) => {
     }
 });
 
-// Endpoint Kirim Pesan Chat
+// 🔥 Endpoint Kirim Pesan Chat (Telah Diinjeksi Logika AI Bot) 🔥
 app.post('/api/chats', async (req, res) => {
     try {
         const chatBaru = new Chat(req.body);
@@ -496,6 +547,12 @@ app.post('/api/chats', async (req, res) => {
         
         io.emit("chatBaruDiterima", { kode: chatBaru.kode, pengirim: chatBaru.pengirim });
         res.status(201).json({ message: "Pesan chat terkirim" });
+
+        // Jika API Key AI dikonfigurasi dan pesan dari pengguna, aktifkan Bot
+        if (chatBaru.pengirim === 'user' && genAI) {
+            prosesBalasanBot(chatBaru.kode, chatBaru.teks).catch(err => console.error("Error Bot AI:", err));
+        }
+
     } catch (error) { 
         res.status(500).json({ error: "Gagal mengirim pesan chat" }); 
     }
@@ -511,8 +568,49 @@ app.get('/api/chats/:kode', async (req, res) => {
     }
 });
 
+// 🔥 FUNGSI HELPER ASISTEN AI CHATBOT (SF BOT) 🔥
+async function prosesBalasanBot(kode, pesanUser) {
+    try {
+        // Ambil riwayat chat agar bot mengerti konteks
+        const riwayatRaw = await Chat.find({ kode: kode }).sort({ _id: 1 }).limit(15);
+        const history = riwayatRaw.slice(0, -1).map(chat => ({
+            role: chat.pengirim === 'user' ? 'user' : 'model',
+            parts: [{ text: chat.teks }]
+        }));
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+            systemInstruction: "Anda adalah 'SF Bot', asisten virtual dari SF Tech Service (Layanan Servis HP, Laptop, dan Elektronik). Jawablah dengan bahasa Indonesia yang ramah, sopan, dan singkat maksimal 2 paragraf. Informasi dasar: Biaya pengecekan awal adalah Rp 50.000. Jika pelanggan bertanya hal terlalu teknis, ingin bernegosiasi harga, atau Anda tidak tahu jawabannya, mintalah pelanggan menunggu Admin atau Teknisi Manusia membalas."
+        });
+
+        const chatSession = model.startChat({ history: history });
+        
+        // Memicu indikator "Mengetik" ke pelanggan
+        io.emit('userTyping', { kode: kode, pengirim: 'admin' });
+
+        const result = await chatSession.sendMessage(pesanUser);
+        const balasanAI = result.response.text();
+
+        // Simpan balasan AI ke Database
+        const chatAI = new Chat({
+            kode: kode,
+            pengirim: 'admin',
+            teks: "🤖 *SF Bot:*\n" + balasanAI,
+            waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        });
+        await chatAI.save();
+
+        io.emit('userStopTyping', { kode: kode, pengirim: 'admin' });
+        io.emit("chatBaruDiterima", { kode: kode, pengirim: 'admin' });
+        
+    } catch (error) {
+        console.error("Gagal memproses AI Chat:", error);
+        io.emit('userStopTyping', { kode: kode, pengirim: 'admin' });
+    }
+}
+
 // Menjalankan Server Node.js
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-    console.log(`🚀 Server backend berjalan di http://localhost:${PORT}`);
+    console.log(`🚀 Server backend aktif di port ${PORT}`);
 });
