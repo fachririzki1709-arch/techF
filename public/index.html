@@ -1989,7 +1989,7 @@ function prosesScanAI(inputElement) {
     loading.style.display = 'block';
     
     // Kirim gambar ke server backend Node.js
-    fetch(`${API_URL}/ai/scan-device`, {
+    fetch(`${API_URL}/api/ai/scan-device`, {
         method: 'POST',
         body: formData
     })
