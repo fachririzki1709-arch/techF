@@ -232,11 +232,17 @@ app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) =
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const prompt = `Analisis gambar ini (biasanya tangkapan layar 'Tentang Ponsel' atau stiker spesifikasi). Ekstrak informasi berikut dan kembalikan HANYA dalam format JSON yang valid (tanpa blok kode markdown):
+        // PROMPT DIUBAH: Fokus ke pengenalan fisik (backdoor, modul kamera) alih-alih screenshot teks
+        const prompt = `Anda adalah asisten teknisi smartphone tingkat lanjut. 
+        Tugas Anda adalah menganalisis foto fisik perangkat ini (bisa berupa backdoor, susunan modul kamera, logo, atau tampak depan).
+        
+        Tentukan merek dan model/tipe perangkat tersebut. Jika tidak bisa memastikan seri pastinya (karena desain identik, misal iPhone 13 dan 14), berikan tebakan terbaik atau rentang serinya.
+        
+        KEMBALIKAN HANYA FORMAT JSON VALID SEPERTI DI BAWAH INI, TANPA TEKS ATAU PENJELASAN LAIN (tanpa blok kode markdown):
         {
-            "merek": "nama merek perangkat utama (misal: Samsung, Asus, Xiaomi, Apple)",
-            "tipe": "tipe/model detail perangkat (misal: Galaxy S21 Ultra, TUF Gaming F15, iPhone 13 Pro)",
-            "imeiSerial": "nomor IMEI atau Serial Number jika ada, jika tidak ada kosongkan"
+            "merek": "Nama Merek (misal: Samsung, Asus, Xiaomi, Apple)",
+            "tipe": "Nama Tipe Detail (misal: Galaxy S23 Ultra, iPhone 13 Pro)",
+            "imeiSerial": "null"
         }`;
 
         const imagePart = fileToGenerativePart(req.file.path, req.file.mimetype);
