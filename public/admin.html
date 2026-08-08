@@ -533,6 +533,10 @@
                         <div style="flex: 1;"><strong>Nama:</strong> <span id="infoNama">-</span></div>
                         <div style="flex: 1;"><strong>WhatsApp:</strong> <span id="infoWa">-</span></div>
                     </div>
+                    <div style="flex: 1;"><strong>IMEI/SN:</strong> <span id="infoImei" style="color:#0ea5e9; font-weight:bold;">-</span></div>
+                    <div style="font-size: 0.9rem; margin-bottom: 10px; margin-top: 10px;">
+                     <strong>Tipe Layanan:</strong> <span id="infoTipeLayanan" style="background:#e2e8f0; padding:2px 8px; border-radius:4px; font-weight:bold;">-</span>
+                    </div>
                     <div style="font-size: 0.9rem; margin-bottom: 10px;"><strong>Keluhan:</strong> <span id="infoKeluhan">-</span></div>
                     
                     <!-- ✨ SKEMA 2: JAMINAN DATA PRIVASI -->
@@ -1336,6 +1340,16 @@ function bukaModalKelola(kode) {
         // Info Kiri (Langkah 1)
         document.getElementById("infoNama").textContent = data.nama;
         document.getElementById("infoWa").textContent = data.wa;
+        document.getElementById("infoImei").textContent = data.imeiSerial || "Tidak ada data";
+
+const lblTipeLayanan = document.getElementById("infoTipeLayanan");
+if (data.lokasiServis === "workshop") {
+    lblTipeLayanan.innerHTML = '<i class="bi bi-shop"></i> Datang ke Workshop';
+    lblTipeLayanan.style.background = "#f1f5f9"; lblTipeLayanan.style.color = "#475569";
+} else {
+    lblTipeLayanan.innerHTML = '<i class="bi bi-house-gear-fill"></i> Panggil Teknisi (On-Site)';
+    lblTipeLayanan.style.background = "#e0f2fe"; lblTipeLayanan.style.color = "#0369a1";
+}
         document.getElementById("infoKeluhan").textContent = data.kerusakan || "-";
 
         // Map Leaflet Admin
