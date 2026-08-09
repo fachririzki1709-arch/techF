@@ -1,4 +1,4 @@
-a<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -379,9 +379,9 @@ a<!DOCTYPE html>
             <input type="radio" name="tipeLayanan" value="home_service" checked onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;"> 
             <span><i class="bi bi-house-gear-fill" style="color:#0ea5e9;"></i> Panggil Teknisi (Home Service)</span>
         </label>
-        <label id="lblWorkshop" style="flex:1; min-width:200px; border: 2px solid #e2e8f0; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f8fafc; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
-            <input type="radio" name="tipeLayanan" value="workshop" onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;">
-            <span><i class="bi bi-shop" style="color:#64748b;"></i> Datang ke Workshop</span>
+        <label id="lblCOD" style="flex:1; min-width:200px; border: 2px solid #e2e8f0; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f8fafc; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
+            <input type="radio" name="tipeLayanan" value="cod" onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;">
+            <span><i class="bi bi-geo-alt-fill" style="color:#64748b;"></i> Sistem COD / Ketemuan</span>
         </label>
     </div>
 
@@ -400,8 +400,8 @@ a<!DOCTYPE html>
     </div>
 
     <!-- 3. AREA LOKASI (Hanya tampil jika Home Service) -->
-    <div id="areaLokasiForm" style="display: block; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.2rem;">
-        <label>Alamat Lengkap Kunjungan</label>
+   <div id="areaLokasiForm" style="display: block; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.2rem;">
+        <label id="judulLokasi">Alamat Lengkap Kunjungan</label>
         <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan..." oninput="simpanDraft()"></textarea>
 
         <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi Peta GPS</label>
@@ -607,7 +607,7 @@ a<!DOCTYPE html>
                 </div>
 
                 <div id="boxTrackingWorkshop" style="display:none; margin: 1.5rem 0; padding: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <h4 style="font-size: 1rem; margin-bottom: 1rem; color:#0f172a;"><i class="bi bi-building-gear"></i> Status Unit di Workshop</h4>
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem; color:#0f172a;"><i class="bi bi-tools"></i> Status Pengerjaan Unit</h4>
                     <div style="display:flex; flex-direction:column; gap:0.5rem;">
                         <div class="ws-step data-dinamis" id="ws-antrean"><i class="bi bi-1-circle"></i> Masuk Antrean Workshop</div>
                         <div class="ws-step data-dinamis" id="ws-pengecekan"><i class="bi bi-2-circle"></i> Pengecekan Detail (QC Awal)</div>
@@ -1659,7 +1659,7 @@ function cekStatus() {
         else if (data.status === "dijadwalkan") {
             targetStep = 3; document.getElementById("teknisi").textContent = data.teknisi;
             document.getElementById("jadwal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : "-";
-            document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Ke Workshop";
+            document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Titik COD";
             document.getElementById("lblETA").textContent = data.etaTeknisi || "Belum diupdate admin";
             document.getElementById("tampilJadwal").style.display = "block"; document.getElementById("infoJadwal").style.display = "none";
         }
@@ -1676,7 +1676,7 @@ function cekStatus() {
             } else { boxEstimasi.style.display = "none"; }
 
             const boxWorkshop = document.getElementById("boxTrackingWorkshop");
-            if(data.lokasiServis === "workshop") {
+            if(data.lokasiServis === "cod") {
                 boxWorkshop.style.display = "block";
                 const urutan = ["antrean", "pengecekan", "tunggu_part", "perbaikan", "qc_akhir", "siap"];
                 const indexSaatIni = urutan.indexOf(data.subStatusWorkshop || "antrean");
@@ -1941,21 +1941,26 @@ headerChat.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
 // --- FUNGSI UI UX LANGKAH 2 ---
+// --- FUNGSI UI UX LANGKAH 2 ---
 function toggleTipeLayanan() {
     const tipe = document.querySelector('input[name="tipeLayanan"]:checked').value;
     const areaLokasi = document.getElementById("areaLokasiForm");
     const lblHome = document.getElementById("lblHomeService");
-    const lblWorkshop = document.getElementById("lblWorkshop");
+    const lblCod = document.getElementById("lblCOD"); // Menggantikan lblWorkshop
+    const judulLokasi = document.getElementById("judulLokasi"); // Mengambil ID label teks
+
+    // Area alamat/peta harus selalu tampil untuk Home Service maupun COD
+    areaLokasi.style.display = "block";
+    if(petaPelanggan) setTimeout(() => petaPelanggan.invalidateSize(), 300);
 
     if (tipe === "home_service") {
-        areaLokasi.style.display = "block";
         lblHome.style.background = "#f0f9ff"; lblHome.style.borderColor = "#0ea5e9";
-        lblWorkshop.style.background = "#f8fafc"; lblWorkshop.style.borderColor = "#e2e8f0";
-        if(petaPelanggan) setTimeout(() => petaPelanggan.invalidateSize(), 300);
-    } else {
-        areaLokasi.style.display = "none";
-        lblWorkshop.style.background = "#f0f9ff"; lblWorkshop.style.borderColor = "#0ea5e9";
+        lblCod.style.background = "#f8fafc"; lblCod.style.borderColor = "#e2e8f0";
+        if(judulLokasi) judulLokasi.innerText = "Alamat Lengkap Kunjungan (Rumah / Kantor)";
+    } else if (tipe === "cod") {
+        lblCod.style.background = "#f0f9ff"; lblCod.style.borderColor = "#0ea5e9";
         lblHome.style.background = "#f8fafc"; lblHome.style.borderColor = "#e2e8f0";
+        if(judulLokasi) judulLokasi.innerText = "Tentukan Lokasi Titik Temu (COD)";
     }
     simpanDraft();
 }
