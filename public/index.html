@@ -1663,7 +1663,6 @@ function cekStatus() {
             document.getElementById("tampilJadwal").style.display = "none";
         }
         else if (data.status === "dijadwalkan") {
-            else if (data.status === "dijadwalkan") {
             targetStep = 3; document.getElementById("teknisi").textContent = data.teknisi;
             tampilkanProfilTeknisi(data.teknisi); // BARIS BARU UNTUK MEMANGGIL KARTU TEKNISI
             document.getElementById("jadwal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : "-";
@@ -2100,7 +2099,7 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
                 boxProfil.style.borderColor = "#334155";
             }
         } else { boxProfil.style.display = "none"; }
-    } catch(e) { console.error("Gagal memuat profil teknisi", e); 
+    } catch(e) { console.error("Gagal memuat profil teknisi", e); }
 }
 </script>
 </body>
