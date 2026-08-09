@@ -607,7 +607,35 @@ app.post('/api/chats', async (req, res) => {
         res.status(500).json({ error: "Gagal mengirim pesan chat" }); 
     }
 });
+// --- API MANAJEMEN TEKNISI ---
+app.get('/api/teknisi', async (req, res) => {
+    try {
+        const teknisi = await Teknisi.find().sort({ createdAt: -1 });
+        res.json(teknisi);
+    } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
+});
 
+app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
+        const teknisiBaru = new Teknisi({ nama: req.body.nama, wa: req.body.wa, foto: `/uploads/${req.file.filename}` });
+        await teknisiBaru.save();
+        res.status(201).json({ message: "Teknisi berhasil ditambahkan" });
+    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi" }); }
+});
+
+app.delete('/api/teknisi/:id', verifyAdmin, async (req, res) => {
+    try {
+        const tek = await Teknisi.findById(req.params.id);
+        if (tek && tek.foto) {
+            const filePath = path.join(__dirname, 'public', tek.foto);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath); 
+        }
+        await Teknisi.findByIdAndDelete(req.params.id);
+        res.json({ message: "Teknisi berhasil dihapus" });
+    } catch (error) { res.status(500).json({ error: "Gagal menghapus teknisi" }); }
+});
+// -----------------------------
 // Endpoint Ambil Log Chat Berdasarkan Kode Pesanan/Konsultasi
 app.get('/api/chats/:kode', async (req, res) => {
     try {
