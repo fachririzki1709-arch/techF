@@ -297,6 +297,7 @@
                     <span id="badgeKonsul" class="badge-sidebar">0</span>
                 </button>
                 <button class="sidebar-btn" onclick="pindahSidebarMenu('menuLaporanEkstra', this)"><i class="bi bi-bar-chart-fill"></i> Laporan Analitik</button>
+                <button class="sidebar-btn" onclick="pindahSidebarMenu('menuManajemenTeknisi', this)"><i class="bi bi-people-fill"></i> Manajemen Teknisi</button>
             </div>
         </aside>
 
@@ -491,7 +492,47 @@
                         </div>
                     </div>
                 </div>
+            <!-- MENU 4: MANAJEMEN TEKNISI -->
+<div id="menuManajemenTeknisi" class="modal-view">
+    <h1>Manajemen Teknisi</h1>
+    <p class="page-subtitle">Kelola profil teknisi yang akan ditampilkan di halaman pelanggan.</p>
+    
+    <div style="display:flex; gap:1.5rem; flex-wrap:wrap; align-items: flex-start;">
+        <!-- Form Tambah Teknisi -->
+        <div class="box-info" style="flex:1; min-width:300px; background:white; border-color:var(--border-line);">
+            <h4 style="margin-bottom:1rem;"><i class="bi bi-person-plus-fill" style="color:#0ea5e9;"></i> Tambah Teknisi Baru</h4>
+            <form id="formTambahTeknisi" onsubmit="simpanTeknisiBaru(event)">
+                <label>Nama Lengkap</label>
+                <input type="text" id="inputNamaTeknisi" placeholder="Nama teknisi..." required>
+                
+                <label>Nomor WhatsApp</label>
+                <input type="number" id="inputWaTeknisi" placeholder="Contoh: 62812345678" required>
+                
+                <label>Foto Profil (Wajah)</label>
+                <input type="file" id="inputFotoTeknisi" accept="image/*" required>
+                
+                <button type="submit" class="btn btn-primary" id="btnSimpanTeknisi" style="width:100%; background:#10b981; color:white; justify-content:center;"><i class="bi bi-save"></i> Simpan Teknisi</button>
+            </form>
+        </div>
 
+        <!-- Tabel Daftar Teknisi -->
+        <div class="table-responsive" style="flex:2; min-width:400px; margin:0;">
+            <table id="tabelTeknisi">
+                <thead>
+                    <tr>
+                        <th>Foto</th>
+                        <th>Nama Teknisi</th>
+                        <th>No WhatsApp</th>
+                        <th style="text-align:center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyTeknisi">
+                    <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
             </div>
             
             <footer style="text-align: center; padding: 2rem; border-top: 1px solid var(--border-line); color: #64748b; margin-top: auto; font-size: 0.9rem;">
@@ -1788,6 +1829,75 @@ function exportCSV() {
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
     });
 }
+    // --- FUNGSI MANAJEMEN TEKNISI ---
+function muatDataTeknisiAdmin() {
+    fetch(`${API_URL}/teknisi`, { headers: getAuthHeader(), cache: 'no-store' })
+    .then(res => res.json())
+    .then(data => {
+        const tbody = document.getElementById("tbodyTeknisi");
+        tbody.innerHTML = "";
+        if(data.length === 0) return tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Belum ada data teknisi</td></tr>";
+        
+        data.forEach(tek => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="${window.location.origin}${tek.foto}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #e2e8f0;"></td>
+                    <td><strong>${tek.nama}</strong></td>
+                    <td>${tek.wa}</td>
+                    <td style="text-align:center;">
+                        <button class="btn btn-hapus btn-sm" onclick="hapusTeknisi('${tek._id}')"><i class="bi bi-trash-fill"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+}
+
+function simpanTeknisiBaru(e) {
+    e.preventDefault();
+    const btn = document.getElementById("btnSimpanTeknisi");
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...'; btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('nama', document.getElementById('inputNamaTeknisi').value);
+    // Format nomor otomatis ke awalan 62
+    let noWa = document.getElementById('inputWaTeknisi').value.replace(/\D/g, '');
+    if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
+    formData.append('wa', noWa);
+    formData.append('fotoTeknisi', document.getElementById('inputFotoTeknisi').files[0]);
+
+    fetch(`${API_URL}/teknisi`, {
+        method: 'POST', headers: getAuthHeader(), body: formData
+    })
+    .then(handleApiError).then(() => {
+        Toast.fire({ icon: 'success', title: 'Teknisi ditambahkan' });
+        document.getElementById("formTambahTeknisi").reset();
+        muatDataTeknisiAdmin();
+    })
+    .finally(() => {
+        btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; btn.disabled = false;
+    });
+}
+
+function hapusTeknisi(id) {
+    Swal.fire({ title: 'Hapus teknisi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' })
+    .then((res) => {
+        if(res.isConfirmed) {
+            fetch(`${API_URL}/teknisi/${id}`, { method: 'DELETE', headers: getAuthHeader() })
+            .then(handleApiError).then(() => {
+                Toast.fire({ icon: 'success', title: 'Terhapus' });
+                muatDataTeknisiAdmin();
+            });
+        }
+    });
+}
+
+// Panggil fungsi ini di dalam fungsi tampilkanDashboardUtama() agar otomatis dimuat saat login
+const oldTampilkanDashboardUtama = tampilkanDashboardUtama;
+tampilkanDashboardUtama = function() {
+    oldTampilkanDashboardUtama();
+    muatDataTeknisiAdmin(); 
+};
 </script>
 </body>
 </html>
