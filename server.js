@@ -179,6 +179,12 @@ async function tambahNotifikasiDB(pesan) {
         await new Notification({ pesan }).save();
     } catch(err) { console.error("Gagal menyimpan notifikasi", err); }
 }
+const TeknisiSchema = new mongoose.Schema({
+    nama: { type: String, required: true },
+    wa: { type: String, required: true },
+    foto: { type: String, required: true } // Path URL foto
+}, { timestamps: true });
+const Teknisi = mongoose.model('Teknisi', TeknisiSchema, 'teknisi');
 
 // --- FUNGSI HELPER WHATSAPP GATEWAY (Webhook) ---
 async function kirimNotifikasiWA(noWa, pesanTeks) {
@@ -213,6 +219,44 @@ function verifyAdmin(req, res, next) {
         next(); 
     });
 }
+// --- API TEKNISI ---
+
+// GET: Tampilkan semua teknisi (Bisa diakses Admin & User)
+app.get('/api/teknisi', async (req, res) => {
+    try {
+        const teknisi = await Teknisi.find().sort({ createdAt: -1 });
+        res.json(teknisi);
+    } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
+});
+
+// POST: Tambah Teknisi Baru (Hanya Admin)
+app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
+        
+        const teknisiBaru = new Teknisi({
+            nama: req.body.nama,
+            wa: req.body.wa,
+            foto: `/uploads/${req.file.filename}`
+        });
+        await teknisiBaru.save();
+        res.status(201).json({ message: "Teknisi berhasil ditambahkan" });
+    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
+});
+
+// DELETE: Hapus Teknisi (Hanya Admin)
+app.delete('/api/teknisi/:id', verifyAdmin, async (req, res) => {
+    try {
+        const tek = await Teknisi.findById(req.params.id);
+        if (tek && tek.foto) {
+            const fs = require('fs');
+            const filePath = path.join(__dirname, 'public', tek.foto);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Hapus foto dari folder
+        }
+        await Teknisi.findByIdAndDelete(req.params.id);
+        res.json({ message: "Teknisi berhasil dihapus" });
+    } catch (error) { res.status(500).json({ error: "Gagal menghapus teknisi" }); }
+});
 
 // 🔥 FUNGSI HELPER KONVERSI GAMBAR UNTUK AI 🔥
 function fileToGenerativePart(filePath, mimeType) {
