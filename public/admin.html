@@ -616,19 +616,27 @@
                         <option value="selesai">Lunas & Selesai Sepenuhnya</option>
                     </select>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
-                        <div>
-    <label style="font-weight:600;">Teknisi PIC</label>
-    <select id="teknisi" class="kunci-target">
-        <option value="">-- Belum Ditentukan --</option>
-    </select>
+                    <div style="background: #f8fafc; border: 1px solid var(--border-line); padding: 1.2rem; border-radius: 10px; margin-top: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+    <h5 style="margin-bottom: 1rem; color: #0ea5e9; font-size: 0.95rem;"><i class="bi bi-calendar2-week"></i> Penugasan Teknisi & Waktu</h5>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem;">
+        <div>
+            <label style="font-weight:600; font-size: 0.85rem;"><i class="bi bi-person-badge"></i> Teknisi PIC</label>
+            <select id="teknisi" class="kunci-target" style="margin-top: 5px;">
+                <option value="">-- Belum Ditentukan --</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-weight:600; font-size: 0.85rem;"><i class="bi bi-clock-fill"></i> Tentukan Tanggal & Jam</label>
+            <!-- MENGGUNAKAN DATETIME-LOCAL AGAR TERSINKRONISASI -->
+            <input type="datetime-local" id="jadwal" class="kunci-target" style="margin-top: 5px;">
+        </div>
+        <div style="grid-column: 1 / -1;">
+            <label style="color:#0ea5e9; font-weight:600; font-size: 0.85rem;"><i class="bi bi-broadcast"></i> Live Update ETA Kedatangan</label>
+            <input type="text" id="etaUpdate" class="kunci-target" placeholder="Contoh: Teknisi telah meluncur ke lokasi (ETA 15 Menit)" style="margin-top: 5px; margin-bottom: 0;">
+        </div>
+    </div>
 </div>
-                        <div>
-                            <label style="font-weight:600;">Jadwal Servis</label>
-                            <input type="text" id="jadwal" class="kunci-target" placeholder="Contoh: 20 Jul, 14:00">
-                        </div>
-                    </div>
-
                     <label style="color:#0ea5e9; font-weight:600;"><i class="bi bi-broadcast"></i> Live Update ETA Kedatangan</label>
                     <input type="text" id="etaUpdate" class="kunci-target" placeholder="Contoh: Teknisi meluncur (ETA 15 Menit)">
                     
@@ -1423,7 +1431,20 @@ if (data.lokasiServis === "cod") {
         // ISIAN FORM (Langkah 2)
         document.getElementById("statusPesanan").value = data.status || "pending";
         document.getElementById("teknisi").value = data.teknisi || "";
-        document.getElementById("jadwal").value = data.jadwal || "";
+       let jadwalFormated = "";
+        if (data.jadwal) {
+            try {
+                const d = new Date(data.jadwal);
+                if (!isNaN(d.getTime())) {
+                    jadwalFormated = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                } else {
+                    jadwalFormated = data.jadwal;
+                }
+            } catch(e) { 
+                jadwalFormated = data.jadwal; 
+            }
+        }
+        document.getElementById("jadwal").value = jadwalFormated;
         document.getElementById("etaUpdate").value = data.etaTeknisi || "";
         
         // INDEN SPAREPART
