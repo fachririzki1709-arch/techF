@@ -687,7 +687,7 @@
                 <div class="pratinjau" id="tampilKondisiAdmin">Belum ada dokumen</div>
                 
                 <!-- ✨ SKEMA 3: TRANSPARANSI WORKSHOP -->
-                <h4 style="margin-top:1.5rem; border-top:2px dashed var(--border-line); padding-top:1.5rem; font-size:1rem; font-weight:800;"><i class="bi bi-camera-video-fill" style="color:#ef4444;"></i> Media Transparansi Workshop</h4>
+                <h4 style="margin-top:1.5rem; border-top:2px dashed var(--border-line); padding-top:1.5rem; font-size:1rem; font-weight:800;"><i class="bi bi-camera-video-fill" style="color:#ef4444;"></i> Media Transparansi Pengerjaan</h4>
                 <p style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">Unggah bukti video unboxing dan foto perbandingan suku cadang untuk dilihat pelanggan.</p>
                 <div style="display: flex; flex-direction: column; gap: 10px; background:var(--bg-utama); padding:1rem; border-radius:8px; border:1px solid var(--border-line);">
                     <div>
@@ -1343,7 +1343,10 @@ function bukaModalKelola(kode) {
         document.getElementById("infoImei").textContent = data.imeiSerial || "Tidak ada data";
 
 const lblTipeLayanan = document.getElementById("infoTipeLayanan");
-if (data.lokasiServis === "workshop") {
+if (data.lokasiServis === "cod") {
+    lblTipeLayanan.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Sistem COD / Titik Temu';
+    lblTipeLayanan.style.background = "#f0f9ff"; lblTipeLayanan.style.color = "#0ea5e9";
+} else if (data.lokasiServis === "workshop") { // Dipertahankan untuk histori data lama
     lblTipeLayanan.innerHTML = '<i class="bi bi-shop"></i> Datang ke Workshop';
     lblTipeLayanan.style.background = "#f1f5f9"; lblTipeLayanan.style.color = "#475569";
 } else {
