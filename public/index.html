@@ -543,12 +543,18 @@
                     <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
                 </div>
                 <div class="jadwal-box" id="tampilJadwal" style="display:none;">
-                    <p><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
-                    <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
-                    <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
-                    <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
-                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
-                </div>
+    <p style="display:none;"><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
+    <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
+    <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
+    <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
+    
+    <!-- KARTU DRIVER TEKNISI ALA RIDE-HAILING -->
+    <div id="kartuTeknisiTugas" style="display:none; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; align-items: center; gap: 15px; margin-top: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+        <!-- Konten dirender oleh JS -->
+    </div>
+    
+    <p style="margin-top: 1rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
+</div>
 
                 <!-- TOMBOL PEMBATALAN OLEH USER -->
                 <button id="btnBatalPesananUser" class="btn btn-danger" onclick="batalkanPesananSistem()" style="margin-top: 1.5rem; width: 100%; justify-content: center; display: none;"><i class="bi bi-x-octagon"></i> Batalkan Pesanan Ini</button>
@@ -1657,7 +1663,9 @@ function cekStatus() {
             document.getElementById("tampilJadwal").style.display = "none";
         }
         else if (data.status === "dijadwalkan") {
+            else if (data.status === "dijadwalkan") {
             targetStep = 3; document.getElementById("teknisi").textContent = data.teknisi;
+            tampilkanProfilTeknisi(data.teknisi); // BARIS BARU UNTUK MEMANGGIL KARTU TEKNISI
             document.getElementById("jadwal").textContent = data.jadwal ? new Date(data.jadwal).toLocaleString("id-ID") : "-";
             document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Titik COD";
             document.getElementById("lblETA").textContent = data.etaTeknisi || "Belum diupdate admin";
@@ -2059,6 +2067,40 @@ function prosesScanAI(inputElement) {
         loading.style.display = 'none';
         inputElement.value = ""; 
     });
+}
+    // --- KARTU TEKNISI (DRIVER CARD) ---
+async function tampilkanProfilTeknisi(namaTeknisi) {
+    const boxProfil = document.getElementById("kartuTeknisiTugas");
+    if(!namaTeknisi || namaTeknisi === "-" || namaTeknisi === "Belum ada teknisi") {
+        boxProfil.style.display = "none";
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/teknisi`, { cache: 'no-store' });
+        const teknisiList = await res.json();
+        const tek = teknisiList.find(t => t.nama === namaTeknisi);
+        
+        if (tek) {
+            let noWa = tek.wa.replace(/\D/g, '');
+            if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
+            
+            boxProfil.innerHTML = `
+                <img src="${window.location.origin}${tek.foto}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
+                <div style="flex: 1;">
+                    <p style="margin: 0; font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Teknisi Bertugas</p>
+                    <h4 style="margin: 2px 0; font-size: 1.1rem; color: #0f172a;">${tek.nama}</h4>
+                    <p style="margin: 0; font-size: 0.8rem; color: #10b981; font-weight: bold;"><i class="bi bi-shield-fill-check"></i> SF Tech Official</p>
+                </div>
+                <a href="https://wa.me/${noWa}?text=Halo%20Mas%20${tek.nama},%20saya%20pelanggan%20dengan%20kode%20pesanan%20${kodeSaya}.%20Apakah%20sudah%20di%20jalan?" target="_blank" class="btn btn-success" style="padding: 0.6rem 0.8rem; border-radius: 50%; margin: 0; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);"><i class="bi bi-telephone-fill" style="font-size: 1.2rem;"></i></a>
+            `;
+            boxProfil.style.display = "flex"; 
+            if (document.body.classList.contains('dark-mode')) {
+                boxProfil.style.background = "#1e293b";
+                boxProfil.style.borderColor = "#334155";
+            }
+        } else { boxProfil.style.display = "none"; }
+    } catch(e) { console.error("Gagal memuat profil teknisi", e); }
 }
 </script>
 </body>
