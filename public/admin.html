@@ -618,9 +618,11 @@
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
                         <div>
-                            <label style="font-weight:600;">Teknisi PIC</label>
-                            <input type="text" id="teknisi" class="kunci-target" placeholder="Nama Teknisi">
-                        </div>
+    <label style="font-weight:600;">Teknisi PIC</label>
+    <select id="teknisi" class="kunci-target">
+        <option value="">-- Belum Ditentukan --</option>
+    </select>
+</div>
                         <div>
                             <label style="font-weight:600;">Jadwal Servis</label>
                             <input type="text" id="jadwal" class="kunci-target" placeholder="Contoh: 20 Jul, 14:00">
@@ -1829,7 +1831,21 @@ function exportCSV() {
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
     });
 }
-    // --- FUNGSI MANAJEMEN TEKNISI ---
+    // --- JAVASCRIPT MANAJEMEN TEKNISI ---
+async function muatDropdownTeknisi() {
+    try {
+        const res = await fetch(`${API_URL}/teknisi`, { headers: getAuthHeader(), cache: 'no-store' });
+        const data = await res.json();
+        const select = document.getElementById("teknisi");
+        
+        let existingValue = select.value;
+        select.innerHTML = '<option value="">-- Belum Ditentukan --</option>';
+        data.forEach(tek => { select.innerHTML += `<option value="${tek.nama}">${tek.nama}</option>`; });
+        
+        if (existingValue) select.value = existingValue;
+    } catch(e) { console.error("Gagal memuat list teknisi dropdown", e); }
+}
+
 function muatDataTeknisiAdmin() {
     fetch(`${API_URL}/teknisi`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(res => res.json())
@@ -1841,12 +1857,10 @@ function muatDataTeknisiAdmin() {
         data.forEach(tek => {
             tbody.innerHTML += `
                 <tr>
-                    <td><img src="${window.location.origin}${tek.foto}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #e2e8f0;"></td>
+                    <td><img src="${window.location.origin}${tek.foto}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid #e2e8f0;"></td>
                     <td><strong>${tek.nama}</strong></td>
                     <td>${tek.wa}</td>
-                    <td style="text-align:center;">
-                        <button class="btn btn-hapus btn-sm" onclick="hapusTeknisi('${tek._id}')"><i class="bi bi-trash-fill"></i></button>
-                    </td>
+                    <td style="text-align:center;"><button class="btn btn-hapus btn-sm" onclick="hapusTeknisi('${tek._id}')"><i class="bi bi-trash-fill"></i></button></td>
                 </tr>
             `;
         });
@@ -1860,23 +1874,17 @@ function simpanTeknisiBaru(e) {
 
     const formData = new FormData();
     formData.append('nama', document.getElementById('inputNamaTeknisi').value);
-    // Format nomor otomatis ke awalan 62
     let noWa = document.getElementById('inputWaTeknisi').value.replace(/\D/g, '');
     if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
     formData.append('wa', noWa);
     formData.append('fotoTeknisi', document.getElementById('inputFotoTeknisi').files[0]);
 
-    fetch(`${API_URL}/teknisi`, {
-        method: 'POST', headers: getAuthHeader(), body: formData
-    })
+    fetch(`${API_URL}/teknisi`, { method: 'POST', headers: getAuthHeader(), body: formData })
     .then(handleApiError).then(() => {
         Toast.fire({ icon: 'success', title: 'Teknisi ditambahkan' });
         document.getElementById("formTambahTeknisi").reset();
-        muatDataTeknisiAdmin();
-    })
-    .finally(() => {
-        btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; btn.disabled = false;
-    });
+        muatDataTeknisiAdmin(); muatDropdownTeknisi();
+    }).finally(() => { btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; btn.disabled = false; });
 }
 
 function hapusTeknisi(id) {
@@ -1884,19 +1892,17 @@ function hapusTeknisi(id) {
     .then((res) => {
         if(res.isConfirmed) {
             fetch(`${API_URL}/teknisi/${id}`, { method: 'DELETE', headers: getAuthHeader() })
-            .then(handleApiError).then(() => {
-                Toast.fire({ icon: 'success', title: 'Terhapus' });
-                muatDataTeknisiAdmin();
-            });
+            .then(handleApiError).then(() => { Toast.fire({ icon: 'success', title: 'Terhapus' }); muatDataTeknisiAdmin(); muatDropdownTeknisi(); });
         }
     });
 }
 
-// Panggil fungsi ini di dalam fungsi tampilkanDashboardUtama() agar otomatis dimuat saat login
-const oldTampilkanDashboardUtama = tampilkanDashboardUtama;
+// Intercept fungsi dashboard agar otomatis memuat data teknisi saat login
+const oldTampilkanDashboardUtamaInit = tampilkanDashboardUtama;
 tampilkanDashboardUtama = function() {
-    oldTampilkanDashboardUtama();
-    muatDataTeknisiAdmin(); 
+    oldTampilkanDashboardUtamaInit();
+    muatDataTeknisiAdmin();
+    muatDropdownTeknisi();
 };
 </script>
 </body>
