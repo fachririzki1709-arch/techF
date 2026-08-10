@@ -1834,7 +1834,37 @@ function kirimChatKonsul() {
         body: JSON.stringify({ kode: aktifKonsulKode, pengirim: 'admin', teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }) 
     }).then(() => { inp.value = ""; muatLogPesanKonsul(); });
 }
+// Fungsi hapus satu pesan (pasang pada tombol 'X' atau 'Hapus' di setiap bubble chat)
+async function hapusPesan(chatId) {
+    if(!confirm("Yakin ingin menghapus pesan ini?")) return;
 
+    try {
+        const response = await fetch(`/api/chats/${chatId}`, { method: 'DELETE' });
+        const result = await response.json();
+        console.log(result.message);
+        
+        // Hapus elemen HTML pesan dari UI atau muat ulang chat
+        document.getElementById(`chat-${chatId}`).remove(); 
+    } catch (error) {
+        console.error("Error menghapus pesan:", error);
+    }
+}
+
+// Fungsi bersihkan seluruh chat (pasang pada tombol "Bersihkan Riwayat" di header chat)
+async function bersihkanRiwayatChat(kodeKonsultasi) {
+    if(!confirm("Yakin ingin menghapus SELURUH riwayat chat pada sesi ini?")) return;
+
+    try {
+        const response = await fetch(`/api/chats/kode/${kodeKonsultasi}`, { method: 'DELETE' });
+        const result = await response.json();
+        alert(result.message);
+        
+        // Kosongkan kontainer chat di UI
+        document.getElementById('chatContainer').innerHTML = ''; 
+    } catch (error) {
+        console.error("Error membersihkan chat:", error);
+    }
+}
 function exportCSV() {
     fetch(`${API_URL}/orders`, { headers: getAuthHeader() }).then(handleApiError).then(data => {
         let csv = "Kode,Tanggal,Nama,Merek,Tipe,Status,Total_Bayar,Metode\n";
@@ -1849,7 +1879,6 @@ function exportCSV() {
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
     });
 }
-    // --- JAVASCRIPT MANAJEMEN TEKNISI ---
 // --- JAVASCRIPT MANAJEMEN TEKNISI ---
 async function muatDropdownTeknisi() {
     try {
@@ -1917,7 +1946,64 @@ function simpanTeknisiBaru(e) {
         muatDataTeknisiAdmin(); muatDropdownTeknisi();
     }).finally(() => { btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; btn.disabled = false; });
 }
+// Variabel global untuk menyimpan ID teknisi yang sedang di-edit
+let editTeknisiId = null;
 
+// Fungsi saat tombol "Edit" pada tabel teknisi ditekan
+function siapkanEditTeknisi(id, nama, wa) {
+    editTeknisiId = id;
+    
+    // Isi otomatis form input dengan data yang ada
+    document.getElementById('inputNamaTeknisi').value = nama;
+    document.getElementById('inputWaTeknisi').value = wa;
+    
+    // Ubah teks tombol submit menjadi "Update"
+    document.getElementById('btnSubmitTeknisi').innerText = "Update Teknisi";
+}
+
+// Fungsi untuk submit form (Tangani Tambah / Edit)
+async function submitFormTeknisi(event) {
+    event.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('nama', document.getElementById('inputNamaTeknisi').value);
+    formData.append('wa', document.getElementById('inputWaTeknisi').value);
+    
+    const fileInput = document.getElementById('inputFotoTeknisi').files[0];
+    if (fileInput) formData.append('fotoTeknisi', fileInput);
+
+    let url = '/api/teknisi';
+    let method = 'POST'; // Default untuk tambah baru
+
+    // Jika editTeknisiId ada isinya, berarti mode edit
+    if (editTeknisiId) {
+        url = `/api/teknisi/${editTeknisiId}`;
+        method = 'PUT';
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            body: formData
+        });
+        
+        const result = await response.json();
+        alert(result.message);
+        
+        // Reset form dan ID setelah berhasil
+        document.getElementById('formTeknisi').reset();
+        editTeknisiId = null;
+        document.getElementById('btnSubmitTeknisi').innerText = "Tambah Teknisi";
+        
+        // Panggil fungsi render ulang tabel teknisi Anda
+        loadDataTeknisi(); 
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+// Pastikan form di-bind dengan fungsi submit
+document.getElementById('formTeknisi').addEventListener('submit', submitFormTeknisi);
 function hapusTeknisi(id) {
     Swal.fire({ title: 'Hapus teknisi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' })
     .then((res) => {
