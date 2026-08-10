@@ -1888,7 +1888,7 @@ function muatDataTeknisiAdmin() {
         data.forEach(tek => {
             tbody.innerHTML += `
                 <tr>
-                    <td><img src="${window.location.origin}${tek.foto}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid #e2e8f0;"></td>
+                    <td><img src="${tek.foto.startsWith('http') ? tek.foto : window.location.origin + tek.foto}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid #e2e8f0;"></td>
                     <td><strong>${tek.nama}</strong></td>
                     <td>${tek.wa}</td>
                     <td style="text-align:center;"><button class="btn btn-hapus btn-sm" onclick="hapusTeknisi('${tek._id}')"><i class="bi bi-trash-fill"></i></button></td>
