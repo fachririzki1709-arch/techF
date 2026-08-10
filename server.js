@@ -221,14 +221,24 @@ function verifyAdmin(req, res, next) {
 }
 // --- API TEKNISI ---
 
-// GET: Tampilkan semua teknisi (Bisa diakses Admin & User)
+// GET: Tampilkan semua teknisi (Bisa diakses Admin & User) beserta Kalkulasi Antrean
 app.get('/api/teknisi', async (req, res) => {
     try {
-        const teknisi = await Teknisi.find().sort({ createdAt: -1 });
-        res.json(teknisi);
+        const teknisiList = await Teknisi.find().sort({ createdAt: -1 });
+        
+        // 🔄 LOOPING UNTUK MENGHITUNG QUEUE IN ORDER MASING-MASING TEKNISI
+        const teknisiDenganAntrian = await Promise.all(teknisiList.map(async (tek) => {
+            const jumlahAntrian = await Order.countDocuments({
+                teknisi: tek.nama,
+                status: { $in: ['dijadwalkan', 'diproses'] } // Hanya hitung status yang sedang aktif
+            });
+            // Gabungkan data teknisi dengan jumlah antreannya
+            return { ...tek.toObject(), antrianAktif: jumlahAntrian }; 
+        }));
+        
+        res.json(teknisiDenganAntrian);
     } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
 });
-
 // POST: Tambah Teknisi Baru (Hanya Admin)
 app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
@@ -607,13 +617,7 @@ app.post('/api/chats', async (req, res) => {
         res.status(500).json({ error: "Gagal mengirim pesan chat" }); 
     }
 });
-// --- API MANAJEMEN TEKNISI ---
-app.get('/api/teknisi', async (req, res) => {
-    try {
-        const teknisi = await Teknisi.find().sort({ createdAt: -1 });
-        res.json(teknisi);
-    } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
-});
+
 
 app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
