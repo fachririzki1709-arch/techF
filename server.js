@@ -259,20 +259,26 @@ app.get('/api/teknisi', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
 });
 // POST: Tambah Teknisi Baru (Hanya Admin)
+// POST: Tambah Teknisi Baru (Hanya Admin)
 app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
         
+        // 🌟 1. LEMPAR FOTO KE CLOUDINARY
+        const fotoUrlCloud = await uploadKeCloudinary(req.file.path);
+        if (!fotoUrlCloud) return res.status(500).json({ error: "Gagal mengunggah foto ke Cloud Storage" });
+
+        // 🌟 2. SIMPAN URL CLOUDINARY KE MONGODB
         const teknisiBaru = new Teknisi({
             nama: req.body.nama,
             wa: req.body.wa,
-            foto: `/uploads/${req.file.filename}`
+            foto: fotoUrlCloud // Format yang tersimpan kini berupa link utuh (https://...)
         });
+        
         await teknisiBaru.save();
         res.status(201).json({ message: "Teknisi berhasil ditambahkan" });
     } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
 });
-
 // DELETE: Hapus Teknisi (Hanya Admin)
 app.delete('/api/teknisi/:id', verifyAdmin, async (req, res) => {
     try {
@@ -638,27 +644,6 @@ app.post('/api/chats', async (req, res) => {
 });
 
 
-app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
-        const teknisiBaru = new Teknisi({ nama: req.body.nama, wa: req.body.wa, foto: `/uploads/${req.file.filename}` });
-        await teknisiBaru.save();
-        res.status(201).json({ message: "Teknisi berhasil ditambahkan" });
-    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi" }); }
-});
-
-app.delete('/api/teknisi/:id', verifyAdmin, async (req, res) => {
-    try {
-        const tek = await Teknisi.findById(req.params.id);
-        if (tek && tek.foto) {
-            const filePath = path.join(__dirname, 'public', tek.foto);
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath); 
-        }
-        await Teknisi.findByIdAndDelete(req.params.id);
-        res.json({ message: "Teknisi berhasil dihapus" });
-    } catch (error) { res.status(500).json({ error: "Gagal menghapus teknisi" }); }
-});
-// -----------------------------
 // Endpoint Ambil Log Chat Berdasarkan Kode Pesanan/Konsultasi
 app.get('/api/chats/:kode', async (req, res) => {
     try {
