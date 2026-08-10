@@ -676,6 +676,25 @@ app.get('/api/chats/:kode', async (req, res) => {
         res.status(500).json({ error: "Gagal memuat log chat" }); 
     }
 });
+// DELETE: Hapus 1 Pesan Berdasarkan ID
+app.delete('/api/chats/:id', async (req, res) => {
+    try {
+        await Chat.findByIdAndDelete(req.params.id);
+        res.json({ message: "Pesan berhasil dihapus" });
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal menghapus pesan" }); 
+    }
+});
+
+// DELETE: Hapus Seluruh Riwayat Chat Berdasarkan Kode Konsultasi
+app.delete('/api/chats/kode/:kode', async (req, res) => {
+    try {
+        await Chat.deleteMany({ kode: req.params.kode });
+        res.json({ message: "Riwayat chat untuk sesi ini berhasil dibersihkan" });
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal membersihkan riwayat chat" }); 
+    }
+});
 
 // 🔥 FUNGSI HELPER ASISTEN AI CHATBOT (SF BOT) 🔥
 async function prosesBalasanBot(kode, pesanUser) {
