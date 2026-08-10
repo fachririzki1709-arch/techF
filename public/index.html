@@ -2114,7 +2114,7 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
                     <!-- Header Accordion (Klik untuk Buka/Tutup) -->
                     <div onclick="toggleDropdownTeknisi()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%;">
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <img src="${window.location.origin}${tek.foto}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
+                            <img src="${tek.foto.startsWith('http') ? tek.foto : window.location.origin + tek.foto}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
                             <div>
                                 <p style="margin: 0; font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Teknisi Bertugas</p>
                                 <h4 style="margin: 2px 0; font-size: 1.1rem; color: var(--teks-utama);">${tek.nama}</h4>
