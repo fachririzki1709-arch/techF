@@ -1850,6 +1850,7 @@ function exportCSV() {
     });
 }
     // --- JAVASCRIPT MANAJEMEN TEKNISI ---
+// --- JAVASCRIPT MANAJEMEN TEKNISI ---
 async function muatDropdownTeknisi() {
     try {
         const res = await fetch(`${API_URL}/teknisi`, { headers: getAuthHeader(), cache: 'no-store' });
@@ -1858,12 +1859,24 @@ async function muatDropdownTeknisi() {
         
         let existingValue = select.value;
         select.innerHTML = '<option value="">-- Belum Ditentukan --</option>';
-        data.forEach(tek => { select.innerHTML += `<option value="${tek.nama}">${tek.nama}</option>`; });
+        
+        data.forEach(tek => { 
+            // Cek peringatan "Overload" jika antrean >= 5
+            let labelAntrean = '';
+            if (tek.antrianAktif >= 5) {
+                labelAntrean = ` (⚠️ OVERLOAD: ${tek.antrianAktif} Job)`;
+            } else if (tek.antrianAktif > 0) {
+                labelAntrean = ` (${tek.antrianAktif} Job Aktif)`;
+            } else {
+                labelAntrean = ' (Free)';
+            }
+            
+            select.innerHTML += `<option value="${tek.nama}">${tek.nama} ${labelAntrean}</option>`; 
+        });
         
         if (existingValue) select.value = existingValue;
     } catch(e) { console.error("Gagal memuat list teknisi dropdown", e); }
 }
-
 function muatDataTeknisiAdmin() {
     fetch(`${API_URL}/teknisi`, { headers: getAuthHeader(), cache: 'no-store' })
     .then(res => res.json())
