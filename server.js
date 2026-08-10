@@ -259,7 +259,6 @@ app.get('/api/teknisi', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
 });
 // POST: Tambah Teknisi Baru (Hanya Admin)
-// POST: Tambah Teknisi Baru (Hanya Admin)
 app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
@@ -278,6 +277,30 @@ app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, 
         await teknisiBaru.save();
         res.status(201).json({ message: "Teknisi berhasil ditambahkan" });
     } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
+});
+// PUT: Edit Data Teknisi berdasarkan ID
+app.put('/api/teknisi/:id', upload.single('fotoTeknisi'), async (req, res) => {
+    try {
+        const updateData = {
+            nama: req.body.nama,
+            wa: req.body.wa
+        };
+        
+        // Jika admin mengunggah foto baru saat edit
+        if (req.file) {
+            updateData.foto = `/uploads/${req.file.filename}`;
+        }
+        
+        const teknisi = await Teknisi.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
+        
+        if (!teknisi) {
+            return res.status(404).json({ error: "Teknisi tidak ditemukan" });
+        }
+        
+        res.json({ message: "Data teknisi berhasil diperbarui", data: teknisi });
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal memperbarui teknisi: " + error.message }); 
+    }
 });
 // DELETE: Hapus Teknisi (Hanya Admin)
 app.delete('/api/teknisi/:id', verifyAdmin, async (req, res) => {
