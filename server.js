@@ -278,28 +278,42 @@ app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, 
         res.status(201).json({ message: "Teknisi berhasil ditambahkan" });
     } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
 });
-// PUT: Edit Data Teknisi berdasarkan ID
-app.put('/api/teknisi/:id', upload.single('fotoTeknisi'), async (req, res) => {
+// PUT: Edit Data Teknisi (Hanya Admin)
+app.put('/api/teknisi/:id', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
         const updateData = {
             nama: req.body.nama,
             wa: req.body.wa
         };
         
-        // Jika admin mengunggah foto baru saat edit
+        // Jika ada unggahan foto baru, perbarui path foto
         if (req.file) {
             updateData.foto = `/uploads/${req.file.filename}`;
+            
+            // Opsional: Hapus foto lama dari storage
+            const tekLama = await Teknisi.findById(req.params.id);
+            if (tekLama && tekLama.foto) {
+                const fs = require('fs');
+                const path = require('path');
+                const filePath = path.join(__dirname, 'public', tekLama.foto);
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            }
         }
         
-        const teknisi = await Teknisi.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
-        
-        if (!teknisi) {
-            return res.status(404).json({ error: "Teknisi tidak ditemukan" });
-        }
-        
-        res.json({ message: "Data teknisi berhasil diperbarui", data: teknisi });
+        await Teknisi.findByIdAndUpdate(req.params.id, { $set: updateData });
+        res.json({ message: "Data teknisi berhasil diperbarui" });
     } catch (error) { 
         res.status(500).json({ error: "Gagal memperbarui teknisi: " + error.message }); 
+    }
+});
+
+// DELETE: Bersihkan Riwayat Chat Konsultasi
+app.delete('/api/chats/kode/:kode', verifyAdmin, async (req, res) => {
+    try {
+        await Chat.deleteMany({ kode: req.params.kode });
+        res.json({ message: "Riwayat chat berhasil dibersihkan" });
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal menghapus riwayat chat" }); 
     }
 });
 // DELETE: Hapus Teknisi (Hanya Admin)
@@ -683,16 +697,6 @@ app.delete('/api/chats/:id', async (req, res) => {
         res.json({ message: "Pesan berhasil dihapus" });
     } catch (error) { 
         res.status(500).json({ error: "Gagal menghapus pesan" }); 
-    }
-});
-
-// DELETE: Hapus Seluruh Riwayat Chat Berdasarkan Kode Konsultasi
-app.delete('/api/chats/kode/:kode', async (req, res) => {
-    try {
-        await Chat.deleteMany({ kode: req.params.kode });
-        res.json({ message: "Riwayat chat untuk sesi ini berhasil dibersihkan" });
-    } catch (error) { 
-        res.status(500).json({ error: "Gagal membersihkan riwayat chat" }); 
     }
 });
 
