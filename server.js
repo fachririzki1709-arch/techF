@@ -73,7 +73,26 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 50 * 1024 * 1024 }
 });
+// --- KONFIGURASI CLOUDINARY ---
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
+// Helper: Fungsi upload dari lokal (Render) langsung dilempar ke Cloudinary
+async function uploadKeCloudinary(filePath) {
+    try {
+        const result = await cloudinary.uploader.upload(filePath, { folder: "sftech_teknisi" });
+        const fs = require('fs');
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Segera hapus file di Render agar tidak membebani server
+        return result.secure_url;
+    } catch (err) {
+        console.error("Cloudinary Error:", err);
+        return "";
+    }
+}
 // WebSocket Connection Handler
 io.on('connection', (socket) => {
     console.log("🟢 Klien terhubung ke WebSocket:", socket.id);
