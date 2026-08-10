@@ -2086,7 +2086,7 @@ function prosesScanAI(inputElement) {
         inputElement.value = ""; 
     });
 }
-    // --- KARTU TEKNISI (DRIVER CARD) ---
+    // --- KARTU TEKNISI (DRIVER CARD) DENGAN DROPDOWN QUEUE IN ORDER ---
 async function tampilkanProfilTeknisi(namaTeknisi) {
     const boxProfil = document.getElementById("kartuTeknisiTugas");
     if(!namaTeknisi || namaTeknisi === "-" || namaTeknisi === "Belum ada teknisi") {
@@ -2103,16 +2103,57 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
             let noWa = tek.wa.replace(/\D/g, '');
             if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
             
+            // Mengambil angka antrean dari server.js
+            const jumlahAntrian = tek.antrianAktif || 0; 
+            const warnaStatus = jumlahAntrian > 3 ? '#ef4444' : (jumlahAntrian > 0 ? '#f59e0b' : '#10b981');
+            const teksStatus = jumlahAntrian > 0 ? 'Sedang Aktif Mengerjakan' : 'Tersedia (Free)';
+            
+            // MERENDER UI DROPDOWN ACCORDION
             boxProfil.innerHTML = `
-                <img src="${window.location.origin}${tek.foto}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
-                <div style="flex: 1;">
-                    <p style="margin: 0; font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Teknisi Bertugas</p>
-                    <h4 style="margin: 2px 0; font-size: 1.1rem; color: #0f172a;">${tek.nama}</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: #10b981; font-weight: bold;"><i class="bi bi-shield-fill-check"></i> SF Tech Official</p>
+                <div style="width: 100%; display: flex; flex-direction: column;">
+                    <!-- Header Accordion (Klik untuk Buka/Tutup) -->
+                    <div onclick="toggleDropdownTeknisi()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <img src="${window.location.origin}${tek.foto}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
+                            <div>
+                                <p style="margin: 0; font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Teknisi Bertugas</p>
+                                <h4 style="margin: 2px 0; font-size: 1.1rem; color: var(--teks-utama);">${tek.nama}</h4>
+                            </div>
+                        </div>
+                        <div style="color: #64748b; font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
+                            <span style="font-weight:600; font-size: 0.8rem;">Info</span> <i class="bi bi-chevron-down" id="ikonDropdownTeknisi" style="font-weight:bold; font-size:1.1rem;"></i>
+                        </div>
+                    </div>
+
+                    <!-- Isi Dropdown (Sembunyi Default) -->
+                    <div id="isiDropdownTeknisi" style="display: none; width: 100%; margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
+                        
+                        <!-- Proteksi Privasi: Hanya Menampilkan Angka Antrean -->
+                        <div style="margin-bottom: 15px; padding: 12px; background: var(--bg-utama); border-radius: 8px; border: 1px solid var(--border-line);">
+                            <p style="margin: 0 0 5px 0; font-size: 0.85rem; font-weight: 600; color: var(--teks-utama); display: flex; align-items: center; gap: 6px;">
+                                <span style="width: 10px; height: 10px; background: ${warnaStatus}; border-radius: 50%; display: inline-block;"></span> 
+                                Status: ${teksStatus}
+                            </p>
+                            <p style="margin: 0; font-size: 0.9rem; font-weight: 700; color: #0ea5e9;">
+                                📦 Antrean Saat Ini: ${jumlahAntrian} Perangkat
+                            </p>
+                            <p style="margin: 5px 0 0 0; font-size: 0.75rem; color: #64748b;">
+                                *Mohon maklumi jika balasan WhatsApp sedikit lebih lama apabila antrean sedang penuh.
+                            </p>
+                        </div>
+                        
+                        <!-- Smart Contact Action (Tombol WA Disembunyikan di Dalam) -->
+                        <a href="https://wa.me/${noWa}?text=Halo%20Mas%20${tek.nama},%20saya%20pelanggan%20dengan%20kode%20pesanan%20${kodeSaya}.%20Bisa%20info%20estimasi%20waktunya?" target="_blank" class="btn btn-success" style="width: 100%; justify-content: center; margin: 0; padding: 10px; border-radius: 8px;">
+                            <i class="bi bi-whatsapp"></i> Hubungi Teknisi
+                        </a>
+                    </div>
                 </div>
-                <a href="https://wa.me/${noWa}?text=Halo%20Mas%20${tek.nama},%20saya%20pelanggan%20dengan%20kode%20pesanan%20${kodeSaya}.%20Apakah%20sudah%20di%20jalan?" target="_blank" class="btn btn-success" style="padding: 0.6rem 0.8rem; border-radius: 50%; margin: 0; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);"><i class="bi bi-telephone-fill" style="font-size: 1.2rem;"></i></a>
             `;
+            
             boxProfil.style.display = "flex"; 
+            boxProfil.style.flexDirection = "column";
+            boxProfil.style.alignItems = "flex-start";
+            
             if (document.body.classList.contains('dark-mode')) {
                 boxProfil.style.background = "#1e293b";
                 boxProfil.style.borderColor = "#334155";
@@ -2120,6 +2161,19 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
         } else { boxProfil.style.display = "none"; }
     } catch(e) { console.error("Gagal memuat profil teknisi", e); }
 }
+
+// Tambahkan Fungsi Trigger Dropdown di luar fungsi di atas
+window.toggleDropdownTeknisi = function() {
+    const isi = document.getElementById("isiDropdownTeknisi");
+    const ikon = document.getElementById("ikonDropdownTeknisi");
+    if(isi.style.display === "none") {
+        isi.style.display = "block";
+        ikon.classList.replace("bi-chevron-down", "bi-chevron-up");
+    } else {
+        isi.style.display = "none";
+        ikon.classList.replace("bi-chevron-up", "bi-chevron-down");
+    }
+};
 </script>
 </body>
 </html>
