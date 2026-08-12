@@ -1046,6 +1046,9 @@ function kembaliKeAwal() {
 
 let html5QrCode = null;
 function bukaScannerQR() {
+    // Mencegah error jika kamera sedang berjalan (State 2 = SCANNING)
+    if (html5QrCode && html5QrCode.getState() === 2) return; 
+    
     document.getElementById("scannerModal").style.display = "flex";
     if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start( { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -1053,11 +1056,10 @@ function bukaScannerQR() {
             tutupScannerQR();
             let kodeMatch = decodedText;
             if (decodedText.includes("?lacak=")) kodeMatch = new URL(decodedText).searchParams.get("lacak");
-            prosesLacakDenganKode(kodeMatch);
+            prosesLacakDenganKode(kodeMatch, false); // Parameter false = Jangan overwrite LocalStorage
         }, () => {}
     ).catch(() => { Swal.fire('Gagal', 'Izin kamera ditolak browser.', 'error'); tutupScannerQR(); });
 }
-
 function tutupScannerQR() {
     document.getElementById("scannerModal").style.display = "none";
     if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(err => console.log(err));
@@ -1511,11 +1513,17 @@ function prosesLacakCepat() {
     prosesLacakDenganKode(kodeInput);
 }
 
-function prosesLacakDenganKode(kode) {
+function prosesLacakDenganKode(kode, simpanLokal = true) {
     fetch(`${API_URL}/orders/${kode}`, { cache: 'no-store' })
     .then(res => { if(!res.ok) throw new Error(); return res.json(); })
     .then(data => {
-        kodeSaya = data.kode; localStorage.setItem("kodeAktifPelanggan", kodeSaya);
+        kodeSaya = data.kode; 
+        
+        // Hanya simpan sesi ke browser utama jika parameter simpanLokal == true
+        if (simpanLokal) {
+            localStorage.setItem("kodeAktifPelanggan", kodeSaya);
+        }
+        
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("lacakCepatBox").style.display = "none"; 
         document.getElementById("publicReviewsSection").style.display = "none";
@@ -1523,7 +1531,6 @@ function prosesLacakDenganKode(kode) {
         document.getElementById("txtChatKode").textContent = "Order (" + kodeSaya + ")";
         
         currentStep = 3; updateProgress(); showContent(); aktifkanSistemChat(); cekStatus();
-        
         mulaiLacakLive(kodeSaya);
     })
     .catch(() => {
