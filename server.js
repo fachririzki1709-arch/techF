@@ -351,6 +351,7 @@ function fileToGenerativePart(filePath, mimeType) {
 }
 
 // 🔥 ENDPOINT AI AUTO-SCAN PERANGKAT (VISION) 🔥
+// 🔥 ENDPOINT AI AUTO-SCAN PERANGKAT (VISION) 🔥
 app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Tidak ada gambar yang diunggah" });
@@ -377,13 +378,11 @@ app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) =
         let textResult = result.response.text();
         
         // Memaksa mengambil pola JSON yang aman untuk mencegah Crash 500
-      const jsonMatch = textResult.match(/\{[\s\S]*\}/);
+        const jsonMatch = textResult.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error("Format JSON gagal diekstrak dari AI");
-        cconst hasilJSON = JSON.parse(jsonMatch[0]);
         
-        // Membersihkan format backtick markdown jika Gemini masih memberikannya
-        textResult = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
-        const parsedData = JSON.parse(textResult);
+        // Cukup parse JSON hasil ekstraksi regex (tanpa mendeklarasikan ulang parsedData)
+        const parsedData = JSON.parse(jsonMatch[0]);
         
         // Hapus foto dari server setelah diproses agar storage tidak penuh
         fs.unlinkSync(req.file.path);
