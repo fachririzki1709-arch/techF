@@ -85,12 +85,14 @@ cloudinary.config({
 async function uploadKeCloudinary(filePath) {
     try {
         const result = await cloudinary.uploader.upload(filePath, { folder: "sftech_teknisi" });
-        const fs = require('fs');
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Segera hapus file di Render agar tidak membebani server
         return result.secure_url;
     } catch (err) {
         console.error("Cloudinary Error:", err);
         return "";
+    } finally {
+        // Pindah ke blok finally agar selalu dieksekusi (mencegah memory leak)
+        const fs = require('fs');
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath); 
     }
 }
 // WebSocket Connection Handler
@@ -321,9 +323,17 @@ app.delete('/api/teknisi/:id', verifyAdmin, async (req, res) => {
     try {
         const tek = await Teknisi.findById(req.params.id);
         if (tek && tek.foto) {
-            const fs = require('fs');
-            const filePath = path.join(__dirname, 'public', tek.foto);
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Hapus foto dari folder
+            if (tek.foto.includes('cloudinary.com')) {
+                // Ekstrak public_id dari link Cloudinary
+                const urlParts = tek.foto.split('/');
+                const publicId = "sftech_teknisi/" + urlParts[urlParts.length - 1].split('.')[0]; 
+                await cloudinary.uploader.destroy(publicId);
+            } else {
+                // Fallback jika foto masih ada di local storage lama
+                const fs = require('fs');
+                const filePath = path.join(__dirname, 'public', tek.foto);
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            }
         }
         await Teknisi.findByIdAndDelete(req.params.id);
         res.json({ message: "Teknisi berhasil dihapus" });
@@ -365,6 +375,11 @@ app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) =
 
         const result = await model.generateContent([prompt, imagePart]);
         let textResult = result.response.text();
+        
+        // Memaksa mengambil pola JSON yang aman untuk mencegah Crash 500
+        const jsonMatch = textResult.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("Format JSON gagal diekstrak dari AI");
+        const parsedData = JSON.parse(jsonMatch[0]);
         
         // Membersihkan format backtick markdown jika Gemini masih memberikannya
         textResult = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
