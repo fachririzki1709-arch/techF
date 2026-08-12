@@ -200,33 +200,57 @@ async function tambahNotifikasiDB(pesan) {
         await new Notification({ pesan }).save();
     } catch(err) { console.error("Gagal menyimpan notifikasi", err); }
 }
-// --- SKEMA TEKNISI (DIPERBARUI UNTUK SMART ROUTING) ---
+// --- SKEMA TEKNISI (DIPERBARUI DENGAN USERNAME & PASSWORD) ---
 const TeknisiSchema = new mongoose.Schema({
     nama: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
     wa: { type: String, required: true },
-    foto: { type: String, required: true }, // Path URL foto Cloudinary
-    statusKerja: { type: String, default: "luang" }, // Opsi: "luang", "penuh", "offline"
-    keahlian: { type: [String], default: [] } // Contoh: ["hp", "laptop", "elektronik"]
+    foto: { type: String, required: true },
+    statusKerja: { type: String, default: "luang" },
+    keahlian: { type: [String], default: [] }
 }, { timestamps: true });
 const Teknisi = mongoose.model('Teknisi', TeknisiSchema, 'teknisi');
 
-// --- FUNGSI HELPER WHATSAPP GATEWAY (Webhook) ---
-async function kirimNotifikasiWA(noWa, pesanTeks) {
-    console.log(`[WA Gateway Simulasi] Mengirim ke ${noWa}: ${pesanTeks}`);
+// Endpoint Login Teknisi
+app.post('/api/teknisi/login', async (req, res) => {
     try {
-        /* Uncomment dan sesuaikan token jika menggunakan penyedia layanan Fonnte / Wablas / Watzap
-        const response = await fetch('https://api.fonnte.com/send', {
-            method: 'POST',
-            headers: { 'Authorization': 'TOKEN_ANDA_DISINI' },
-            body: new URLSearchParams({ target: noWa, message: pesanTeks, countryCode: '62' })
-        });
-        const result = await response.json();
-        console.log("Status WA Fonnte:", result);
-        */
-    } catch(err) {
-        console.error("Gagal mengirim WA:", err);
+        const { username, password } = req.body;
+        const teknisi = await Teknisi.findOne({ username });
+        if (!teknisi || !bcrypt.compareSync(password, teknisi.password)) {
+            return res.status(401).json({ message: "Username atau Password teknisi salah" });
+        }
+        const token = jwt.sign({ id: teknisi._id, nama: teknisi.nama, role: "teknisi" }, JWT_SECRET, { expiresIn: '12h' });
+        res.json({ token, nama: teknisi.nama, message: "Login Teknisi Berhasil" });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal login teknisi: " + error.message });
     }
-}
+});
+
+// Update Endpoint POST Tambah Teknisi oleh Admin
+app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
+        
+        const fotoUrlCloud = await uploadKeCloudinary(req.file.path);
+        if (!fotoUrlCloud) return res.status(500).json({ error: "Gagal mengunggah foto ke Cloud Storage" });
+
+        const hashedPassword = bcrypt.hashSync(req.body.password || "teknisi123", 8);
+        const arrayKeahlian = req.body.keahlian ? req.body.keahlian.split(',').map(s => s.trim().toLowerCase()) : [];
+
+        const teknisiBaru = new Teknisi({
+            nama: req.body.nama,
+            username: req.body.username,
+            password: hashedPassword,
+            wa: req.body.wa,
+            foto: fotoUrlCloud,
+            keahlian: arrayKeahlian
+        });
+        
+        await teknisiBaru.save();
+        res.status(201).json({ message: "Teknisi berhasil ditambahkan dengan akun login" });
+    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
+});
 
 // Konfigurasi Admin & Middleware JWT
 const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
