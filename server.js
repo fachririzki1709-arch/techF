@@ -12,6 +12,11 @@ const { Server } = require('socket.io');
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 
+// Konfigurasi Admin & Middleware JWT
+const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
+const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
+
+
 // 🔥 Inisialisasi Google Gemini AI 🔥
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
@@ -252,9 +257,6 @@ app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, 
     } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
 });
 
-// Konfigurasi Admin & Middleware JWT
-const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
-const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
 
 function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
