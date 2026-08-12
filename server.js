@@ -200,10 +200,13 @@ async function tambahNotifikasiDB(pesan) {
         await new Notification({ pesan }).save();
     } catch(err) { console.error("Gagal menyimpan notifikasi", err); }
 }
+// --- SKEMA TEKNISI (DIPERBARUI UNTUK SMART ROUTING) ---
 const TeknisiSchema = new mongoose.Schema({
     nama: { type: String, required: true },
     wa: { type: String, required: true },
-    foto: { type: String, required: true } // Path URL foto
+    foto: { type: String, required: true }, // Path URL foto Cloudinary
+    statusKerja: { type: String, default: "luang" }, // Opsi: "luang", "penuh", "offline"
+    keahlian: { type: [String], default: [] } // Contoh: ["hp", "laptop", "elektronik"]
 }, { timestamps: true });
 const Teknisi = mongoose.model('Teknisi', TeknisiSchema, 'teknisi');
 
@@ -260,20 +263,22 @@ app.get('/api/teknisi', async (req, res) => {
         res.json(teknisiDenganAntrian);
     } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
 });
-// POST: Tambah Teknisi Baru (Hanya Admin)
+// POST: Tambah Teknisi Baru (DIPERBARUI)
 app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
         
-        // 🌟 1. LEMPAR FOTO KE CLOUDINARY
         const fotoUrlCloud = await uploadKeCloudinary(req.file.path);
         if (!fotoUrlCloud) return res.status(500).json({ error: "Gagal mengunggah foto ke Cloud Storage" });
 
-        // 🌟 2. SIMPAN URL CLOUDINARY KE MONGODB
+        // Menangkap string keahlian dari form admin (misal: "hp,laptop") lalu memecahnya jadi Array
+        const arrayKeahlian = req.body.keahlian ? req.body.keahlian.split(',').map(s => s.trim().toLowerCase()) : [];
+
         const teknisiBaru = new Teknisi({
             nama: req.body.nama,
             wa: req.body.wa,
-            foto: fotoUrlCloud // Format yang tersimpan kini berupa link utuh (https://...)
+            foto: fotoUrlCloud,
+            keahlian: arrayKeahlian
         });
         
         await teknisiBaru.save();
