@@ -1967,8 +1967,15 @@ function simpanTeknisiBaru(e) {
         Toast.fire({ icon: 'success', title: 'Teknisi & akun login berhasil dibuat' });
         document.getElementById("formTambahTeknisi").reset();
         muatDataTeknisiAdmin(); muatDropdownTeknisi();
-    }).finally(() => { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; });
-}
+    })
+    .catch(err => {
+        // 🔥 Tambahkan catch ini agar error tidak disembunyikan
+        Swal.fire('Gagal Menyimpan', err.message, 'error'); 
+    })
+    .finally(() => { 
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; 
+    });
+    
 function hapusTeknisi(id) {
     Swal.fire({ title: 'Hapus teknisi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' })
     .then((res) => {
