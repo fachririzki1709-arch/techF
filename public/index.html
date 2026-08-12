@@ -2119,7 +2119,7 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
             boxProfil.innerHTML = `
                 <div style="width: 100%; display: flex; flex-direction: column;">
                     <!-- Header Accordion (Klik untuk Buka/Tutup) -->
-                    <div onclick="toggleDropdownTeknisi()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%;">
+                    <img src="${(tek.foto && tek.foto.startsWith('http')) ? tek.foto : window.location.origin + (tek.foto || '/default.jpg')}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
                         <div style="display: flex; align-items: center; gap: 15px;">
                             <img src="${tek.foto.startsWith('http') ? tek.foto : window.location.origin + tek.foto}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
                             <div>
