@@ -280,16 +280,18 @@ app.post('/api/teknisi/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const teknisi = await Teknisi.findOne({ username });
-        if (!teknisi || !bcrypt.compareSync(password, teknisi.password)) {
+        
+        // 🔥 PERBAIKAN: Tambahkan pelindung password di sini juga
+        if (!teknisi || !password || typeof password !== "string" || !bcrypt.compareSync(password, teknisi.password)) {
             return res.status(401).json({ message: "Username atau Password teknisi salah" });
         }
+        
         const token = jwt.sign({ id: teknisi._id, nama: teknisi.nama, role: "teknisi" }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ token, nama: teknisi.nama, message: "Login Teknisi Berhasil" });
     } catch (error) {
         res.status(500).json({ error: "Gagal login teknisi: " + error.message });
     }
 });
-
 function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; 
@@ -441,7 +443,9 @@ app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) =
 // Endpoint Login Admin
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
-    if (username === "admin" && bcrypt.compareSync(password, ADMIN_HASH)) {
+    
+    // 🔥 PERBAIKAN: Tambahkan validasi tipe data password agar server tidak crash
+    if (username === "admin" && password && typeof password === "string" && bcrypt.compareSync(password, ADMIN_HASH)) {
         const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ token, message: "Login Berhasil" });
     } else {
