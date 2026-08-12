@@ -1975,7 +1975,7 @@ function simpanTeknisiBaru(e) {
     .finally(() => { 
         btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; 
     });
-    
+}
 function hapusTeknisi(id) {
     Swal.fire({ title: 'Hapus teknisi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' })
     .then((res) => {
