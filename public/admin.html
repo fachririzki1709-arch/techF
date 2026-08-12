@@ -375,9 +375,9 @@
                         
                         <div class="filter-grup">
                             <label><i class="bi bi-calendar-range"></i> Dari:</label>
-                            <input type="date" id="filterTglMulai" onchange="muatData()">
+                            <input type="date" id="filterTglMulai" onchange="halamanSkrg = 1; muatData()">
                             <label>Hingga:</label>
-                            <input type="date" id="filterTglAkhir" onchange="muatData()">
+                            <input type="date" id="filterTglAkhir" onchange="halamanSkrg = 1; muatData()">
                         </div>
                         
                         <div class="filter-grup">
@@ -1927,6 +1927,15 @@ function muatDataTeknisiAdmin() {
     });
 }
 
+let editTeknisiId = null; // Tambahkan variabel global ini
+
+function siapkanEditTeknisi(id, nama, wa) {
+    editTeknisiId = id;
+    document.getElementById('inputNamaTeknisi').value = nama;
+    document.getElementById('inputWaTeknisi').value = wa;
+    document.getElementById('btnSimpanTeknisi').innerHTML = '<i class="bi bi-pencil-square"></i> Update Teknisi';
+}
+
 function simpanTeknisiBaru(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSimpanTeknisi");
@@ -1937,73 +1946,27 @@ function simpanTeknisiBaru(e) {
     let noWa = document.getElementById('inputWaTeknisi').value.replace(/\D/g, '');
     if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
     formData.append('wa', noWa);
-    formData.append('fotoTeknisi', document.getElementById('inputFotoTeknisi').files[0]);
-
-    fetch(`${API_URL}/teknisi`, { method: 'POST', headers: getAuthHeader(), body: formData })
-    .then(handleApiError).then(() => {
-        Toast.fire({ icon: 'success', title: 'Teknisi ditambahkan' });
-        document.getElementById("formTambahTeknisi").reset();
-        muatDataTeknisiAdmin(); muatDropdownTeknisi();
-    }).finally(() => { btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; btn.disabled = false; });
-}
-// Variabel global untuk menyimpan ID teknisi yang sedang di-edit
-let editTeknisiId = null;
-
-// Fungsi saat tombol "Edit" pada tabel teknisi ditekan
-function siapkanEditTeknisi(id, nama, wa) {
-    editTeknisiId = id;
-    
-    // Isi otomatis form input dengan data yang ada
-    document.getElementById('inputNamaTeknisi').value = nama;
-    document.getElementById('inputWaTeknisi').value = wa;
-    
-    // Ubah teks tombol submit menjadi "Update"
-    document.getElementById('btnSubmitTeknisi').innerText = "Update Teknisi";
-}
-
-// Fungsi untuk submit form (Tangani Tambah / Edit)
-async function submitFormTeknisi(event) {
-    event.preventDefault();
-    
-    const formData = new FormData();
-    formData.append('nama', document.getElementById('inputNamaTeknisi').value);
-    formData.append('wa', document.getElementById('inputWaTeknisi').value);
     
     const fileInput = document.getElementById('inputFotoTeknisi').files[0];
     if (fileInput) formData.append('fotoTeknisi', fileInput);
 
-    let url = '/api/teknisi';
-    let method = 'POST'; // Default untuk tambah baru
-
-    // Jika editTeknisiId ada isinya, berarti mode edit
+    // Menentukan metode POST atau PUT
+    let url = `${API_URL}/teknisi`;
+    let method = 'POST';
     if (editTeknisiId) {
-        url = `/api/teknisi/${editTeknisiId}`;
+        url = `${API_URL}/teknisi/${editTeknisiId}`;
         method = 'PUT';
     }
 
-    try {
-        const response = await fetch(url, {
-            method: method,
-            body: formData
-        });
-        
-        const result = await response.json();
-        alert(result.message);
-        
-        // Reset form dan ID setelah berhasil
-        document.getElementById('formTeknisi').reset();
-        editTeknisiId = null;
-        document.getElementById('btnSubmitTeknisi').innerText = "Tambah Teknisi";
-        
-        // Panggil fungsi render ulang tabel teknisi Anda
-        loadDataTeknisi(); 
-    } catch (error) {
-        console.error("Error:", error);
-    }
+    fetch(url, { method: method, headers: getAuthHeader(), body: formData })
+    .then(handleApiError).then(() => {
+        Toast.fire({ icon: 'success', title: editTeknisiId ? 'Teknisi diupdate' : 'Teknisi ditambahkan' });
+        document.getElementById("formTambahTeknisi").reset();
+        editTeknisiId = null; // Kembalikan ke mode tambah
+        btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi';
+        muatDataTeknisiAdmin(); muatDropdownTeknisi();
+    }).finally(() => { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; });
 }
-
-// Pastikan form di-bind dengan fungsi submit
-document.getElementById('formTeknisi').addEventListener('submit', submitFormTeknisi);
 function hapusTeknisi(id) {
     Swal.fire({ title: 'Hapus teknisi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' })
     .then((res) => {
