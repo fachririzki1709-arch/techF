@@ -377,9 +377,9 @@ app.post('/api/ai/scan-device', upload.single('deviceImage'), async (req, res) =
         let textResult = result.response.text();
         
         // Memaksa mengambil pola JSON yang aman untuk mencegah Crash 500
-        const jsonMatch = textResult.match(/\{[\s\S]*\}/);
+      const jsonMatch = textResult.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error("Format JSON gagal diekstrak dari AI");
-        const parsedData = JSON.parse(jsonMatch[0]);
+        cconst hasilJSON = JSON.parse(jsonMatch[0]);
         
         // Membersihkan format backtick markdown jika Gemini masih memberikannya
         textResult = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
