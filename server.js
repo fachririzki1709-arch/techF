@@ -290,32 +290,6 @@ app.post('/api/teknisi/login', async (req, res) => {
     }
 });
 
-// Update Endpoint POST Tambah Teknisi oleh Admin
-app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
-        
-        const fotoUrlCloud = await uploadKeCloudinary(req.file.path);
-        if (!fotoUrlCloud) return res.status(500).json({ error: "Gagal mengunggah foto ke Cloud Storage" });
-
-        const hashedPassword = bcrypt.hashSync(req.body.password || "teknisi123", 8);
-        const arrayKeahlian = req.body.keahlian ? req.body.keahlian.split(',').map(s => s.trim().toLowerCase()) : [];
-
-        const teknisiBaru = new Teknisi({
-            nama: req.body.nama,
-            username: req.body.username,
-            password: hashedPassword,
-            wa: req.body.wa,
-            foto: fotoUrlCloud,
-            keahlian: arrayKeahlian
-        });
-        
-        await teknisiBaru.save();
-        res.status(201).json({ message: "Teknisi berhasil ditambahkan dengan akun login" });
-    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
-});
-
-
 function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; 
