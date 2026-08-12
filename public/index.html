@@ -2115,19 +2115,20 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
             const warnaStatus = jumlahAntrian > 3 ? '#ef4444' : (jumlahAntrian > 0 ? '#f59e0b' : '#10b981');
             const teksStatus = jumlahAntrian > 0 ? 'Sedang Aktif Mengerjakan' : 'Tersedia (Free)';
             
-            // MERENDER UI DROPDOWN ACCORDION
+            // MERENDER UI DROPDOWN ACCORDION (DIPERBAIKI)
             boxProfil.innerHTML = `
                 <div style="width: 100%; display: flex; flex-direction: column;">
-                    <!-- Header Accordion (Klik untuk Buka/Tutup) -->
-                    <img src="${(tek.foto && tek.foto.startsWith('http')) ? tek.foto : window.location.origin + (tek.foto || '/default.jpg')}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
+                    
+                    <!-- Header Accordion (Bungkus dalam 1 div Clickable) -->
+                    <div onclick="toggleDropdownTeknisi()" style="cursor: pointer; display: flex; flex-direction: column;">
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <img src="${tek.foto.startsWith('http') ? tek.foto : window.location.origin + tek.foto}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
+                            <img src="${(tek.foto && tek.foto.startsWith('http')) ? tek.foto : window.location.origin + (tek.foto || '/default.jpg')}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
                             <div>
                                 <p style="margin: 0; font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Teknisi Bertugas</p>
                                 <h4 style="margin: 2px 0; font-size: 1.1rem; color: var(--teks-utama);">${tek.nama}</h4>
                             </div>
                         </div>
-                        <div style="color: #64748b; font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
+                        <div style="color: #64748b; font-size: 0.9em; display: flex; align-items: center; gap: 5px; margin-top: 10px;">
                             <span style="font-weight:600; font-size: 0.8rem;">Info</span> <i class="bi bi-chevron-down" id="ikonDropdownTeknisi" style="font-weight:bold; font-size:1.1rem;"></i>
                         </div>
                     </div>
@@ -2149,7 +2150,7 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
                             </p>
                         </div>
                         
-                        <!-- Smart Contact Action (Tombol WA Disembunyikan di Dalam) -->
+                        <!-- Smart Contact Action -->
                         <a href="https://wa.me/${noWa}?text=Halo%20Mas%20${tek.nama},%20saya%20pelanggan%20dengan%20kode%20pesanan%20${kodeSaya}.%20Bisa%20info%20estimasi%20waktunya?" target="_blank" class="btn btn-success" style="width: 100%; justify-content: center; margin: 0; padding: 10px; border-radius: 8px;">
                             <i class="bi bi-whatsapp"></i> Hubungi Teknisi
                         </a>
@@ -2165,10 +2166,13 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
                 boxProfil.style.background = "#1e293b";
                 boxProfil.style.borderColor = "#334155";
             }
-        } else { boxProfil.style.display = "none"; }
-    } catch(e) { console.error("Gagal memuat profil teknisi", e); }
+        } else { 
+            boxProfil.style.display = "none"; 
+        }
+    } catch(e) { 
+        console.error("Gagal memuat profil teknisi", e); 
+    }
 }
-
 // Tambahkan Fungsi Trigger Dropdown di luar fungsi di atas
 window.toggleDropdownTeknisi = function() {
     const isi = document.getElementById("isiDropdownTeknisi");
