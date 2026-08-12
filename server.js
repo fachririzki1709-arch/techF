@@ -86,21 +86,54 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Helper: Fungsi upload dari lokal (Render) langsung dilempar ke Cloudinary
+// Helper: Fungsi upload dari lokal langsung dilempar ke Cloudinary
 async function uploadKeCloudinary(filePath) {
     try {
+        // Lewati dan kembalikan null jika Cloudinary belum disetting
+        if (!process.env.CLOUDINARY_API_KEY) return null; 
+        
         const result = await cloudinary.uploader.upload(filePath, { folder: "sftech_teknisi" });
-        return result.secure_url;
-    } catch (err) {
-        console.error("Cloudinary Error:", err);
-        return "";
-    } finally {
-        // Pindah ke blok finally agar selalu dieksekusi (mencegah memory leak)
+        
+        // Hapus file lokal HANYA jika upload ke cloud berhasil
         const fs = require('fs');
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath); 
+        
+        return result.secure_url;
+    } catch (err) {
+        console.error("Cloudinary Error:", err.message);
+        return null; // Kembalikan null agar bisa menggunakan fallback lokal
     }
 }
-// WebSocket Connection Handler
+
+// Update Endpoint POST Tambah Teknisi oleh Admin
+app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
+        
+        let fotoUrl = await uploadKeCloudinary(req.file.path);
+        
+        // 🔥 FALLBACK: Gunakan path lokal jika Cloudinary gagal/kosong
+        if (!fotoUrl) {
+            fotoUrl = `/uploads/${req.file.filename}`;
+        }
+
+        const hashedPassword = bcrypt.hashSync(req.body.password || "teknisi123", 8);
+        const arrayKeahlian = req.body.keahlian ? req.body.keahlian.split(',').map(s => s.trim().toLowerCase()) : [];
+
+        const teknisiBaru = new Teknisi({
+            nama: req.body.nama,
+            username: req.body.username,
+            password: hashedPassword,
+            wa: req.body.wa,
+            foto: fotoUrl,
+            keahlian: arrayKeahlian
+        });
+        
+        await teknisiBaru.save();
+        res.status(201).json({ message: "Teknisi berhasil ditambahkan dengan akun login" });
+    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
+
+});// WebSocket Connection Handler
 io.on('connection', (socket) => {
     console.log("🟢 Klien terhubung ke WebSocket:", socket.id);
     
