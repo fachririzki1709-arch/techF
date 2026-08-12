@@ -124,7 +124,32 @@ io.on('connection', (socket) => {
     socket.on('stopTyping', (data) => { 
         io.emit('userStopTyping', data); 
     });
-
+    // 👇 TAMBAHKAN BLOK INI: Listener saat teknisi klik Ambil Order
+    socket.on('teknisiAmbilOrder', async (data) => {
+        try {
+            const { kodeOrder, namaTeknisi } = data;
+            const order = await Order.findOne({ kode: kodeOrder });
+            
+            // First-to-claim logic: Hanya berhasil jika pesanan belum memiliki teknisi
+            if (order && (order.teknisi === "" || !order.teknisi)) {
+                order.teknisi = namaTeknisi;
+                order.status = "dijadwalkan"; // Otomatis naik status menjadi dijadwalkan
+                order.riwayatStatus.push({ status: "dijadwalkan", detail: `Diambil oleh Teknisi ${namaTeknisi}`, waktu: new Date().toISOString() });
+                
+                await order.save();
+                
+                // Hapus kartu pesanan di panel teknisi lainnya
+                io.emit('orderSudahDiambil', { kodeOrder, oleh: namaTeknisi });
+                // Update tabel di panel Admin
+                io.emit("updateDashboardAdmin");
+                // Update notifikasi live tracking Pelanggan
+                io.emit("updateDataPelanggan", kodeOrder);
+            }
+        } catch (err) {
+            console.error("Gagal memproses teknisiAmbilOrder:", err);
+        }
+    });
+    
     socket.on('disconnect', () => {
         // console.log("🔴 Klien terputus dari WebSocket:", socket.id);
     });
@@ -289,28 +314,7 @@ app.get('/api/teknisi', async (req, res) => {
         res.json(teknisiDenganAntrian);
     } catch (error) { res.status(500).json({ error: "Gagal memuat teknisi" }); }
 });
-// POST: Tambah Teknisi Baru (DIPERBARUI)
-app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
-        
-        const fotoUrlCloud = await uploadKeCloudinary(req.file.path);
-        if (!fotoUrlCloud) return res.status(500).json({ error: "Gagal mengunggah foto ke Cloud Storage" });
 
-        // Menangkap string keahlian dari form admin (misal: "hp,laptop") lalu memecahnya jadi Array
-        const arrayKeahlian = req.body.keahlian ? req.body.keahlian.split(',').map(s => s.trim().toLowerCase()) : [];
-
-        const teknisiBaru = new Teknisi({
-            nama: req.body.nama,
-            wa: req.body.wa,
-            foto: fotoUrlCloud,
-            keahlian: arrayKeahlian
-        });
-        
-        await teknisiBaru.save();
-        res.status(201).json({ message: "Teknisi berhasil ditambahkan" });
-    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
-});
 // PUT: Edit Data Teknisi (Hanya Admin)
 app.put('/api/teknisi/:id', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
@@ -528,6 +532,14 @@ app.post('/api/orders', upload.any(), async (req, res) => {
 
         await tambahNotifikasiDB(`Pesanan Baru: ${dataBaru.kode} oleh ${dataBaru.nama}`);
         io.emit("updateDashboardAdmin");
+        try {
+            const semuaTeknisi = await Teknisi.find();
+            const daftarNamaTeknisi = semuaTeknisi.map(t => t.nama);
+            io.emit('orderBaruTersedia', {
+                order: dataBaru,
+                targetTeknisi: daftarNamaTeknisi
+            });
+        } catch(e) { console.error("Gagal broadcast ke teknisi", e); }
         res.status(201).json({ message: "Data pesanan berhasil disimpan", kode: dataBaru.kode });
     } catch (error) {
         res.status(500).json({ error: "Gagal menyimpan pesanan: " + error.message }); 
