@@ -502,17 +502,23 @@
         <div class="box-info" style="flex:1; min-width:300px; background:white; border-color:var(--border-line);">
             <h4 style="margin-bottom:1rem;"><i class="bi bi-person-plus-fill" style="color:#0ea5e9;"></i> Tambah Teknisi Baru</h4>
             <form id="formTambahTeknisi" onsubmit="simpanTeknisiBaru(event)">
-                <label>Nama Lengkap</label>
-                <input type="text" id="inputNamaTeknisi" placeholder="Nama teknisi..." required>
-                
-                <label>Nomor WhatsApp</label>
-                <input type="number" id="inputWaTeknisi" placeholder="Contoh: 62812345678" required>
-                
-                <label>Foto Profil (Wajah)</label>
-                <input type="file" id="inputFotoTeknisi" accept="image/*" required>
-                
-                <button type="submit" class="btn btn-primary" id="btnSimpanTeknisi" style="width:100%; background:#10b981; color:white; justify-content:center;"><i class="bi bi-save"></i> Simpan Teknisi</button>
-            </form>
+    <label>Nama Lengkap</label>
+    <input type="text" id="inputNamaTeknisi" placeholder="Nama teknisi..." required>
+    
+    <label>Username Panel Teknisi</label>
+    <input type="text" id="inputUsernameTeknisi" placeholder="Username login..." required>
+    
+    <label>Password Panel Teknisi</label>
+    <input type="password" id="inputPasswordTeknisi" placeholder="Password login..." required>
+    
+    <label>Nomor WhatsApp</label>
+    <input type="number" id="inputWaTeknisi" placeholder="Contoh: 62812345678" required>
+    
+    <label>Foto Profil (Wajah)</label>
+    <input type="file" id="inputFotoTeknisi" accept="image/*" required>
+    
+    <button type="submit" class="btn btn-primary" id="btnSimpanTeknisi" style="width:100%; background:#10b981; color:white; justify-content:center;"><i class="bi bi-save"></i> Simpan Teknisi</button>
+</form>
         </div>
 
         <!-- Tabel Daftar Teknisi -->
@@ -1943,6 +1949,9 @@ function simpanTeknisiBaru(e) {
 
     const formData = new FormData();
     formData.append('nama', document.getElementById('inputNamaTeknisi').value);
+    formData.append('username', document.getElementById('inputUsernameTeknisi').value);
+    formData.append('password', document.getElementById('inputPasswordTeknisi').value);
+    
     let noWa = document.getElementById('inputWaTeknisi').value.replace(/\D/g, '');
     if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
     formData.append('wa', noWa);
@@ -1950,20 +1959,13 @@ function simpanTeknisiBaru(e) {
     const fileInput = document.getElementById('inputFotoTeknisi').files[0];
     if (fileInput) formData.append('fotoTeknisi', fileInput);
 
-    // Menentukan metode POST atau PUT
     let url = `${API_URL}/teknisi`;
     let method = 'POST';
-    if (editTeknisiId) {
-        url = `${API_URL}/teknisi/${editTeknisiId}`;
-        method = 'PUT';
-    }
 
     fetch(url, { method: method, headers: getAuthHeader(), body: formData })
     .then(handleApiError).then(() => {
-        Toast.fire({ icon: 'success', title: editTeknisiId ? 'Teknisi diupdate' : 'Teknisi ditambahkan' });
+        Toast.fire({ icon: 'success', title: 'Teknisi & akun login berhasil dibuat' });
         document.getElementById("formTambahTeknisi").reset();
-        editTeknisiId = null; // Kembalikan ke mode tambah
-        btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi';
         muatDataTeknisiAdmin(); muatDropdownTeknisi();
     }).finally(() => { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; });
 }
