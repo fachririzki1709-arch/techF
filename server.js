@@ -307,17 +307,42 @@ app.post('/api/teknisi/login', async (req, res) => {
         res.status(500).json({ error: "Gagal login teknisi: " + error.message });
     }
 });
-function verifyAdmin(req, res, next) {
+function verifyTeknisi(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; 
     if (!token) return res.status(401).json({ message: "Akses Ditolak: Token tidak ditemukan" });
     
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
-        req.adminUser = user;
+        req.teknisiUser = user;
         next(); 
     });
 }
+// GET: Ambil daftar order yang "Pending" (Tersedia untuk diambil)
+app.get('/api/teknisi/orders/available', verifyTeknisi, async (req, res) => {
+    try {
+        // Cari order yang belum ada teknisinya dan berstatus pending/baru
+        const availableOrders = await Order.find({
+            $or: [{ teknisi: "" }, { teknisi: null }],
+            status: { $in: ['pending', 'baru'] }
+        }).sort({ waktuPesan: -1 });
+        
+        res.json(availableOrders);
+    } catch (error) {
+        res.status(500).json({ error: "Gagal memuat daftar pesanan tersedia" });
+    }
+});
+
+// PUT: Update Status Online/Offline Teknisi
+app.put('/api/teknisi/status', verifyTeknisi, async (req, res) => {
+    try {
+        const { statusKerja } = req.body;
+        await Teknisi.findByIdAndUpdate(req.teknisiUser.id, { $set: { statusKerja } });
+        res.json({ message: "Status kerja berhasil diperbarui" });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal memperbarui status" });
+    }
+});
 // --- API TEKNISI ---
 
 // GET: Tampilkan semua teknisi (Bisa diakses Admin & User) beserta Kalkulasi Antrean
