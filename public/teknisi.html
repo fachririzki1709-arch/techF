@@ -20,12 +20,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg-utama); color: var(--teks-utama); padding-bottom: 70px; transition: 0.3s; }
 
-        /* HEADER */
         header { background: var(--bg-kartu); padding: 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-line); }
         .logo-area { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; }
         .logo-area i { color: var(--primary); font-size: 1.4rem; }
         
-        /* TOGGLE STATUS KERJA */
         .status-toggle { display: flex; align-items: center; gap: 8px; background: #e2e8f0; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .status-toggle.aktif { background: #dcfce7; color: #166534; }
         .status-toggle.aktif .dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
@@ -33,7 +31,6 @@
 
         .container { padding: 1rem; }
         
-        /* KARTU ORDER BROADCAST */
         .order-card { background: var(--bg-kartu); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-line); position: relative; overflow: hidden; animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
@@ -43,14 +40,11 @@
         .order-card h4 { color: var(--primary); font-size: 1.1rem; margin-bottom: 5px; }
         .order-info { font-size: 0.85rem; color: #64748b; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
         .order-info i { color: #94a3b8; }
-        body.dark-mode .order-info { color: #94a3b8; }
 
         .btn { padding: 0.8rem; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 15px; transition: 0.2s; font-size: 0.95rem; }
         .btn-take { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
         .btn-take:active { transform: scale(0.98); }
-        .btn-detail { background: var(--bg-utama); color: var(--teks-utama); border: 1px solid var(--border-line); }
 
-        /* BOTTOM NAV BAR UNTUK MOBILE */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-kartu); border-top: 1px solid var(--border-line); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #64748b; font-size: 0.7rem; font-weight: 600; text-decoration: none; gap: 4px; cursor: pointer; transition: 0.2s; }
         .nav-item i { font-size: 1.3rem; }
@@ -61,23 +55,21 @@
     </style>
 </head>
 <body>
-<div class="login-overlay" id="loginTeknisiOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:flex; justify-content:center; align-items:center; z-index:9999;">
-    <div class="login-box" style="background:white; padding:3rem; border-radius:16px; width:100%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.4); text-align:center;">
-        <h2><i class="bi bi-tools" style="color:#0ea5e9;"></i> Login Teknisi</h2>
-        <p style="color:#64748b; font-size:0.95rem; margin-bottom:2rem;">Masukkan kredensial yang dibuat oleh manajemen admin</p>
-        
-        <label style="text-align:left; display:block; font-size:0.85rem; font-weight:600; color:#475569;">Username</label>
-        <input type="text" id="teknisiUsername" placeholder="Username teknisi..." style="background:#f8fafc; color:#0f172a; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border-radius:8px;">
-        
-        <label style="text-align:left; display:block; font-size:0.85rem; font-weight:600; color:#475569;">Password</label>
-        <input type="password" id="teknisiPassword" placeholder="Password..." style="background:#f8fafc; color:#0f172a; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border-radius:8px;">
-        
-        <button class="btn btn-take" onclick="prosesLoginTeknisi()" style="width:100%; justify-content:center;">Masuk Panel Teknisi</button>
+    <div class="login-overlay" id="loginTeknisiOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:flex; justify-content:center; align-items:center; z-index:9999;">
+        <div class="login-box" style="background:white; padding:3rem; border-radius:16px; width:100%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.4); text-align:center;">
+            <h2><i class="bi bi-tools" style="color:#0ea5e9;"></i> Login Teknisi</h2>
+            <p style="color:#64748b; font-size:0.95rem; margin-bottom:2rem;">Masukkan kredensial dari admin</p>
+            
+            <input type="text" id="teknisiUsername" placeholder="Username teknisi..." style="background:#f8fafc; color:#0f172a; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border-radius:8px;">
+            <input type="password" id="teknisiPassword" placeholder="Password..." style="background:#f8fafc; color:#0f172a; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border-radius:8px;">
+            
+            <button class="btn btn-take" onclick="prosesLoginTeknisi()">Masuk Panel Teknisi</button>
+        </div>
     </div>
-</div>
+
     <header>
         <div class="logo-area">
-            <i class="bi bi-tools"></i> Teknisi Panel
+            <i class="bi bi-tools"></i> <span id="namaHeader">Teknisi Panel</span>
         </div>
         <div class="status-toggle aktif" id="btnStatusKerja" onclick="toggleStatus()">
             <span class="dot"></span> <span id="lblStatus">On Duty</span>
@@ -93,91 +85,123 @@
         </div>
 
         <div id="listOrderBaru">
-            <!-- Order diinjeksi via Socket.io -->
+            <!-- Order diinjeksi via JS -->
         </div>
     </div>
 
-    <!-- Navigasi Bawah ala Aplikasi Mobile -->
     <nav class="bottom-nav">
-        <div class="nav-item aktif">
-            <i class="bi bi-radar"></i>
-            <span>Radar Order</span>
+        <div class="nav-item aktif" onclick="location.reload()">
+            <i class="bi bi-radar"></i> <span>Radar Order</span>
         </div>
-        <div class="nav-item">
-            <i class="bi bi-wrench-adjustable"></i>
-            <span>Tugas Aktif</span>
-        </div>
-        <div class="nav-item">
-            <i class="bi bi-person-circle"></i>
-            <span>Profil</span>
+        <div class="nav-item" onclick="logoutTeknisi()">
+            <i class="bi bi-box-arrow-right"></i> <span>Keluar</span>
         </div>
     </nav>
 
     <script>
-        // Inisialisasi Socket.io
         const socket = io(window.location.origin);
         let profilTeknisi = { nama: "", keahlian: [] };
-
-function prosesLoginTeknisi() {
-    const username = document.getElementById("teknisiUsername").value.trim();
-    const password = document.getElementById("teknisiPassword").value;
-    if(!username || !password) return Swal.fire('Peringatan', 'Username dan Password wajib diisi', 'warning');
-
-    fetch(`${window.location.origin}/api/teknisi/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    })
-    .then(res => {
-        if(!res.ok) throw new Error("Login gagal");
-        return res.json();
-    })
-    .then(data => {
-        sessionStorage.setItem("teknisiToken", data.token);
-        sessionStorage.setItem("teknisiNama", data.nama);
-        profilTeknisi.nama = data.nama;
-        document.getElementById("loginTeknisiOverlay").style.display = "none";
-        Swal.fire({ icon: 'success', title: data.message, timer: 1500, showConfirmButton: false });
-    })
-    .catch(() => Swal.fire('Gagal', 'Username atau Password salah', 'error'));
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const token = sessionStorage.getItem("teknisiToken");
-    if(token) {
-        document.getElementById("loginTeknisiOverlay").style.display = "none";
-        profilTeknisi.nama = sessionStorage.getItem("teknisiNama") || "Teknisi";
-    }
-});
-        // Asumsi data login (Nanti disambungkan dengan sistem Auth Anda)
-        const profilTeknisi = {
-            nama: "Fachri Rizki Fadillah", // Mockup data login
-            keahlian: ["hp", "laptop"] 
-        };
-
         let isAktif = true;
+
+        // Helper Header Authorization untuk endpoint khusus Teknisi
+        function getAuthHeaderTeknisi() {
+            const token = sessionStorage.getItem("teknisiToken");
+            return token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const token = sessionStorage.getItem("teknisiToken");
+            if(token) {
+                document.getElementById("loginTeknisiOverlay").style.display = "none";
+                profilTeknisi.nama = sessionStorage.getItem("teknisiNama") || "Teknisi";
+                document.getElementById("namaHeader").textContent = profilTeknisi.nama;
+                muatOrderTersedia(); // Langsung ambil order setelah masuk panel
+            }
+        });
+
+        function prosesLoginTeknisi() {
+            const username = document.getElementById("teknisiUsername").value.trim();
+            const password = document.getElementById("teknisiPassword").value;
+            if(!username || !password) return Swal.fire('Peringatan', 'Username dan Password wajib diisi', 'warning');
+
+            const btn = document.querySelector('.login-box .btn-take');
+            btn.innerHTML = '<i class="bi bi-hourglass"></i> Memproses...';
+            btn.disabled = true;
+
+            fetch(`${window.location.origin}/api/teknisi/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.message || "Login gagal");
+                return data;
+            })
+            .then(data => {
+                sessionStorage.setItem("teknisiToken", data.token);
+                sessionStorage.setItem("teknisiNama", data.nama);
+                profilTeknisi.nama = data.nama;
+                document.getElementById("namaHeader").textContent = data.nama;
+                
+                document.getElementById("loginTeknisiOverlay").style.display = "none";
+                Swal.fire({ icon: 'success', title: data.message, timer: 1500, showConfirmButton: false });
+                
+                muatOrderTersedia(); // Ambil Order setelah berhasil login
+            })
+            .catch((err) => {
+                Swal.fire('Gagal', err.message, 'error');
+            })
+            .finally(() => {
+                btn.innerHTML = 'Masuk Panel Teknisi';
+                btn.disabled = false;
+            });
+        }
+
+        function logoutTeknisi() {
+            sessionStorage.removeItem("teknisiToken");
+            sessionStorage.removeItem("teknisiNama");
+            location.reload();
+        }
 
         function toggleStatus() {
             isAktif = !isAktif;
             const btn = document.getElementById('btnStatusKerja');
             const lbl = document.getElementById('lblStatus');
+            const statusBaru = isAktif ? "luang" : "offline";
             
             if(isAktif) {
                 btn.classList.add('aktif');
                 lbl.innerText = "On Duty";
-                // TODO: Tembak API untuk ubah statusKerja = "luang" di Database
             } else {
                 btn.classList.remove('aktif');
                 lbl.innerText = "Offline";
-                // TODO: Tembak API untuk ubah statusKerja = "offline" di Database
             }
+
+            // Sinkronisasi status kerja dengan Backend
+            fetch(`${window.location.origin}/api/teknisi/status`, {
+                method: 'PUT',
+                headers: getAuthHeaderTeknisi(),
+                body: JSON.stringify({ statusKerja: statusBaru })
+            }).catch(err => console.error("Gagal sinkron status:", err));
         }
 
-        // 🚨 MENDENGARKAN BROADCAST DARI SERVER
-        socket.on('orderBaruTersedia', (data) => {
-            if(!isAktif) return; // Jika teknisi offline, abaikan
+        // FUNGSI BARU: Mengambil order yang pending dari Database (Bukan sekadar Real-Time)
+        function muatOrderTersedia() {
+            fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('listOrderBaru').innerHTML = "";
+                if(data && data.length > 0) {
+                    data.forEach(order => tampilkanKartuOrder(order));
+                }
+                cekEmptyState();
+            }).catch(err => console.error("Gagal memuat order: ", err));
+        }
 
-            // Verifikasi apakah nama teknisi ini masuk dalam daftar broadcast server
+        // 🚨 MENDENGARKAN BROADCAST DARI SERVER (Notif Order Baru Live)
+        socket.on('orderBaruTersedia', (data) => {
+            if(!isAktif) return;
             if (data.targetTeknisi.includes(profilTeknisi.nama)) {
                 tampilkanKartuOrder(data.order);
             }
@@ -190,7 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 kartuTarget.remove();
                 cekEmptyState();
                 
-                // Beri notif jika bukan kita yang mengambil
                 if (data.oleh !== profilTeknisi.nama) {
                     Swal.fire({
                         title: 'Terlewat!',
@@ -206,21 +229,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         function tampilkanKartuOrder(order) {
+            // Hindari render ganda
+            if (document.getElementById(`order-${order.kode}`)) return; 
+
             document.getElementById('radarKosong').style.display = 'none';
 
             const div = document.createElement('div');
             div.className = 'order-card';
             div.id = `order-${order.kode}`;
             
-            // Format Icon berdasarkan layanan
             let ikon = "bi-phone";
-            if(order.layanan.toLowerCase().includes("laptop")) ikon = "bi-laptop";
+            if(order.layanan && order.layanan.toLowerCase().includes("laptop")) ikon = "bi-laptop";
             
             div.innerHTML = `
                 <div class="badge-baru">TERBARU</div>
                 <h4>${order.kode}</h4>
                 <div class="order-info"><i class="bi bi-person-fill"></i> ${order.nama}</div>
                 <div class="order-info"><i class="bi ${ikon}"></i> ${order.merek} ${order.tipe}</div>
+                <div class="order-info"><i class="bi bi-geo-alt-fill"></i> ${order.lokasiServis === 'home_service' ? 'Panggilan (Ke Lokasi)' : 'Titik Temu (COD)'}</div>
                 <div class="order-info"><i class="bi bi-exclamation-triangle"></i> ${order.kerusakan || "Tidak ada detail"}</div>
                 
                 <button class="btn btn-take" onclick="tarikOrder('${order.kode}')">
@@ -228,15 +254,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 </button>
             `;
             
-            // Munculkan order paling atas
             document.getElementById('listOrderBaru').prepend(div);
-            
-            // Opsional: Mainkan Suara Notifikasi untuk Teknisi
             if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
         }
 
         function tarikOrder(kodeOrder) {
-            // Tembakkan request Socket ke Server untuk proses First-to-Claim
             socket.emit('teknisiAmbilOrder', { 
                 kodeOrder: kodeOrder, 
                 namaTeknisi: profilTeknisi.nama 
@@ -249,10 +271,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            // Simulasi respon sukses (Nanti respon asli dihandle oleh callback dari server)
             setTimeout(() => {
                 Swal.close();
-                Swal.fire('Berhasil!', 'Order masuk ke daftar Tugas Aktif Anda.', 'success');
+                Swal.fire('Berhasil!', 'Order masuk ke daftar Tugas Anda. Silakan cek di Panel Admin jika izin terbatas.', 'success');
                 const kartu = document.getElementById(`order-${kodeOrder}`);
                 if(kartu) kartu.remove();
                 cekEmptyState();
@@ -262,9 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
         function cekEmptyState() {
             const list = document.getElementById('listOrderBaru');
             const empty = document.getElementById('radarKosong');
-            if(list.children.length === 0) {
-                empty.style.display = 'block';
-            }
+            empty.style.display = list.children.length === 0 ? 'block' : 'none';
         }
     </script>
 </body>
