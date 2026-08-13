@@ -131,7 +131,22 @@ app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, 
         
         await teknisiBaru.save();
         res.status(201).json({ message: "Teknisi berhasil ditambahkan dengan akun login" });
-    } catch (error) { res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); }
+        
+    } catch (error) { 
+        // Tangkap kegagalan (misalnya karena duplicate username) dan hapus file sampah
+        const fs = require('fs');
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        
+        // Format pesan error Mongoose agar lebih mudah dibaca admin
+        if (error.code === 11000) {
+            return res.status(400).json({ error: "Username sudah digunakan oleh teknisi lain. Silakan pilih username berbeda." });
+        }
+        
+        res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); 
+    }
+});
 
 });// WebSocket Connection Handler
 io.on('connection', (socket) => {
