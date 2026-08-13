@@ -85,6 +85,26 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
+// MIDDLEWARE AUTENTIKASI ADMIN
+function verifyAdmin(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    // Ambil token dari header 'Bearer <token>'
+    const token = authHeader && authHeader.split(' ')[1]; 
+    
+    if (!token) return res.status(401).json({ message: "Akses Ditolak: Token admin tidak ditemukan" });
+    
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
+        
+        // Memastikan payload token memiliki role admin (Berdasarkan token yang di-generate di endpoint login Admin)
+        if (decoded.role !== "admin") {
+            return res.status(403).json({ message: "Akses Ditolak: Akun ini bukan admin" });
+        }
+        
+        req.admin = decoded;
+        next(); // Lanjut ke proses berikutnya
+    });
+}
 
 // Helper: Fungsi upload dari lokal langsung dilempar ke Cloudinary
 async function uploadKeCloudinary(filePath) {
