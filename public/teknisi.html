@@ -9,9 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 
     <style>
         :root { --bg-utama: #f1f5f9; --teks-utama: #1e293b; --bg-kartu: white; --border-line: #e2e8f0; --primary: #0ea5e9; }
@@ -228,57 +231,130 @@
             }
         });
 
-        function tampilkanKartuOrder(order) {
-            // Hindari render ganda
-            if (document.getElementById(`order-${order.kode}`)) return; 
+       function tampilkanKartuOrder(order) {
+    // Hindari render ganda
+    if (document.getElementById(`order-${order.kode}`)) return; 
 
-            document.getElementById('radarKosong').style.display = 'none';
+    document.getElementById('radarKosong').style.display = 'none';
 
-            const div = document.createElement('div');
-            div.className = 'order-card';
-            div.id = `order-${order.kode}`;
+    const div = document.createElement('div');
+    div.className = 'order-card';
+    div.id = `order-${order.kode}`;
+    
+    let ikon = "bi-phone";
+    if(order.layanan && order.layanan.toLowerCase().includes("laptop")) ikon = "bi-laptop";
+    
+    // Siapkan Link Navigasi Google Maps
+    let linkMaps = "";
+    if(order.lat && order.lng) {
+        linkMaps = `<a href="https://www.google.com/maps?q=${order.lat},${order.lng}" target="_blank" class="btn btn-secondary" style="margin-top:10px; background:#f1f5f9; color:#0ea5e9; font-size:0.85rem;">
+                        <i class="bi bi-geo-alt"></i> Buka Navigasi Google Maps
+                    </a>`;
+    }
+
+    div.innerHTML = `
+        <div class="badge-baru">ORDER MASUK</div>
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <h4>${order.kode}</h4>
+            <span style="font-size:0.75rem; font-weight:bold; background:#e0f2fe; color:#0284c7; padding:3px 8px; border-radius:12px;">
+                ${order.lokasiServis === 'home_service' ? 'Panggilan (On-Site)' : 'Titik Temu (COD)'}
+            </span>
+        </div>
+        
+        <hr style="margin: 10px 0; border-color: #e2e8f0;">
+        
+        <!-- Info Pelanggan & Perangkat -->
+        <div class="order-info"><i class="bi bi-person-fill"></i> <strong>${order.nama}</strong> (${order.wa})</div>
+        <div class="order-info"><i class="bi ${ikon}"></i> <strong>${order.merek} ${order.tipe}</strong></div>
+        
+        <!-- Info Detail Kerusakan (Tampil Jelas) -->
+        <div style="background: #fffbeb; border-left: 3px solid #f59e0b; padding: 8px; margin: 8px 0; border-radius: 4px;">
+            <div style="font-size: 0.8rem; color: #d97706; font-weight: bold;"><i class="bi bi-exclamation-triangle"></i> Keluhan Pelanggan:</div>
+            <div style="font-size: 0.85rem; color: #475569; margin-top: 3px;">${order.kerusakan || "Tidak ada detail keluhan."}</div>
+        </div>
+
+        <!-- Wadah Peta Mini -->
+        <div id="map-${order.kode}" style="height: 120px; width: 100%; border-radius: 6px; margin-top: 10px; z-index: 1; border: 1px solid #e2e8f0; display: ${order.lat ? 'block' : 'none'};"></div>
+        
+        ${linkMaps}
+
+        <button class="btn btn-take" onclick="tarikOrder('${order.kode}')" style="margin-top: 15px; font-size: 1.05rem;">
+            <i class="bi bi-lightning-charge-fill"></i> Terima Order Ini
+        </button>
+    `;
+    
+    document.getElementById('listOrderBaru').prepend(div);
+    
+    // Inisialisasi Peta Leaflet untuk kartu ini jika koordinat tersedia
+    if(order.lat && order.lng) {
+        setTimeout(() => {
+            const mapCenter = [parseFloat(order.lat), parseFloat(order.lng)];
+            const mapMini = L.map(`map-${order.kode}`, {
+                zoomControl: false,
+                dragging: false
+            }).setView(mapCenter, 15);
             
-            let ikon = "bi-phone";
-            if(order.layanan && order.layanan.toLowerCase().includes("laptop")) ikon = "bi-laptop";
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapMini);
+            L.marker(mapCenter).addTo(mapMini);
+        }, 300);
+    }
+    
+    if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
+}
+        function tarikOrder(kodeOrder) {
+    // 1. Pancarkan ke server via socket[cite: 54]
+    socket.emit('teknisiAmbilOrder', { 
+        kodeOrder: kodeOrder, 
+        namaTeknisi: profilTeknisi.nama 
+    });
+    
+    Swal.fire({
+        title: 'Order Diterima!',
+        text: 'Mengunci order untuk Anda dan menyiapkan navigasi.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+    });
+
+    // 2. Ubah Tampilan Kartu menjadi "Tugas Aktif"
+    setTimeout(() => {
+        const kartu = document.getElementById(`order-${kodeOrder}`);
+        if(kartu) {
+            kartu.style.borderLeft = "5px solid #10b981"; // Beri tanda hijau
             
-            div.innerHTML = `
-                <div class="badge-baru">TERBARU</div>
-                <h4>${order.kode}</h4>
-                <div class="order-info"><i class="bi bi-person-fill"></i> ${order.nama}</div>
-                <div class="order-info"><i class="bi ${ikon}"></i> ${order.merek} ${order.tipe}</div>
-                <div class="order-info"><i class="bi bi-geo-alt-fill"></i> ${order.lokasiServis === 'home_service' ? 'Panggilan (Ke Lokasi)' : 'Titik Temu (COD)'}</div>
-                <div class="order-info"><i class="bi bi-exclamation-triangle"></i> ${order.kerusakan || "Tidak ada detail"}</div>
-                
-                <button class="btn btn-take" onclick="tarikOrder('${order.kode}')">
-                    <i class="bi bi-lightning-charge-fill"></i> Ambil Order Ini
+            // Buat menu aksi baru ala Gojek
+            const aksiBaru = `
+                <hr style="margin: 15px 0; border-color: #e2e8f0;">
+                <div style="display:flex; gap: 8px;">
+                    <button class="btn" style="flex: 1; background: #0ea5e9; color: white;" onclick="bukaChat('${kodeOrder}')">
+                        <i class="bi bi-chat-dots-fill"></i> Chat User
+                    </button>
+                    <button class="btn" style="flex: 1; background: #f59e0b; color: white;" onclick="updateStatusKerja('${kodeOrder}', 'diproses')">
+                        <i class="bi bi-tools"></i> Mulai Servis
+                    </button>
+                </div>
+                <button class="btn" style="width: 100%; background: #10b981; color: white; margin-top: 8px;" onclick="updateStatusKerja('${kodeOrder}', 'selesai_servis')">
+                    <i class="bi bi-check-circle-fill"></i> Selesai (Tagih Bayaran)
                 </button>
             `;
             
-            document.getElementById('listOrderBaru').prepend(div);
-            if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
+            // Ganti tombol lama (Terima Order) dengan aksi baru
+            const btnLama = kartu.querySelector('.btn-take');
+            if(btnLama) btnLama.outerHTML = aksiBaru;
         }
+    }, 800);
+}
 
-        function tarikOrder(kodeOrder) {
-            socket.emit('teknisiAmbilOrder', { 
-                kodeOrder: kodeOrder, 
-                namaTeknisi: profilTeknisi.nama 
-            });
-            
-            Swal.fire({
-                title: 'Memproses...',
-                text: 'Mengunci order untuk Anda',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            setTimeout(() => {
-                Swal.close();
-                Swal.fire('Berhasil!', 'Order masuk ke daftar Tugas Anda. Silakan cek di Panel Admin jika izin terbatas.', 'success');
-                const kartu = document.getElementById(`order-${kodeOrder}`);
-                if(kartu) kartu.remove();
-                cekEmptyState();
-            }, 800);
-        }
+// Helper untuk update status cepat ke server
+function updateStatusKerja(kode, statusBaru) {
+    fetch(`${window.location.origin}/api/orders/${kode}`, {
+        method: "PUT", 
+        headers: getAuthHeaderTeknisi(),
+        body: JSON.stringify({ status: statusBaru })
+    }).then(res => {
+        if(res.ok) Swal.fire('Update Sukses', `Status diubah menjadi: ${statusBaru}`, 'success');
+    });
+}
 
         function cekEmptyState() {
             const list = document.getElementById('listOrderBaru');
