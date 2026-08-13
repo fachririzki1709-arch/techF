@@ -1945,35 +1945,52 @@ function siapkanEditTeknisi(id, nama, wa) {
 function simpanTeknisiBaru(e) {
     e.preventDefault();
     const btn = document.getElementById("btnSimpanTeknisi");
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...'; btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...'; 
+    btn.disabled = true;
 
     const formData = new FormData();
-    formData.append('nama', document.getElementById('inputNamaTeknisi').value);
-    formData.append('username', document.getElementById('inputUsernameTeknisi').value);
+    formData.append('nama', document.getElementById('inputNamaTeknisi').value.trim());
+    formData.append('username', document.getElementById('inputUsernameTeknisi').value.trim());
     formData.append('password', document.getElementById('inputPasswordTeknisi').value);
     
     let noWa = document.getElementById('inputWaTeknisi').value.replace(/\D/g, '');
     if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
     formData.append('wa', noWa);
     
-    const fileInput = document.getElementById('inputFotoTeknisi').files[0];
-    if (fileInput) formData.append('fotoTeknisi', fileInput);
+    const fileInput = document.getElementById('inputFotoTeknisi');
+    if (fileInput.files && fileInput.files[0]) {
+        formData.append('fotoTeknisi', fileInput.files[0]);
+    } else {
+        Swal.fire('Peringatan', 'Foto profil teknisi wajib diunggah!', 'warning');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi';
+        return;
+    }
 
-    let url = `${API_URL}/teknisi`;
-    let method = 'POST';
-
-    fetch(url, { method: method, headers: getAuthHeader(), body: formData })
-    .then(handleApiError).then(() => {
+    fetch(`${API_URL}/teknisi`, { 
+        method: 'POST', 
+        headers: getAuthHeader(), // Jangan tambahkan 'Content-Type', biarkan FormData yang mengaturnya
+        body: formData 
+    })
+    .then(async res => {
+        const data = await res.json();
+        // Melemparkan error asli dari server jika status tidak OK
+        if (!res.ok) throw new Error(data.error || data.message || "Gagal menyimpan teknisi");
+        return data;
+    })
+    .then(() => {
         Toast.fire({ icon: 'success', title: 'Teknisi & akun login berhasil dibuat' });
         document.getElementById("formTambahTeknisi").reset();
-        muatDataTeknisiAdmin(); muatDropdownTeknisi();
+        muatDataTeknisiAdmin(); 
+        muatDropdownTeknisi();
     })
     .catch(err => {
-        // 🔥 Tambahkan catch ini agar error tidak disembunyikan
+        // Sekarang error seperti "Username sudah dipakai" akan muncul dengan jelas
         Swal.fire('Gagal Menyimpan', err.message, 'error'); 
     })
     .finally(() => { 
-        btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; 
+        btn.disabled = false; 
+        btn.innerHTML = '<i class="bi bi-save"></i> Simpan Teknisi'; 
     });
 }
 function hapusTeknisi(id) {
