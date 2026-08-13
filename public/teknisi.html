@@ -15,105 +15,107 @@
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <!-- TAG STYLE WAJIB DITAMBAHKAN AGAR LAYOUT TIDAK RUSAK -->
+    <style>
+        :root { 
+            --bg-utama: #f8fafc; 
+            --teks-utama: #0f172a; 
+            --bg-kartu: #ffffff; 
+            --border-line: #e2e8f0; 
+            --primary: #0ea5e9; 
+            --primary-hover: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        body.dark-mode { 
+            --bg-utama: #0f172a; 
+            --teks-utama: #f8fafc; 
+            --bg-kartu: #1e293b; 
+            --border-line: #334155; 
+        }
 
-    :root { 
-    --bg-utama: #f8fafc; 
-    --teks-utama: #0f172a; 
-    --bg-kartu: #ffffff; 
-    --border-line: #e2e8f0; 
-    --primary: #0ea5e9; 
-    --primary-hover: #0284c7;
-    --success: #10b981;
-    --warning: #f59e0b;
-}
-body.dark-mode { 
-    --bg-utama: #0f172a; 
-    --teks-utama: #f8fafc; 
-    --bg-kartu: #1e293b; 
-    --border-line: #334155; 
-}
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg-utama); color: var(--teks-utama); padding-bottom: 80px; transition: 0.3s; }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-body { background: var(--bg-utama); color: var(--teks-utama); padding-bottom: 80px; transition: 0.3s; }
+        /* HEADER MODERN GLASMORPHISM */
+        header { 
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px);
+            padding: 1.2rem 1.5rem; 
+            display: flex; justify-content: space-between; align-items: center; 
+            position: sticky; top: 0; z-index: 100; 
+            border-bottom: 1px solid var(--border-line); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+        body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
+        .logo-area { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; color: var(--teks-utama); }
+        .logo-area i { color: var(--primary); font-size: 1.5rem; }
 
-/* HEADER MODERN GLASMORPHISM */
-header { 
-    background: rgba(255, 255, 255, 0.9); 
-    backdrop-filter: blur(10px);
-    padding: 1.2rem 1.5rem; 
-    display: flex; justify-content: space-between; align-items: center; 
-    position: sticky; top: 0; z-index: 100; 
-    border-bottom: 1px solid var(--border-line); 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-}
-body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
-.logo-area { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; color: var(--teks-utama); }
-.logo-area i { color: var(--primary); font-size: 1.5rem; }
+        /* TOMBOL STATUS KERJA */
+        .status-toggle { 
+            display: flex; align-items: center; gap: 8px; 
+            background: #f1f5f9; padding: 6px 14px; border-radius: 30px; 
+            font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            border: 1px solid var(--border-line);
+        }
+        .status-toggle.aktif { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .status-toggle.aktif .dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+        .status-toggle .dot { width: 10px; height: 10px; background: #94a3b8; border-radius: 50%; display: inline-block; transition: 0.3s; }
 
-/* TOMBOL STATUS KERJA */
-.status-toggle { 
-    display: flex; align-items: center; gap: 8px; 
-    background: #f1f5f9; padding: 6px 14px; border-radius: 30px; 
-    font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s;
-    border: 1px solid var(--border-line);
-}
-.status-toggle.aktif { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-.status-toggle.aktif .dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
-.status-toggle .dot { width: 10px; height: 10px; background: #94a3b8; border-radius: 50%; display: inline-block; transition: 0.3s; }
+        .container { padding: 1.5rem; }
 
-.container { padding: 1.5rem; }
+        /* KARTU ORDER (GOJEK/GRAB STYLE) */
+        .order-card { 
+            background: var(--bg-kartu); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.2rem; 
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); border: 1px solid var(--border-line); 
+            position: relative; overflow: hidden; animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        @keyframes slideIn { from { transform: translateY(-20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 
-/* KARTU ORDER (GOJEK/GRAB STYLE) */
-.order-card { 
-    background: var(--bg-kartu); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.2rem; 
-    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); border: 1px solid var(--border-line); 
-    position: relative; overflow: hidden; animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
-    display: flex; flex-direction: column; gap: 12px;
-}
-@keyframes slideIn { from { transform: translateY(-20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-line); padding-bottom: 12px; }
+        .order-header h4 { font-size: 1.1rem; font-weight: 800; color: var(--teks-utama); }
+        .badge-layanan { background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 800; padding: 5px 12px; border-radius: 20px; }
 
-.order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-line); padding-bottom: 12px; }
-.order-header h4 { font-size: 1.1rem; font-weight: 800; color: var(--teks-utama); }
-.badge-layanan { background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 800; padding: 5px 12px; border-radius: 20px; }
+        .info-row { display: flex; align-items: flex-start; gap: 12px; font-size: 0.9rem; color: #475569; line-height: 1.4; }
+        .info-row i { color: var(--primary); font-size: 1.2rem; margin-top: 2px; }
+        body.dark-mode .info-row { color: #cbd5e1; }
 
-.info-row { display: flex; align-items: flex-start; gap: 12px; font-size: 0.9rem; color: #475569; line-height: 1.4; }
-.info-row i { color: var(--primary); font-size: 1.2rem; margin-top: 2px; }
-body.dark-mode .info-row { color: #cbd5e1; }
+        .kerusakan-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 8px; margin-top: 4px; }
+        body.dark-mode .kerusakan-box { background: rgba(245, 158, 11, 0.1); }
+        .kerusakan-box-title { font-size: 0.8rem; color: #d97706; font-weight: 800; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .kerusakan-box-text { font-size: 0.9rem; color: #475569; font-weight: 600; }
+        body.dark-mode .kerusakan-box-text { color: #f8fafc; }
 
-.kerusakan-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 8px; margin-top: 4px; }
-body.dark-mode .kerusakan-box { background: rgba(245, 158, 11, 0.1); }
-.kerusakan-box-title { font-size: 0.8rem; color: #d97706; font-weight: 800; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-.kerusakan-box-text { font-size: 0.9rem; color: #475569; font-weight: 600; }
-body.dark-mode .kerusakan-box-text { color: #f8fafc; }
+        /* TOMBOL AKSI UTAMA */
+        .btn { padding: 0.9rem; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-take { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; width: 100%; margin-top: 10px; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25); }
+        .btn-take:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35); }
+        .btn-take:active { transform: scale(0.98); }
+        .btn-secondary { background: var(--bg-utama); color: var(--primary); border: 1px solid var(--border-line); }
 
-/* TOMBOL AKSI UTAMA */
-.btn { padding: 0.9rem; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-.btn-take { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; width: 100%; margin-top: 10px; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25); }
-.btn-take:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35); }
-.btn-take:active { transform: scale(0.98); }
-.btn-secondary { background: var(--bg-utama); color: var(--primary); border: 1px solid var(--border-line); }
+        /* BOTTOM NAVIGATION MODERN */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-line); 
+            display: flex; justify-content: space-around; 
+            padding: 12px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); 
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.03); z-index: 100; 
+        }
+        body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-decoration: none; gap: 4px; cursor: pointer; transition: 0.3s; }
+        .nav-item i { font-size: 1.5rem; transition: 0.3s; }
+        .nav-item.aktif { color: var(--primary); }
+        .nav-item.aktif i { transform: translateY(-3px); }
 
-/* BOTTOM NAVIGATION MODERN */
-.bottom-nav { 
-    position: fixed; bottom: 0; left: 0; width: 100%; 
-    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-    border-top: 1px solid var(--border-line); 
-    display: flex; justify-content: space-around; 
-    padding: 12px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); 
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.03); z-index: 100; 
-}
-body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
-.nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-decoration: none; gap: 4px; cursor: pointer; transition: 0.3s; }
-.nav-item i { font-size: 1.5rem; transition: 0.3s; }
-.nav-item.aktif { color: var(--primary); }
-.nav-item.aktif i { transform: translateY(-3px); }
+        .empty-state { text-align: center; padding: 4rem 1.5rem; color: #94a3b8; }
+        .empty-state i { font-size: 4rem; margin-bottom: 15px; display: block; color: #cbd5e1; }
+        .empty-state h3 { font-size: 1.2rem; color: var(--teks-utama); margin-bottom: 5px; }
 
-.empty-state { text-align: center; padding: 4rem 1.5rem; color: #94a3b8; }
-.empty-state i { font-size: 4rem; margin-bottom: 15px; display: block; color: #cbd5e1; }
-.empty-state h3 { font-size: 1.2rem; color: var(--teks-utama); margin-bottom: 5px; }
-
-/* KUSTOMISASI SWEETALERT AGAR MODERN */
-.swal2-popup { border-radius: 20px !important; }
+        /* KUSTOMISASI SWEETALERT AGAR MODERN */
+        .swal2-popup { border-radius: 20px !important; }
+    </style>
 </head>
 <body>
     <div class="login-overlay" id="loginTeknisiOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:flex; justify-content:center; align-items:center; z-index:9999;">
@@ -176,7 +178,7 @@ body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
                 profilTeknisi.nama = sessionStorage.getItem("teknisiNama") || "Teknisi";
                 document.getElementById("namaHeader").textContent = profilTeknisi.nama;
-                muatOrderTersedia(); // Langsung ambil order setelah masuk panel
+                muatOrderTersedia(); 
             }
         });
 
@@ -208,7 +210,7 @@ body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
                 Swal.fire({ icon: 'success', title: data.message, timer: 1500, showConfirmButton: false });
                 
-                muatOrderTersedia(); // Ambil Order setelah berhasil login
+                muatOrderTersedia(); 
             })
             .catch((err) => {
                 Swal.fire('Gagal', err.message, 'error');
@@ -239,7 +241,6 @@ body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
                 lbl.innerText = "Offline";
             }
 
-            // Sinkronisasi status kerja dengan Backend
             fetch(`${window.location.origin}/api/teknisi/status`, {
                 method: 'PUT',
                 headers: getAuthHeaderTeknisi(),
@@ -247,7 +248,6 @@ body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
             }).catch(err => console.error("Gagal sinkron status:", err));
         }
 
-        // FUNGSI BARU: Mengambil order yang pending dari Database (Bukan sekadar Real-Time)
         function muatOrderTersedia() {
             fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
             .then(res => res.json())
@@ -260,7 +260,6 @@ body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
             }).catch(err => console.error("Gagal memuat order: ", err));
         }
 
-        // 🚨 MENDENGARKAN BROADCAST DARI SERVER (Notif Order Baru Live)
         socket.on('orderBaruTersedia', (data) => {
             if(!isAktif) return;
             if (data.targetTeknisi.includes(profilTeknisi.nama)) {
@@ -268,7 +267,6 @@ body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
             }
         });
 
-        // 🚨 MENGHAPUS ORDER JIKA SUDAH DIAMBIL TEKNISI LAIN (First-to-Claim)
         socket.on('orderSudahDiambil', (data) => {
             const kartuTarget = document.getElementById(`order-${data.kodeOrder}`);
             if (kartuTarget) {
@@ -289,177 +287,129 @@ body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
             }
         });
 
-       function tampilkanKartuOrder(order) {
-    if (document.getElementById(`order-${order.kode}`)) return; 
+        function tampilkanKartuOrder(order) {
+            if (document.getElementById(`order-${order.kode}`)) return; 
 
-    document.getElementById('radarKosong').style.display = 'none';
+            document.getElementById('radarKosong').style.display = 'none';
 
-    const div = document.createElement('div');
-    div.className = 'order-card';
-    div.id = `order-${order.kode}`;
-    
-    let ikonUnit = order.layanan && order.layanan.toLowerCase().includes("laptop") ? "bi-laptop" : "bi-phone";
-    
-    // Link Navigasi Opsional
-    let linkMaps = "";
-    if(order.lat && order.lng) {
-        linkMaps = `<a href="https://www.google.com/maps?q=${order.lat},${order.lng}" target="_blank" class="btn btn-secondary" style="width: 100%; font-size:0.9rem; margin-top:5px;">
-                        <i class="bi bi-compass-fill"></i> Navigasi Rute Maps
-                    </a>`;
-    }
-
-    div.innerHTML = `
-        <!-- Header Kartu -->
-        <div class="order-header">
-            <h4>${order.kode}</h4>
-            <span class="badge-layanan">
-                ${order.lokasiServis === 'home_service' ? '<i class="bi bi-house-door-fill"></i> On-Site' : '<i class="bi bi-geo-alt-fill"></i> COD'}
-            </span>
-        </div>
-        
-        <!-- Info Pelanggan -->
-        <div class="info-row">
-            <i class="bi bi-person-bounding-box"></i>
-            <div>
-                <strong style="color: var(--teks-utama); font-size: 1rem;">${order.nama}</strong>
-                <div style="font-size: 0.8rem; margin-top: 2px;">${order.wa}</div>
-            </div>
-        </div>
-
-        <!-- Info Unit -->
-        <div class="info-row">
-            <i class="bi ${ikonUnit}"></i>
-            <div>
-                <strong style="color: var(--teks-utama); font-size: 0.95rem;">${order.merek} ${order.tipe}</strong>
-            </div>
-        </div>
-        
-        <!-- Info Kerusakan (Highlight) -->
-        <div class="kerusakan-box">
-            <div class="kerusakan-box-title"><i class="bi bi-exclamation-triangle-fill"></i> Detail Kerusakan:</div>
-            <div class="kerusakan-box-text">${order.kerusakan || "Tidak ada detail keluhan."}</div>
-        </div>
-
-        <!-- Peta Leaflet Mini -->
-        <div id="map-${order.kode}" style="height: 140px; width: 100%; border-radius: 12px; margin-top: 5px; z-index: 1; border: 1px solid var(--border-line); display: ${order.lat ? 'block' : 'none'};"></div>
-        
-        ${linkMaps}
-
-        <button class="btn btn-take" onclick="tarikOrder('${order.kode}')">
-            Ambil Pekerjaan <i class="bi bi-arrow-right-circle-fill"></i>
-        </button>
-    `;
-    
-    document.getElementById('listOrderBaru').prepend(div);
-    
-    // Render Peta Interaktif
-    if(order.lat && order.lng) {
-        setTimeout(() => {
-            const mapCenter = [parseFloat(order.lat), parseFloat(order.lng)];
-            const mapMini = L.map(`map-${order.kode}`, {
-                zoomControl: false, dragging: false, scrollWheelZoom: false
-            }).setView(mapCenter, 15);
+            const div = document.createElement('div');
+            div.className = 'order-card';
+            div.id = `order-${order.kode}`;
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapMini);
-            L.marker(mapCenter).addTo(mapMini);
-        }, 300);
-    }
-    
-    if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
-}
-
-function tarikOrder(kodeOrder) {
-    // 1. Eksekusi klaim tugas ke server
-    socket.emit('teknisiAmbilOrder', { 
-        kodeOrder: kodeOrder, 
-        namaTeknisi: profilTeknisi.nama 
-    });
-    
-    Swal.fire({
-        title: 'Tugas Diterima!',
-        text: 'Order ini telah masuk ke daftar tugas aktif Anda.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-    });
-
-    // 2. Transisi UI (Mengubah Kartu menjadi mode "Aktif Dikerjakan")
-    setTimeout(() => {
-        const kartu = document.getElementById(`order-${kodeOrder}`);
-        if(kartu) {
-            kartu.style.borderLeft = "6px solid var(--success)";
+            let ikonUnit = order.layanan && order.layanan.toLowerCase().includes("laptop") ? "bi-laptop" : "bi-phone";
             
-            const btnLama = kartu.querySelector('.btn-take');
-            if(btnLama) {
-                btnLama.outerHTML = `
-                    <div style="display:flex; gap: 10px; margin-top: 10px;">
-                        <button class="btn" style="flex: 1; background: var(--primary); color: white;" onclick="hubungiPelanggan('${kodeOrder}')">
-                            <i class="bi bi-chat-dots-fill"></i> Chat
-                        </button>
-                        <button class="btn" style="flex: 1; background: var(--warning); color: white;" onclick="updateStatusKerja('${kodeOrder}', 'diproses')">
-                            <i class="bi bi-tools"></i> Proses
-                        </button>
-                    </div>
-                    <button class="btn" style="width: 100%; background: var(--success); color: white; margin-top: 10px;" onclick="updateStatusKerja('${kodeOrder}', 'selesai_servis')">
-                        <i class="bi bi-check-circle-fill"></i> Tandai Selesai
-                    </button>
-                `;
+            let linkMaps = "";
+            if(order.lat && order.lng) {
+                linkMaps = `<a href="https://www.google.com/maps?q=${order.lat},${order.lng}" target="_blank" class="btn btn-secondary" style="width: 100%; font-size:0.9rem; margin-top:5px;">
+                                <i class="bi bi-compass-fill"></i> Navigasi Rute Maps
+                            </a>`;
             }
-        }
-    }, 800);
-}
 
-// Helper untuk memperbarui status
-function updateStatusKerja(kode, statusBaru) {
-    fetch(`${window.location.origin}/api/orders/${kode}`, {
-        method: "PUT", headers: getAuthHeaderTeknisi(),
-        body: JSON.stringify({ status: statusBaru })
-    }).then(res => {
-        if(res.ok) Swal.fire('Tersimpan', `Status pekerjaan berhasil diubah.`, 'success');
-    });
-}
-function hubungiPelanggan(kode) {
-    Swal.fire('Fitur Chat', `Membuka ruang chat untuk pesanan ${kode}... (Integrasikan dengan modal chat Anda)`, 'info');
-}
-    // 2. Ubah Tampilan Kartu menjadi "Tugas Aktif"
-    setTimeout(() => {
-        const kartu = document.getElementById(`order-${kodeOrder}`);
-        if(kartu) {
-            kartu.style.borderLeft = "5px solid #10b981"; // Beri tanda hijau
-            
-            // Buat menu aksi baru ala Gojek
-            const aksiBaru = `
-                <hr style="margin: 15px 0; border-color: #e2e8f0;">
-                <div style="display:flex; gap: 8px;">
-                    <button class="btn" style="flex: 1; background: #0ea5e9; color: white;" onclick="bukaChat('${kodeOrder}')">
-                        <i class="bi bi-chat-dots-fill"></i> Chat User
-                    </button>
-                    <button class="btn" style="flex: 1; background: #f59e0b; color: white;" onclick="updateStatusKerja('${kodeOrder}', 'diproses')">
-                        <i class="bi bi-tools"></i> Mulai Servis
-                    </button>
+            div.innerHTML = `
+                <div class="order-header">
+                    <h4>${order.kode}</h4>
+                    <span class="badge-layanan">
+                        ${order.lokasiServis === 'home_service' ? '<i class="bi bi-house-door-fill"></i> On-Site' : '<i class="bi bi-geo-alt-fill"></i> COD'}
+                    </span>
                 </div>
-                <button class="btn" style="width: 100%; background: #10b981; color: white; margin-top: 8px;" onclick="updateStatusKerja('${kodeOrder}', 'selesai_servis')">
-                    <i class="bi bi-check-circle-fill"></i> Selesai (Tagih Bayaran)
+                
+                <div class="info-row">
+                    <i class="bi bi-person-bounding-box"></i>
+                    <div>
+                        <strong style="color: var(--teks-utama); font-size: 1rem;">${order.nama}</strong>
+                        <div style="font-size: 0.8rem; margin-top: 2px;">${order.wa}</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <i class="bi ${ikonUnit}"></i>
+                    <div>
+                        <strong style="color: var(--teks-utama); font-size: 0.95rem;">${order.merek} ${order.tipe}</strong>
+                    </div>
+                </div>
+                
+                <div class="kerusakan-box">
+                    <div class="kerusakan-box-title"><i class="bi bi-exclamation-triangle-fill"></i> Detail Kerusakan:</div>
+                    <div class="kerusakan-box-text">${order.kerusakan || "Tidak ada detail keluhan."}</div>
+                </div>
+
+                <div id="map-${order.kode}" style="height: 140px; width: 100%; border-radius: 12px; margin-top: 5px; z-index: 1; border: 1px solid var(--border-line); display: ${order.lat ? 'block' : 'none'};"></div>
+                
+                ${linkMaps}
+
+                <button class="btn btn-take" onclick="tarikOrder('${order.kode}')">
+                    Ambil Pekerjaan <i class="bi bi-arrow-right-circle-fill"></i>
                 </button>
             `;
             
-            // Ganti tombol lama (Terima Order) dengan aksi baru
-            const btnLama = kartu.querySelector('.btn-take');
-            if(btnLama) btnLama.outerHTML = aksiBaru;
+            document.getElementById('listOrderBaru').prepend(div);
+            
+            if(order.lat && order.lng) {
+                setTimeout(() => {
+                    const mapCenter = [parseFloat(order.lat), parseFloat(order.lng)];
+                    const mapMini = L.map(`map-${order.kode}`, {
+                        zoomControl: false, dragging: false, scrollWheelZoom: false
+                    }).setView(mapCenter, 15);
+                    
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapMini);
+                    L.marker(mapCenter).addTo(mapMini);
+                }, 300);
+            }
+            
+            if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
         }
-    }, 800);
-}
 
-// Helper untuk update status cepat ke server
-function updateStatusKerja(kode, statusBaru) {
-    fetch(`${window.location.origin}/api/orders/${kode}`, {
-        method: "PUT", 
-        headers: getAuthHeaderTeknisi(),
-        body: JSON.stringify({ status: statusBaru })
-    }).then(res => {
-        if(res.ok) Swal.fire('Update Sukses', `Status diubah menjadi: ${statusBaru}`, 'success');
-    });
-}
+        function tarikOrder(kodeOrder) {
+            socket.emit('teknisiAmbilOrder', { 
+                kodeOrder: kodeOrder, 
+                namaTeknisi: profilTeknisi.nama 
+            });
+            
+            Swal.fire({
+                title: 'Tugas Diterima!',
+                text: 'Order ini telah masuk ke daftar tugas aktif Anda.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            setTimeout(() => {
+                const kartu = document.getElementById(`order-${kodeOrder}`);
+                if(kartu) {
+                    kartu.style.borderLeft = "6px solid var(--success)";
+                    
+                    const btnLama = kartu.querySelector('.btn-take');
+                    if(btnLama) {
+                        btnLama.outerHTML = `
+                            <div style="display:flex; gap: 10px; margin-top: 10px;">
+                                <button class="btn" style="flex: 1; background: var(--primary); color: white;" onclick="hubungiPelanggan('${kodeOrder}')">
+                                    <i class="bi bi-chat-dots-fill"></i> Chat
+                                </button>
+                                <button class="btn" style="flex: 1; background: var(--warning); color: white;" onclick="updateStatusKerja('${kodeOrder}', 'diproses')">
+                                    <i class="bi bi-tools"></i> Proses
+                                </button>
+                            </div>
+                            <button class="btn" style="width: 100%; background: var(--success); color: white; margin-top: 10px;" onclick="updateStatusKerja('${kodeOrder}', 'selesai_servis')">
+                                <i class="bi bi-check-circle-fill"></i> Tandai Selesai
+                            </button>
+                        `;
+                    }
+                }
+            }, 800);
+        }
+
+        function updateStatusKerja(kode, statusBaru) {
+            fetch(`${window.location.origin}/api/orders/${kode}`, {
+                method: "PUT", headers: getAuthHeaderTeknisi(),
+                body: JSON.stringify({ status: statusBaru })
+            }).then(res => {
+                if(res.ok) Swal.fire('Tersimpan', `Status pekerjaan berhasil diubah.`, 'success');
+            });
+        }
+        
+        function hubungiPelanggan(kode) {
+            Swal.fire('Fitur Chat', `Membuka ruang chat untuk pesanan ${kode}...`, 'info');
+        }
 
         function cekEmptyState() {
             const list = document.getElementById('listOrderBaru');
