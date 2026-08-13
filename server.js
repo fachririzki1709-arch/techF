@@ -298,6 +298,16 @@ async function tambahNotifikasiDB(pesan) {
         await new Notification({ pesan }).save();
     } catch(err) { console.error("Gagal menyimpan notifikasi", err); }
 }
+// ==========================================
+// HELPER: NOTIFIKASI WHATSAPP
+// ==========================================
+function kirimNotifikasiWA(nomor, pesan) {
+    // Fungsi ini ditambahkan agar server tidak crash saat membuat orderan
+    console.log(`[WhatsApp Simulasi] Pesan untuk ${nomor}: \n${pesan}`);
+    
+    // Catatan: Jika suatu saat Anda ingin menggunakan API WhatsApp asli 
+    // (seperti Wablas, Fonnte, atau Baileys), Anda bisa memasukkan kodenya di sini.
+}
 // --- SKEMA TEKNISI (DIPERBARUI DENGAN USERNAME & PASSWORD) ---
 const TeknisiSchema = new mongoose.Schema({
     nama: { type: String, required: true },
