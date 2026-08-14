@@ -200,7 +200,22 @@
     <div class="container" style="padding-bottom: 80px;" id="wsKonten">
         <!-- Konten Detail akan disuntikkan via JS -->
     </div>
-
+<!-- OVERLAY CHAT TEKNISI -->
+<div id="chatTeknisiOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-utama); z-index:10000; flex-direction:column; animation: slideUp 0.3s ease-out;">
+    <div style="background:var(--bg-kartu); padding:15px; border-bottom:1px solid var(--border-line); display:flex; align-items:center; gap:10px; position:sticky; top:0;">
+        <button onclick="tutupChatTeknisi()" style="background:none; border:none; font-size:1.2rem; color:var(--teks-utama);"><i class="bi bi-arrow-left"></i></button>
+        <h3 style="font-size:1.1rem; margin:0;">Ruang Chat: <span id="chatKodeOrderTitle" style="color:var(--primary);"></span></h3>
+    </div>
+    
+    <div id="chatBoxTeknisi" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:10px; background:var(--bg-utama);">
+        <!-- Pesan Chat akan Muncul di Sini -->
+    </div>
+    
+    <div style="background:var(--bg-kartu); padding:15px; border-top:1px solid var(--border-line); display:flex; gap:10px; position:sticky; bottom:0;">
+        <input type="text" id="inputChatTeknisi" placeholder="Ketik pesan untuk pelanggan..." style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--border-line); outline:none;" onkeypress="if(event.key === 'Enter') kirimChatTeknisi()">
+        <button class="btn btn-take" style="margin:0; width:auto; padding:0 20px; border-radius:12px;" onclick="kirimChatTeknisi()"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
     <!-- Sticky Bottom Actions -->
     <div style="position:fixed; bottom:0; left:0; width:100%; background:var(--bg-kartu); padding:15px; border-top:1px solid var(--border-line); display:flex; gap:10px;">
         <button class="btn" style="flex:1; background:var(--bg-utama); color:var(--primary); border:1px solid var(--border-line);" id="btnWsChat">
@@ -512,56 +527,152 @@ function tarikOrder(kodeOrder) {
             const empty = document.getElementById('radarKosong');
             empty.style.display = list.children.length === 0 ? 'block' : 'none';
         }
-// 2. Fungsi untuk membuka Tampilan Layar Penuh Servis
+let aktifChatKode = "";
+
+// 1. FUNGSI WORKSPACE MENGGUNAKAN DATA ASLI DARI SERVER
 function bukaWorkspace(kodeOrder) {
-    document.getElementById('serviceWorkspaceOverlay').style.display = 'block';
-    document.getElementById('wsKodeOrder').innerText = kodeOrder;
-    
-    // Ambil data pelanggan dari elemen atau panggil API (simulasi data dari DOM saat ini)
-    const kartu = document.getElementById(`order-${kodeOrder}`);
-    const namaPlg = kartu.querySelector('.info-row strong').innerText;
-    
-    // Suntikkan UI detail kerja
-    document.getElementById('wsKonten').innerHTML = `
-        <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
-            <h4 style="margin-bottom:10px; font-size:1rem;">Detail Pelanggan</h4>
-            <p style="margin:0; font-size:0.9rem;"><strong>Nama:</strong> ${namaPlg}</p>
-            <p style="margin:5px 0 0 0; font-size:0.9rem;"><strong>Kendala:</strong> Unit mati total, butuh cek arus.</p>
-        </div>
+    // Ambil data detail terbaru dari server
+    fetch(`${window.location.origin}/api/orders/${kodeOrder}`, { headers: getAuthHeaderTeknisi() })
+    .then(res => res.json())
+    .then(order => {
+        document.getElementById('serviceWorkspaceOverlay').style.display = 'block';
+        document.getElementById('wsKodeOrder').innerText = kodeOrder;
+        
+        document.getElementById('wsKonten').innerHTML = `
+            <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
+                <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-person-lines-fill"></i> Detail Pelanggan</h4>
+                <p style="margin:0; font-size:0.9rem;"><strong>Nama:</strong> ${order.nama}</p>
+                <p style="margin:5px 0 0 0; font-size:0.9rem;"><strong>Unit:</strong> ${order.merek} ${order.tipe}</p>
+                <p style="margin:5px 0 0 0; font-size:0.9rem; color:var(--warning);"><strong>Kendala:</strong> ${order.kerusakan}</p>
+            </div>
 
-        <div class="qc-box">
-            <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-clipboard-check"></i> Quality Control (QC)</h4>
-            <label><input type="checkbox" style="width:18px; height:18px;"> Arus Mesin Normal</label>
-            <label><input type="checkbox" style="width:18px; height:18px;"> LCD / Sentuhan Normal</label>
-            <label style="border:none;"><input type="checkbox" style="width:18px; height:18px;"> Baterai & Charging Normal</label>
-        </div>
+            <div class="qc-box">
+                <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-ui-checks"></i> QC Checklist (Akhir)</h4>
+                <label><input type="checkbox" id="qc_layar" style="width:18px; height:18px;"> Layar & Sentuhan</label>
+                <label><input type="checkbox" id="qc_baterai" style="width:18px; height:18px;"> Baterai & Charging</label>
+                <label style="border:none;"><input type="checkbox" id="qc_kamera" style="width:18px; height:18px;"> Kamera / Sinyal / Lainnya</label>
+            </div>
 
-        <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
-            <h4 style="margin-bottom:10px; font-size:1rem;"><i class="bi bi-receipt"></i> Logistik & Tagihan Tambahan</h4>
-            <label style="font-size:0.85rem; font-weight:bold; color:var(--teks-utama);">Biaya Sparepart Tambahan (Rp):</label>
-            <input type="number" id="biayaPart-${kodeOrder}" placeholder="0" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border-line);">
-            
-            <label style="font-size:0.85rem; font-weight:bold; color:var(--teks-utama); display:block; margin-top:15px;">Upload Bukti Perbaikan (Wajib):</label>
-            <input type="file" id="fotoBukti-${kodeOrder}" accept="image/*" style="width:100%; padding:10px; margin-top:5px; background:var(--bg-utama); border-radius:8px;">
-        </div>
-    `;
+            <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
+                <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-receipt"></i> Logistik & Tagihan</h4>
+                <label style="font-size:0.85rem; font-weight:bold;">Biaya Sparepart / Jasa (Rp):</label>
+                <input type="number" id="biayaPart-${kodeOrder}" value="${order.biayaSuku || 0}" placeholder="0" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border-line);">
+                
+                <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:15px;">Upload Bukti / Foto Komponen (Opsional):</label>
+                <input type="file" id="fotoBukti-${kodeOrder}" accept="image/*" style="width:100%; padding:10px; margin-top:5px; background:var(--bg-utama); border-radius:8px;">
+            </div>
+        `;
 
-    // Pasang aksi tombol sticky
-    document.getElementById('btnWsChat').onclick = () => hubungiPelanggan(kodeOrder);
-    document.getElementById('btnWsSelesai').onclick = () => {
-        selesaikanTugas(kodeOrder);
-        tutupWorkspace();
-    };
+        document.getElementById('btnWsChat').onclick = () => bukaChatTeknisi(kodeOrder);
+        document.getElementById('btnWsSelesai').onclick = () => selesaikanTugas(kodeOrder);
+    });
 }
 
-function tutupWorkspace() {
-    document.getElementById('serviceWorkspaceOverlay').style.display = 'none';
-}
-        // 4. Fungsi Penyelesaian Tugas dengan Rincian Biaya & Media Bukti
+// 2. FUNGSI SELESAIKAN TUGAS (MENGGUNAKAN ENDPOINT YANG BENAR)
 function selesaikanTugas(kodeOrder) {
     const biayaPart = document.getElementById(`biayaPart-${kodeOrder}`).value || 0;
     const fileInput = document.getElementById(`fotoBukti-${kodeOrder}`);
     
+    Swal.fire({
+        title: 'Selesaikan Pekerjaan?',
+        text: `Tandai selesai dengan biaya Rp ${biayaPart}?`,
+        icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Selesai'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('status', 'selesai_servis');
+            formData.append('biayaSuku', biayaPart);
+            
+            // Simpan data QC
+            formData.append('qcChecklist[layar]', document.getElementById('qc_layar').checked);
+            formData.append('qcChecklist[baterai]', document.getElementById('qc_baterai').checked);
+            formData.append('qcChecklist[kamera]', document.getElementById('qc_kamera').checked);
+
+            if (fileInput.files.length > 0) formData.append('fotoPart', fileInput.files[0]);
+
+            // Endpoint yang benar adalah PUT /api/orders/:kode
+            fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${sessionStorage.getItem("teknisiToken")}` },
+                body: formData
+            }).then(res => {
+                if(res.ok) {
+                    Swal.fire('Sukses', 'Servis selesai dilaporkan!', 'success');
+                    document.getElementById(`order-${kodeOrder}`).remove();
+                    daftarTugasAktif = daftarTugasAktif.filter(item => item !== kodeOrder);
+                    document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
+                    if(daftarTugasAktif.length === 0) document.getElementById('aktifKosong').style.display = 'block';
+                    tutupWorkspace();
+                }
+            });
+        }
+    });
+}
+
+// 3. LOGIKA SISTEM CHAT TEKNISI
+function bukaChatTeknisi(kodeOrder) {
+    aktifChatKode = kodeOrder;
+    document.getElementById('chatTeknisiOverlay').style.display = 'flex';
+    document.getElementById('chatKodeOrderTitle').innerText = kodeOrder;
+    muatPesanTeknisi();
+}
+
+function tutupChatTeknisi() {
+    document.getElementById('chatTeknisiOverlay').style.display = 'none';
+    aktifChatKode = "";
+}
+
+function muatPesanTeknisi() {
+    if(!aktifChatKode) return;
+    const box = document.getElementById("chatBoxTeknisi");
+    fetch(`${window.location.origin}/api/chats/${aktifChatKode}`, { headers: getAuthHeaderTeknisi() })
+    .then(res => res.json())
+    .then(data => {
+        let html = "";
+        data.forEach(msg => {
+            let isSelf = (msg.pengirim === 'teknisi' || msg.pengirim === 'admin');
+            let align = isSelf ? 'align-self: flex-end; background:var(--primary); color:white;' : 'align-self: flex-start; background:white; color:black; border:1px solid var(--border-line);';
+            let label = msg.pengirim === 'user' ? '📱 Pelanggan' : (msg.pengirim === 'teknisi' ? `👨‍🔧 Saya (${msg.namaTeknisi || 'Teknisi'})` : '👨‍💻 Admin');
+            
+            html += `<div style="max-width:80%; padding:10px 14px; border-radius:12px; font-size:0.9rem; ${align}">
+                <strong style="font-size:0.8rem; opacity:0.9;">${label}:</strong><br>${msg.teks}
+                <span style="font-size:0.65rem; display:block; text-align:right; margin-top:5px; opacity:0.8;">${msg.waktu}</span>
+            </div>`;
+        });
+        box.innerHTML = html || `<div style="text-align:center; color:gray; margin-top:20px;">Mulai percakapan dengan pelanggan...</div>`;
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+function kirimChatTeknisi() {
+    const input = document.getElementById("inputChatTeknisi");
+    const teks = input.value.trim();
+    if(!teks || !aktifChatKode) return;
+
+    fetch(`${window.location.origin}/api/chats`, {
+        method: "POST", headers: getAuthHeaderTeknisi(),
+        body: JSON.stringify({ 
+            kode: aktifChatKode, 
+            pengirim: 'teknisi', 
+            namaTeknisi: profilTeknisi.nama,
+            teks: teks, 
+            waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) 
+        })
+    }).then(() => {
+        input.value = "";
+        muatPesanTeknisi();
+    });
+}
+
+// Dengarkan balasan baru via Websocket
+socket.on('chatBaruDiterima', (data) => {
+    const kodeTarget = data.kode || data;
+    if (kodeTarget === aktifChatKode) muatPesanTeknisi();
+});
+function tutupWorkspace() {
+    document.getElementById('serviceWorkspaceOverlay').style.display = 'none';
+}
+        
     // Validasi sederhana atau proses FormData
     Swal.fire({
         title: 'Konfirmasi Penyelesaian',
