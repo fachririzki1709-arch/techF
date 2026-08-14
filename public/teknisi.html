@@ -145,15 +145,6 @@
     </div>
     </header>
 
-   <header>
-    <div class="logo-area">
-        <i class="bi bi-tools"></i> <span id="namaHeader">Teknisi Panel</span>
-    </div>
-    <div class="status-toggle aktif" id="btnStatusKerja" onclick="toggleStatus()">
-        <span class="dot"></span> <span id="lblStatus">On Duty</span>
-    </div>
-</header>
-
 <!-- KONTAINER UTAMA DENGAN SISTEM TAB -->
 <div class="container">
     <!-- Tab Navigasi Atas -->
@@ -366,24 +357,25 @@ function muatOrderTersedia() {
 }
 
         socket.on('orderSudahDiambil', (data) => {
-            const kartuTarget = document.getElementById(`order-${data.kodeOrder}`);
-            if (kartuTarget) {
-                kartuTarget.remove();
-                cekEmptyState();
-                
-                if (data.oleh !== profilTeknisi.nama) {
-                    Swal.fire({
-                        title: 'Terlewat!',
-                        text: `Order ${data.kodeOrder} baru saja diambil oleh ${data.oleh}`,
-                        icon: 'info',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
-                    });
-                }
-            }
-        });
+    const kartuTarget = document.getElementById(`order-${data.kodeOrder}`);
+    if (kartuTarget) {
+        // PERBAIKAN: Hanya hapus kartu dari layar JIKA yang mengambil BUKAN teknisi ini
+        if (data.oleh !== profilTeknisi.nama) {
+            kartuTarget.remove();
+            cekEmptyState();
+            
+            Swal.fire({
+                title: 'Terlewat!',
+                text: `Order ${data.kodeOrder} baru saja diambil oleh ${data.oleh}`,
+                icon: 'info',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+    }
+});
 
         function tampilkanKartuOrder(order) {
             if (document.getElementById(`order-${order.kode}`)) return; 
@@ -459,6 +451,7 @@ function muatOrderTersedia() {
 
      // 1. Modifikasi tarikOrder
 function tarikOrder(kodeOrder) {
+    // Beritahu server bahwa teknisi ini mengambil order
     socket.emit('teknisiAmbilOrder', { 
         kodeOrder: kodeOrder, 
         namaTeknisi: profilTeknisi.nama 
@@ -476,20 +469,27 @@ function tarikOrder(kodeOrder) {
     if(kartu) {
         kartu.style.borderLeft = "6px solid var(--success)";
         
-        // Ubah tombol luar HANYA untuk membuka Workspace, bukan menampilkan semua input di kartu kecil
+        // Ubah tombol di kartu agar berubah menjadi tombol "Buka Ruang Kerja"
         const btnArea = kartu.querySelector('.btn-take');
-        btnArea.outerHTML = `
-            <button class="btn" style="width: 100%; background: var(--warning); color: white; margin-top: 10px;" onclick="bukaWorkspace('${kodeOrder}')">
-                <i class="bi bi-tools"></i> Buka Ruang Kerja
-            </button>
-        `;
+        if(btnArea) {
+            btnArea.outerHTML = `
+                <button class="btn" style="width: 100%; background: var(--warning); color: white; margin-top: 10px;" onclick="bukaWorkspace('${kodeOrder}')">
+                    <i class="bi bi-tools"></i> Buka Ruang Kerja
+                </button>
+            `;
+        }
         
-        document.getElementById('listOrderBaru').removeChild(kartu);
+        // PERBAIKAN: Cukup gunakan prepend. Metode append/prepend otomatis memindahkan elemen di DOM tanpa perlu removeChild()
         document.getElementById('listTugasAktif').prepend(kartu);
         document.getElementById('aktifKosong').style.display = 'none';
         
-        daftarTugasAktif.push(kodeOrder);
+        // Tambahkan ke array state lokal
+        if (!daftarTugasAktif.includes(kodeOrder)) {
+            daftarTugasAktif.push(kodeOrder);
+        }
         document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
+        
+        // Periksa apakah daftar radar kosong setelah diambil
         cekEmptyState();
     }
 }
