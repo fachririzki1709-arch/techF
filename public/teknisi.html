@@ -17,6 +17,7 @@
 
     <!-- TAG STYLE WAJIB DITAMBAHKAN AGAR LAYOUT TIDAK RUSAK -->
     <style>
+        
         :root { 
             --bg-utama: #f8fafc; 
             --teks-utama: #0f172a; 
@@ -115,6 +116,11 @@
 
         /* KUSTOMISASI SWEETALERT AGAR MODERN */
         .swal2-popup { border-radius: 20px !important; }
+        @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
     </style>
 </head>
 <body>
@@ -132,34 +138,64 @@
 
     <header>
         <div class="logo-area">
-            <img src="Full Horizon_1.png" alt="Teknisi Panel Logo" style="height: 30px; width: auto; object-fit: contain;">
-        </div>
-        <div class="status-toggle aktif" id="btnStatusKerja" onclick="toggleStatus()">
-            <span class="dot"></span> <span id="lblStatus">On Duty</span>
-        </div>
+        <i class="bi bi-tools"></i> <span id="namaHeader">Teknisi Panel</span>
+    </div>
+    <div class="status-toggle aktif" id="btnStatusKerja" onclick="toggleStatus()">
+        <span class="dot"></span> <span id="lblStatus">On Duty</span>
+    </div>
     </header>
 
-    <div class="container" id="tabOrderMasuk">
-        <h3 style="margin-bottom: 15px; font-size: 1.1rem;"><i class="bi bi-broadcast"></i> Radar Order Baru</h3>
-        
-        <div id="radarKosong" class="empty-state">
-            <i class="bi bi-radar"></i>
-            <p>Belum ada order masuk di area Anda.<br>Pastikan status Anda "On Duty".</p>
-        </div>
+   <header>
+    <div class="logo-area">
+        <i class="bi bi-tools"></i> <span id="namaHeader">Teknisi Panel</span>
+    </div>
+    <div class="status-toggle aktif" id="btnStatusKerja" onclick="toggleStatus()">
+        <span class="dot"></span> <span id="lblStatus">On Duty</span>
+    </div>
+</header>
 
-        <div id="listOrderBaru">
-            <!-- Order diinjeksi via JS -->
-        </div>
+<!-- KONTAINER UTAMA DENGAN SISTEM TAB -->
+<div class="container">
+    <!-- Tab Navigasi Atas -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button id="tabBtnBaru" class="btn" style="flex:1; background: var(--primary); color:white; font-size:0.9rem;" onclick="gantiTab('baru')">
+            <i class="bi bi-broadcast"></i> Order Masuk
+        </button>
+        <button id="tabBtnAktif" class="btn" style="flex:1; background: var(--bg-utama); color: var(--teks-utama); border: 1px solid var(--border-line); font-size:0.9rem;" onclick="gantiTab('aktif')">
+            <i class="bi bi-tools"></i> Tugas Aktif <span id="badgeTugasAktif" style="background:var(--warning); color:white; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;">0</span>
+        </button>
     </div>
 
-    <nav class="bottom-nav">
-        <div class="nav-item aktif" onclick="location.reload()">
-            <i class="bi bi-radar"></i> <span>Radar Order</span>
+    <!-- Konten Tab 1: Order Baru (Radar) -->
+    <div id="sectionOrderBaru">
+        <div id="radarKosong" class="empty-state">
+            <i class="bi bi-radar"></i>
+            <h3>Menunggu Order...</h3>
+            <p>Belum ada order masuk di area Anda. Pastikan status "On Duty".</p>
         </div>
-        <div class="nav-item" onclick="logoutTeknisi()">
-            <i class="bi bi-box-arrow-right"></i> <span>Keluar</span>
+        <div id="listOrderBaru"></div>
+    </div>
+
+    <!-- Konten Tab 2: Tugas Aktif (Dikerjakan) -->
+    <div id="sectionTugasAktif" style="display: none;">
+        <div id="aktifKosong" class="empty-state">
+            <i class="bi bi-clipboard-check"></i>
+            <h3>Tidak Ada Tugas Aktif</h3>
+            <p>Ambil order dari tab "Order Masuk" untuk memulai pengerjaan.</p>
         </div>
-    </nav>
+        <div id="listTugasAktif"></div>
+    </div>
+</div>
+
+<!-- NAVIGASI BAWAH -->
+<nav class="bottom-nav">
+    <div class="nav-item aktif" onclick="location.reload()">
+        <i class="bi bi-radar"></i> <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="logoutTeknisi()">
+        <i class="bi bi-box-arrow-right"></i> <span>Keluar</span>
+    </div>
+</nav>
 
     <script>
         const socket = io(window.location.origin);
@@ -181,6 +217,7 @@
                 muatOrderTersedia(); 
             }
         });
+        
 
         function prosesLoginTeknisi() {
             const username = document.getElementById("teknisiUsername").value.trim();
@@ -226,6 +263,43 @@
             sessionStorage.removeItem("teknisiNama");
             location.reload();
         }
+        let daftarTugasAktif = []; // Menyimpan state tugas yang sedang dipegang
+
+// 1. Sistem Navigasi Tab (Order Baru vs Tugas Aktif)
+function gantiTab(target) {
+    const secBaru = document.getElementById('sectionOrderBaru');
+    const secAktif = document.getElementById('sectionTugasAktif');
+    const btnBaru = document.getElementById('tabBtnBaru');
+    const btnAktif = document.getElementById('tabBtnAktif');
+
+    if(target === 'baru') {
+        secBaru.style.display = 'block';
+        secAktif.style.display = 'none';
+        btnBaru.style.background = 'var(--primary)';
+        btnBaru.style.color = 'white';
+        btnAktif.style.background = 'var(--bg-utama)';
+        btnAktif.style.color = 'var(--teks-utama)';
+    } else {
+        secBaru.style.display = 'none';
+        secAktif.style.display = 'block';
+        btnAktif.style.background = 'var(--primary)';
+        btnAktif.style.color = 'white';
+        btnBaru.style.background = 'var(--bg-utama)';
+        btnBaru.style.color = 'var(--teks-utama)';
+    }
+}
+
+// 2. Implementasi Skeleton Loading saat memuat data awal
+function tampilkanSkeletonLoading() {
+    const list = document.getElementById('listOrderBaru');
+    list.innerHTML = `
+        <div style="background: var(--bg-kartu); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; animation: pulse 1.5s infinite;">
+            <div style="height: 20px; background: #e2e8f0; border-radius: 4px; width: 40%; margin-bottom: 10px;"></div>
+            <div style="height: 15px; background: #e2e8f0; border-radius: 4px; width: 70%; margin-bottom: 8px;"></div>
+            <div style="height: 40px; background: #e2e8f0; border-radius: 8px; margin-top: 15px;"></div>
+        </div>
+    `;
+}
 
         function toggleStatus() {
             isAktif = !isAktif;
@@ -248,24 +322,19 @@
             }).catch(err => console.error("Gagal sinkron status:", err));
         }
 
-        function muatOrderTersedia() {
-            fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('listOrderBaru').innerHTML = "";
-                if(data && data.length > 0) {
-                    data.forEach(order => tampilkanKartuOrder(order));
-                }
-                cekEmptyState();
-            }).catch(err => console.error("Gagal memuat order: ", err));
+// Modifikasi fungsi muatOrderTersedia dengan Skeleton
+function muatOrderTersedia() {
+    tampilkanSkeletonLoading();
+    fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('listOrderBaru').innerHTML = "";
+        if(data && data.length > 0) {
+            data.forEach(order => tampilkanKartuOrder(order));
         }
-
-        socket.on('orderBaruTersedia', (data) => {
-            if(!isAktif) return;
-            if (data.targetTeknisi.includes(profilTeknisi.nama)) {
-                tampilkanKartuOrder(data.order);
-            }
-        });
+        cekEmptyState();
+    }).catch(err => console.error("Gagal memuat order: ", err));
+}
 
         socket.on('orderSudahDiambil', (data) => {
             const kartuTarget = document.getElementById(`order-${data.kodeOrder}`);
@@ -359,44 +428,59 @@
             if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
         }
 
-        function tarikOrder(kodeOrder) {
-            socket.emit('teknisiAmbilOrder', { 
-                kodeOrder: kodeOrder, 
-                namaTeknisi: profilTeknisi.nama 
-            });
-            
-            Swal.fire({
-                title: 'Tugas Diterima!',
-                text: 'Order ini telah masuk ke daftar tugas aktif Anda.',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            });
+       function tarikOrder(kodeOrder) {
+    socket.emit('teknisiAmbilOrder', { 
+        kodeOrder: kodeOrder, 
+        namaTeknisi: profilTeknisi.nama 
+    });
+    
+    Swal.fire({
+        title: 'Tugas Diterima!',
+        text: 'Order dipindahkan ke tab Tugas Aktif.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+    });
 
-            setTimeout(() => {
-                const kartu = document.getElementById(`order-${kodeOrder}`);
-                if(kartu) {
-                    kartu.style.borderLeft = "6px solid var(--success)";
-                    
-                    const btnLama = kartu.querySelector('.btn-take');
-                    if(btnLama) {
-                        btnLama.outerHTML = `
-                            <div style="display:flex; gap: 10px; margin-top: 10px;">
-                                <button class="btn" style="flex: 1; background: var(--primary); color: white;" onclick="hubungiPelanggan('${kodeOrder}')">
-                                    <i class="bi bi-chat-dots-fill"></i> Chat
-                                </button>
-                                <button class="btn" style="flex: 1; background: var(--warning); color: white;" onclick="updateStatusKerja('${kodeOrder}', 'diproses')">
-                                    <i class="bi bi-tools"></i> Proses
-                                </button>
-                            </div>
-                            <button class="btn" style="width: 100%; background: var(--success); color: white; margin-top: 10px;" onclick="updateStatusKerja('${kodeOrder}', 'selesai_servis')">
-                                <i class="bi bi-check-circle-fill"></i> Tandai Selesai
-                            </button>
-                        `;
-                    }
-                }
-            }, 800);
-        }
+    const kartu = document.getElementById(`order-${kodeOrder}`);
+    if(kartu) {
+        // Ubah tombol dan aksi khusus untuk Tugas Aktif (Termasuk Input Biaya & Bukti Foto)
+        kartu.style.borderLeft = "6px solid var(--success)";
+        const btnArea = kartu.querySelector('.btn-take');
+        
+        btnArea.outerHTML = `
+            <div style="background:var(--bg-utama); padding:10px; border-radius:8px; margin-top:10px; border:1px solid var(--border-line);">
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--teks-utama);">Input Biaya Sparepart (Rp):</label>
+                <input type="number" id="biayaPart-${kodeOrder}" placeholder="Contoh: 50000" style="width:100%; padding:8px; margin-top:4px; border-radius:6px; border:1px solid var(--border-line); background:var(--bg-kartu); color:var(--teks-utama);">
+                
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--teks-utama); display:block; margin-top:8px;">Upload Foto Bukti Perbaikan:</label>
+                <input type="file" id="fotoBukti-${kodeOrder}" accept="image/*" style="font-size:0.8rem; margin-top:4px;">
+            </div>
+
+            <div style="display:flex; gap: 8px; margin-top: 10px;">
+                <button class="btn" style="flex: 1; background: var(--primary); color: white; font-size:0.85rem;" onclick="hubungiPelanggan('${kodeOrder}')">
+                    <i class="bi bi-chat-dots-fill"></i> Chat
+                </button>
+                <button class="btn" style="flex: 1; background: var(--warning); color: white; font-size:0.85rem;" onclick="updateStatusKerja('${kodeOrder}', 'diproses')">
+                    <i class="bi bi-tools"></i> Proses
+                </button>
+            </div>
+            <button class="btn" style="width: 100%; background: var(--success); color: white; margin-top: 8px; font-size:0.9rem;" onclick="selesaikanTugas('${kodeOrder}')">
+                <i class="bi bi-check-circle-fill"></i> Selesaikan Servis & Tagih
+            </button>
+        `;
+        // Pindahkan elemen kartu dari list order baru ke list tugas aktif
+        document.getElementById('listOrderBaru').removeChild(kartu);
+        document.getElementById('listTugasAktif').prepend(kartu);
+        
+        document.getElementById('aktifKosong').style.display = 'none';
+        
+        // Update badge counter tugas aktif
+        daftarTugasAktif.push(kodeOrder);
+        document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
+        cekEmptyState();
+    }
+}
 
         function updateStatusKerja(kode, statusBaru) {
             fetch(`${window.location.origin}/api/orders/${kode}`, {
@@ -416,6 +500,48 @@
             const empty = document.getElementById('radarKosong');
             empty.style.display = list.children.length === 0 ? 'block' : 'none';
         }
+
+        // 4. Fungsi Penyelesaian Tugas dengan Rincian Biaya & Media Bukti
+function selesaikanTugas(kodeOrder) {
+    const biayaPart = document.getElementById(`biayaPart-${kodeOrder}`).value || 0;
+    const fileInput = document.getElementById(`fotoBukti-${kodeOrder}`);
+    
+    // Validasi sederhana atau proses FormData
+    Swal.fire({
+        title: 'Konfirmasi Penyelesaian',
+        text: `Menyelesaikan pesanan ${kodeOrder} dengan biaya sparepart Rp ${biayaPart}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Selesai',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Kirim data ke backend menggunakan fetch PUT / POST
+            fetch(`${window.location.origin}/api/orders/${kodeOrder}/selesai`, {
+                method: "PUT",
+                headers: getAuthHeaderTeknisi(),
+                body: JSON.stringify({ biayaSparepart: biayaPart, status: 'selesai_servis' })
+            }).then(res => {
+                if(res.ok) {
+                    Swal.fire('Sukses', 'Servis telah selesai dilaporkan ke sistem.', 'success');
+                    document.getElementById(`order-${kodeOrder}`).remove();
+                    daftarTugasAktif = daftarTugasAktif.filter(item => item !== kodeOrder);
+                    document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
+                    
+                    // Cek jika tugas aktif kosong
+                    if(daftarTugasAktif.length === 0) {
+                        document.getElementById('aktifKosong').style.display = 'block';
+                    }
+                }
+            });
+        }
+    });
+}
+
+function cekEmptyState() {
+    const listBaru = document.getElementById('listOrderBaru');
+    document.getElementById('radarKosong').style.display = listBaru.children.length === 0 ? 'block' : 'none';
+}
     </script>
 </body>
 </html>
