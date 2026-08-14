@@ -672,38 +672,6 @@ socket.on('chatBaruDiterima', (data) => {
 function tutupWorkspace() {
     document.getElementById('serviceWorkspaceOverlay').style.display = 'none';
 }
-        
-    // Validasi sederhana atau proses FormData
-    Swal.fire({
-        title: 'Konfirmasi Penyelesaian',
-        text: `Menyelesaikan pesanan ${kodeOrder} dengan biaya sparepart Rp ${biayaPart}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Selesai',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Kirim data ke backend menggunakan fetch PUT / POST
-            fetch(`${window.location.origin}/api/orders/${kodeOrder}/selesai`, {
-                method: "PUT",
-                headers: getAuthHeaderTeknisi(),
-                body: JSON.stringify({ biayaSparepart: biayaPart, status: 'selesai_servis' })
-            }).then(res => {
-                if(res.ok) {
-                    Swal.fire('Sukses', 'Servis telah selesai dilaporkan ke sistem.', 'success');
-                    document.getElementById(`order-${kodeOrder}`).remove();
-                    daftarTugasAktif = daftarTugasAktif.filter(item => item !== kodeOrder);
-                    document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
-                    
-                    // Cek jika tugas aktif kosong
-                    if(daftarTugasAktif.length === 0) {
-                        document.getElementById('aktifKosong').style.display = 'block';
-                    }
-                }
-            });
-        }
-    });
-}
 
 function cekEmptyState() {
     const listBaru = document.getElementById('listOrderBaru');
