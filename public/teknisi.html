@@ -196,7 +196,36 @@
         <i class="bi bi-box-arrow-right"></i> <span>Keluar</span>
     </div>
 </nav>
+<!-- OVERLAY TAMPILAN SERVICE KERJA -->
+<div id="serviceWorkspaceOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-utama); z-index:9999; overflow-y:auto; animation: slideUp 0.3s ease-out;">
+    
+    <!-- Sticky Header -->
+    <div style="background:var(--bg-kartu); padding:15px; position:sticky; top:0; z-index:10; border-bottom:1px solid var(--border-line); display:flex; justify-content:space-between; align-items:center;">
+        <button onclick="tutupWorkspace()" style="background:none; border:none; font-size:1.2rem; color:var(--teks-utama);"><i class="bi bi-arrow-left"></i></button>
+        <h3 style="font-size:1.1rem; margin:0;" id="wsKodeOrder">Order -</h3>
+        <span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold;">Diproses</span>
+    </div>
 
+    <div class="container" style="padding-bottom: 80px;" id="wsKonten">
+        <!-- Konten Detail akan disuntikkan via JS -->
+    </div>
+
+    <!-- Sticky Bottom Actions -->
+    <div style="position:fixed; bottom:0; left:0; width:100%; background:var(--bg-kartu); padding:15px; border-top:1px solid var(--border-line); display:flex; gap:10px;">
+        <button class="btn" style="flex:1; background:var(--bg-utama); color:var(--primary); border:1px solid var(--border-line);" id="btnWsChat">
+            <i class="bi bi-chat-dots-fill"></i> Chat
+        </button>
+        <button class="btn btn-take" style="flex:2; margin:0;" id="btnWsSelesai">
+            <i class="bi bi-check-circle-fill"></i> Selesaikan Servis
+        </button>
+    </div>
+</div>
+
+<style>
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .qc-box { background: var(--bg-kartu); border: 1px solid var(--border-line); border-radius: 12px; padding: 15px; margin-top: 15px; }
+    .qc-box label { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border-line); font-size: 0.9rem;}
+</style>
     <script>
         const socket = io(window.location.origin);
         let profilTeknisi = { nama: "", keahlian: [] };
@@ -428,7 +457,8 @@ function muatOrderTersedia() {
             if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
         }
 
-       function tarikOrder(kodeOrder) {
+     // 1. Modifikasi tarikOrder
+function tarikOrder(kodeOrder) {
     socket.emit('teknisiAmbilOrder', { 
         kodeOrder: kodeOrder, 
         namaTeknisi: profilTeknisi.nama 
@@ -436,7 +466,7 @@ function muatOrderTersedia() {
     
     Swal.fire({
         title: 'Tugas Diterima!',
-        text: 'Order dipindahkan ke tab Tugas Aktif.',
+        text: 'Order telah masuk ke antrean tugas aktif Anda.',
         icon: 'success',
         timer: 1500,
         showConfirmButton: false
@@ -444,38 +474,20 @@ function muatOrderTersedia() {
 
     const kartu = document.getElementById(`order-${kodeOrder}`);
     if(kartu) {
-        // Ubah tombol dan aksi khusus untuk Tugas Aktif (Termasuk Input Biaya & Bukti Foto)
         kartu.style.borderLeft = "6px solid var(--success)";
-        const btnArea = kartu.querySelector('.btn-take');
         
+        // Ubah tombol luar HANYA untuk membuka Workspace, bukan menampilkan semua input di kartu kecil
+        const btnArea = kartu.querySelector('.btn-take');
         btnArea.outerHTML = `
-            <div style="background:var(--bg-utama); padding:10px; border-radius:8px; margin-top:10px; border:1px solid var(--border-line);">
-                <label style="font-size:0.8rem; font-weight:bold; color:var(--teks-utama);">Input Biaya Sparepart (Rp):</label>
-                <input type="number" id="biayaPart-${kodeOrder}" placeholder="Contoh: 50000" style="width:100%; padding:8px; margin-top:4px; border-radius:6px; border:1px solid var(--border-line); background:var(--bg-kartu); color:var(--teks-utama);">
-                
-                <label style="font-size:0.8rem; font-weight:bold; color:var(--teks-utama); display:block; margin-top:8px;">Upload Foto Bukti Perbaikan:</label>
-                <input type="file" id="fotoBukti-${kodeOrder}" accept="image/*" style="font-size:0.8rem; margin-top:4px;">
-            </div>
-
-            <div style="display:flex; gap: 8px; margin-top: 10px;">
-                <button class="btn" style="flex: 1; background: var(--primary); color: white; font-size:0.85rem;" onclick="hubungiPelanggan('${kodeOrder}')">
-                    <i class="bi bi-chat-dots-fill"></i> Chat
-                </button>
-                <button class="btn" style="flex: 1; background: var(--warning); color: white; font-size:0.85rem;" onclick="updateStatusKerja('${kodeOrder}', 'diproses')">
-                    <i class="bi bi-tools"></i> Proses
-                </button>
-            </div>
-            <button class="btn" style="width: 100%; background: var(--success); color: white; margin-top: 8px; font-size:0.9rem;" onclick="selesaikanTugas('${kodeOrder}')">
-                <i class="bi bi-check-circle-fill"></i> Selesaikan Servis & Tagih
+            <button class="btn" style="width: 100%; background: var(--warning); color: white; margin-top: 10px;" onclick="bukaWorkspace('${kodeOrder}')">
+                <i class="bi bi-tools"></i> Buka Ruang Kerja
             </button>
         `;
-        // Pindahkan elemen kartu dari list order baru ke list tugas aktif
+        
         document.getElementById('listOrderBaru').removeChild(kartu);
         document.getElementById('listTugasAktif').prepend(kartu);
-        
         document.getElementById('aktifKosong').style.display = 'none';
         
-        // Update badge counter tugas aktif
         daftarTugasAktif.push(kodeOrder);
         document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
         cekEmptyState();
@@ -500,7 +512,51 @@ function muatOrderTersedia() {
             const empty = document.getElementById('radarKosong');
             empty.style.display = list.children.length === 0 ? 'block' : 'none';
         }
+// 2. Fungsi untuk membuka Tampilan Layar Penuh Servis
+function bukaWorkspace(kodeOrder) {
+    document.getElementById('serviceWorkspaceOverlay').style.display = 'block';
+    document.getElementById('wsKodeOrder').innerText = kodeOrder;
+    
+    // Ambil data pelanggan dari elemen atau panggil API (simulasi data dari DOM saat ini)
+    const kartu = document.getElementById(`order-${kodeOrder}`);
+    const namaPlg = kartu.querySelector('.info-row strong').innerText;
+    
+    // Suntikkan UI detail kerja
+    document.getElementById('wsKonten').innerHTML = `
+        <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
+            <h4 style="margin-bottom:10px; font-size:1rem;">Detail Pelanggan</h4>
+            <p style="margin:0; font-size:0.9rem;"><strong>Nama:</strong> ${namaPlg}</p>
+            <p style="margin:5px 0 0 0; font-size:0.9rem;"><strong>Kendala:</strong> Unit mati total, butuh cek arus.</p>
+        </div>
 
+        <div class="qc-box">
+            <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-clipboard-check"></i> Quality Control (QC)</h4>
+            <label><input type="checkbox" style="width:18px; height:18px;"> Arus Mesin Normal</label>
+            <label><input type="checkbox" style="width:18px; height:18px;"> LCD / Sentuhan Normal</label>
+            <label style="border:none;"><input type="checkbox" style="width:18px; height:18px;"> Baterai & Charging Normal</label>
+        </div>
+
+        <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
+            <h4 style="margin-bottom:10px; font-size:1rem;"><i class="bi bi-receipt"></i> Logistik & Tagihan Tambahan</h4>
+            <label style="font-size:0.85rem; font-weight:bold; color:var(--teks-utama);">Biaya Sparepart Tambahan (Rp):</label>
+            <input type="number" id="biayaPart-${kodeOrder}" placeholder="0" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border-line);">
+            
+            <label style="font-size:0.85rem; font-weight:bold; color:var(--teks-utama); display:block; margin-top:15px;">Upload Bukti Perbaikan (Wajib):</label>
+            <input type="file" id="fotoBukti-${kodeOrder}" accept="image/*" style="width:100%; padding:10px; margin-top:5px; background:var(--bg-utama); border-radius:8px;">
+        </div>
+    `;
+
+    // Pasang aksi tombol sticky
+    document.getElementById('btnWsChat').onclick = () => hubungiPelanggan(kodeOrder);
+    document.getElementById('btnWsSelesai').onclick = () => {
+        selesaikanTugas(kodeOrder);
+        tutupWorkspace();
+    };
+}
+
+function tutupWorkspace() {
+    document.getElementById('serviceWorkspaceOverlay').style.display = 'none';
+}
         // 4. Fungsi Penyelesaian Tugas dengan Rincian Biaya & Media Bukti
 function selesaikanTugas(kodeOrder) {
     const biayaPart = document.getElementById(`biayaPart-${kodeOrder}`).value || 0;
