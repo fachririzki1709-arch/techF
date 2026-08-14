@@ -1818,9 +1818,9 @@ function muatLogPesan() {
         }
 
         chatData.forEach(msg => {
-            let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
-            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Admin' : '📱 Anda';
-            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
+           // Ganti baris ini di dalam fungsi muatLogPesan() di index.html:
+let kelasBubble = (msg.pengirim === 'admin' || msg.pengirim === 'teknisi') ? 'msg-admin' : 'msg-user';
+let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Admin' : (msg.pengirim === 'teknisi' ? `👨‍🔧 Teknisi (${msg.namaTeknisi || ''})` : '📱 Anda');            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
         
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
