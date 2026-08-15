@@ -3,241 +3,343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Panel Teknisi - SF Tech</title>
+    <title>Panel Teknisi - SF Service</title>
     
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
+    <!-- JS Libraries (SweetAlert, Leaflet, Socket.io) -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- TAG STYLE WAJIB DITAMBAHKAN AGAR LAYOUT TIDAK RUSAK -->
+    
     <style>
-        
-        :root { 
-            --bg-utama: #f8fafc; 
-            --teks-utama: #0f172a; 
-            --bg-kartu: #ffffff; 
-            --border-line: #e2e8f0; 
-            --primary: #0ea5e9; 
+        :root {
+            --bg-body: #f8fafc;
+            --bg-sidebar: #0f172a;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #0ea5e9;
             --primary-hover: #0284c7;
             --success: #10b981;
             --warning: #f59e0b;
-        }
-        body.dark-mode { 
-            --bg-utama: #0f172a; 
-            --teks-utama: #f8fafc; 
-            --bg-kartu: #1e293b; 
-            --border-line: #334155; 
+            --border: #e2e8f0;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg-utama); color: var(--teks-utama); padding-bottom: 80px; transition: 0.3s; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; overflow-x: hidden; }
 
-        /* HEADER MODERN GLASMORPHISM */
-        header { 
-            background: rgba(255, 255, 255, 0.9); 
-            backdrop-filter: blur(10px);
-            padding: 1.2rem 1.5rem; 
-            display: flex; justify-content: space-between; align-items: center; 
-            position: sticky; top: 0; z-index: 100; 
-            border-bottom: 1px solid var(--border-line); 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        /* ================= SIDEBAR ================= */
+        .sidebar {
+            width: 260px; background-color: var(--bg-sidebar); color: white;
+            height: 100vh; position: fixed; left: 0; top: 0;
+            display: flex; flex-direction: column; transition: 0.3s ease; z-index: 1000;
         }
-        body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
-        .logo-area { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; color: var(--teks-utama); }
-        .logo-area i { color: var(--primary); font-size: 1.5rem; }
-
-        /* TOMBOL STATUS KERJA */
-        .status-toggle { 
-            display: flex; align-items: center; gap: 8px; 
-            background: #f1f5f9; padding: 6px 14px; border-radius: 30px; 
-            font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s;
-            border: 1px solid var(--border-line);
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+        .sidebar-header img { height: 24px; }
+        .sidebar-header h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: 1px;}
+        
+        .sidebar-menu { list-style: none; padding: 1.5rem 1rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .sidebar-menu li a {
+            display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem;
+            color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 0.95rem; transition: 0.2s; cursor: pointer;
         }
-        .status-toggle.aktif { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-        .status-toggle.aktif .dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
-        .status-toggle .dot { width: 10px; height: 10px; background: #94a3b8; border-radius: 50%; display: inline-block; transition: 0.3s; }
+        .sidebar-menu li a i { font-size: 1.1rem; }
+        .sidebar-menu li a:hover, .sidebar-menu li.active a { background-color: var(--primary); color: white; }
+        
+        .badge { background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: auto; font-weight: 700;}
+        .badge.warning { background: var(--warning); }
+        .badge.success { background: var(--success); }
+        .badge.dark { background: #1e293b; }
 
-        .container { padding: 1.5rem; }
+        .sidebar-footer { padding: 1.5rem 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-footer a { color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; font-weight: 500; transition: 0.2s; cursor: pointer; }
+        .sidebar-footer a:hover { color: white; }
 
-        /* KARTU ORDER (GOJEK/GRAB STYLE) */
-        .order-card { 
-            background: var(--bg-kartu); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.2rem; 
-            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); border: 1px solid var(--border-line); 
-            position: relative; overflow: hidden; animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
-            display: flex; flex-direction: column; gap: 12px;
+        /* ================= MAIN CONTENT ================= */
+        .main-wrapper { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; transition: 0.3s ease; }
+        
+        /* HEADER TOPBAR */
+        .topbar {
+            background: var(--bg-card); height: 70px; padding: 0 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 99;
         }
-        @keyframes slideIn { from { transform: translateY(-20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        .topbar-left { display: flex; align-items: center; gap: 15px; }
+        .menu-toggle { background: none; border: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer; display: none; }
+        .topbar-title { font-weight: 600; font-size: 1.1rem; }
+        
+        .topbar-right { display: flex; align-items: center; gap: 20px; }
+        .notif-btn { position: relative; font-size: 1.2rem; color: var(--text-muted); cursor: pointer; }
+        .notif-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px 10px; border-radius: 20px; background: #f1f5f9;}
+        .user-profile img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white; }
+        .user-profile span { font-weight: 600; font-size: 0.9rem; }
+        .status-duty { background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer; transition: 0.3s; border: 1px solid #bbf7d0;}
+        .status-duty.offline { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+        .status-duty::before { content: ''; width: 6px; height: 6px; background: #10b981; border-radius: 50%; }
+        .status-duty.offline::before { background: #94a3b8; }
 
-        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-line); padding-bottom: 12px; }
-        .order-header h4 { font-size: 1.1rem; font-weight: 800; color: var(--teks-utama); }
-        .badge-layanan { background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 800; padding: 5px 12px; border-radius: 20px; }
+        /* DASHBOARD CONTENT */
+        .content { padding: 2rem; display: none; }
+        .content.active { display: block; animation: fadeIn 0.4s ease-out;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Grid Stat Cards */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border); }
+        .stat-info h3 { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; margin-bottom: 5px; }
+        .stat-info h2 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px; }
+        .stat-info p { font-size: 0.8rem; color: var(--text-muted); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        
+        /* Grid Layout Bawah */
+        .bawah-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card-box { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02); padding: 1.5rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+        .card-header h3 { font-size: 1.1rem; font-weight: 700; }
+        .btn-link { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        
+        /* List Item Styling (Order List) */
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px dashed var(--border); transition: 0.2s;}
+        .list-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .list-item:hover { background: #f8fafc; border-radius: 8px; padding: 1rem; }
+        .list-info h4 { font-size: 0.85rem; color: var(--primary); margin-bottom: 3px; font-weight: 700;}
+        .list-info p { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 2px;}
+        .list-info span { font-size: 0.8rem; color: var(--text-muted); }
+        .list-action { display: flex; align-items: center; gap: 15px; }
+        
+        .badge-status { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .status-diagnosa { background: #fef3c7; color: #d97706; }
+        .status-perbaikan { background: #e0f2fe; color: #0284c7; }
+        .status-baru { background: #dcfce7; color: #166534; }
+        
+        /* Tombol Ambil Order & Selesai */
+        .btn { padding: 0.6rem 1rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.85rem;}
+        .btn-take { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .btn-take:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
+        .btn-workspace { background: var(--warning); color: white; }
 
-        .info-row { display: flex; align-items: flex-start; gap: 12px; font-size: 0.9rem; color: #475569; line-height: 1.4; }
-        .info-row i { color: var(--primary); font-size: 1.2rem; margin-top: 2px; }
-        body.dark-mode .info-row { color: #cbd5e1; }
+        /* Donut Chart Placeholder */
+        .donut-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px;}
+        .donut-chart { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(var(--success) 0% 29%, var(--primary) 29% 47%, var(--warning) 47% 58%, #3b82f6 58% 100%); display: flex; align-items: center; justify-content: center; }
+        .donut-inner { width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .donut-inner h2 { font-size: 2rem; font-weight: 800; color: var(--text-main); }
+        
+        .chart-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 10px;}
+        .legend-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 500; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; display: inline-block; }
 
-        .kerusakan-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 8px; margin-top: 4px; }
-        body.dark-mode .kerusakan-box { background: rgba(245, 158, 11, 0.1); }
-        .kerusakan-box-title { font-size: 0.8rem; color: #d97706; font-weight: 800; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-        .kerusakan-box-text { font-size: 0.9rem; color: #475569; font-weight: 600; }
-        body.dark-mode .kerusakan-box-text { color: #f8fafc; }
+        /* Empty State */
+        .empty-state { text-align: center; padding: 2rem; color: #94a3b8; }
+        .empty-state i { font-size: 3rem; margin-bottom: 10px; display: block; color: #cbd5e1; }
 
-        /* TOMBOL AKSI UTAMA */
-        .btn { padding: 0.9rem; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-        .btn-take { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; width: 100%; margin-top: 10px; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25); }
-        .btn-take:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35); }
-        .btn-take:active { transform: scale(0.98); }
-        .btn-secondary { background: var(--bg-utama); color: var(--primary); border: 1px solid var(--border-line); }
-
-        /* BOTTOM NAVIGATION MODERN */
-        .bottom-nav { 
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border-line); 
-            display: flex; justify-content: space-around; 
-            padding: 12px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); 
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.03); z-index: 100; 
+        /* ================= RESPONSIVE MOBILE ================= */
+        @media (max-width: 992px) {
+            .sidebar { left: -260px; }
+            .sidebar.active { left: 0; box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
+            .main-wrapper { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .content { padding: 1rem; }
+            .bawah-grid { grid-template-columns: 1fr; }
+            .user-profile span.nama { display: none; } 
+            
+            .mobile-profile-card { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border); margin-bottom: 1rem;}
+            .mobile-profile-info { display: flex; align-items: center; gap: 15px; }
+            .mobile-profile-info img { width: 45px; height: 45px; border-radius: 50%; }
         }
-        body.dark-mode .bottom-nav { background: rgba(30, 41, 59, 0.95); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-decoration: none; gap: 4px; cursor: pointer; transition: 0.3s; }
-        .nav-item i { font-size: 1.5rem; transition: 0.3s; }
-        .nav-item.aktif { color: var(--primary); }
-        .nav-item.aktif i { transform: translateY(-3px); }
 
-        .empty-state { text-align: center; padding: 4rem 1.5rem; color: #94a3b8; }
-        .empty-state i { font-size: 4rem; margin-bottom: 15px; display: block; color: #cbd5e1; }
-        .empty-state h3 { font-size: 1.2rem; color: var(--teks-utama); margin-bottom: 5px; }
-
-        /* KUSTOMISASI SWEETALERT AGAR MODERN */
-        .swal2-popup { border-radius: 20px !important; }
-        @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
-}
+        /* Overlay Login & Workspace (Full Screen Style) */
+        .login-overlay, .full-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 10000; overflow-y: auto;}
+        .login-overlay { display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 3rem; border-radius: 16px; width: 90%; max-width: 420px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; }
+        
+        .full-overlay { display: none; background: var(--bg-body); flex-direction: column;}
+        .overlay-header { background: var(--bg-card); padding: 15px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
+        
+        /* Swifty Animations */
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <div class="login-overlay" id="loginTeknisiOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:flex; justify-content:center; align-items:center; z-index:9999;">
-        <div class="login-box" style="background:white; padding:3rem; border-radius:16px; width:100%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.4); text-align:center;">
+
+    <!-- OVERLAY LOGIN -->
+    <div class="login-overlay" id="loginTeknisiOverlay">
+        <div class="login-box">
             <h2><i class="bi bi-tools" style="color:#0ea5e9;"></i> Login Teknisi</h2>
-            <p style="color:#64748b; font-size:0.95rem; margin-bottom:2rem;">Masukkan kredensial dari admin</p>
-            
-            <input type="text" id="teknisiUsername" placeholder="Username teknisi..." style="background:#f8fafc; color:#0f172a; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border-radius:8px;">
-            <input type="password" id="teknisiPassword" placeholder="Password..." style="background:#f8fafc; color:#0f172a; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin:0.5rem 0 1.2rem; border-radius:8px;">
-            
-            <button class="btn btn-take" onclick="prosesLoginTeknisi()">Masuk Panel Teknisi</button>
+            <p style="color:#64748b; font-size:0.95rem; margin-bottom:2rem;">Masukkan kredensial sistem</p>
+            <input type="text" id="teknisiUsername" placeholder="Username teknisi..." style="background:#f8fafc; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin-bottom:1rem; border-radius:8px;">
+            <input type="password" id="teknisiPassword" placeholder="Password..." style="background:#f8fafc; border:2px solid #e2e8f0; width:100%; padding:0.75rem 1rem; margin-bottom:1.5rem; border-radius:8px;">
+            <button class="btn btn-take" style="width: 100%; font-size: 1rem; padding: 1rem;" onclick="prosesLoginTeknisi()">Masuk Panel</button>
         </div>
     </div>
 
-    <header>
-        <div class="logo-area">
-        <i class="bi bi-tools"></i> <span id="namaHeader">Teknisi Panel</span>
-    </div>
-    <div class="status-toggle aktif" id="btnStatusKerja" onclick="toggleStatus()">
-        <span class="dot"></span> <span id="lblStatus">On Duty</span>
-    </div>
-    </header>
-
-<!-- KONTAINER UTAMA DENGAN SISTEM TAB -->
-<div class="container">
-    <!-- Tab Navigasi Atas -->
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button id="tabBtnBaru" class="btn" style="flex:1; background: var(--primary); color:white; font-size:0.9rem;" onclick="gantiTab('baru')">
-            <i class="bi bi-broadcast"></i> Order Masuk
-        </button>
-        <button id="tabBtnAktif" class="btn" style="flex:1; background: var(--bg-utama); color: var(--teks-utama); border: 1px solid var(--border-line); font-size:0.9rem;" onclick="gantiTab('aktif')">
-            <i class="bi bi-tools"></i> Tugas Aktif <span id="badgeTugasAktif" style="background:var(--warning); color:white; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:5px;">0</span>
-        </button>
-    </div>
-
-    <!-- Konten Tab 1: Order Baru (Radar) -->
-    <div id="sectionOrderBaru">
-        <div id="radarKosong" class="empty-state">
-            <i class="bi bi-radar"></i>
-            <h3>Menunggu Order...</h3>
-            <p>Belum ada order masuk di area Anda. Pastikan status "On Duty".</p>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="bi bi-tools" style="color: var(--primary); font-size: 1.5rem;"></i>
+            <h2>SF SERVICE</h2>
         </div>
-        <div id="listOrderBaru"></div>
-    </div>
-
-    <!-- Konten Tab 2: Tugas Aktif (Dikerjakan) -->
-    <div id="sectionTugasAktif" style="display: none;">
-        <div id="aktifKosong" class="empty-state">
-            <i class="bi bi-clipboard-check"></i>
-            <h3>Tidak Ada Tugas Aktif</h3>
-            <p>Ambil order dari tab "Order Masuk" untuk memulai pengerjaan.</p>
+        <ul class="sidebar-menu">
+            <li class="active" onclick="bukaTab('dashboard', this)"><a ><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+            <li onclick="bukaTab('orderMasuk', this)"><a ><i class="bi bi-box-seam"></i> Order Masuk <span class="badge" id="badgeOrderMasuk">0</span></a></li>
+            <li onclick="bukaTab('tugasAktif', this)"><a ><i class="bi bi-tools"></i> Tugas Aktif <span class="badge warning" id="badgeTugasAktif">0</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a onclick="logoutTeknisi()"><i class="bi bi-box-arrow-right"></i> Keluar</a>
         </div>
-        <div id="listTugasAktif"></div>
-    </div>
-</div>
+    </aside>
 
-<!-- NAVIGASI BAWAH -->
-<nav class="bottom-nav">
-    <div class="nav-item aktif" onclick="location.reload()">
-        <i class="bi bi-radar"></i> <span>Dashboard</span>
-    </div>
-    <div class="nav-item" onclick="logoutTeknisi()">
-        <i class="bi bi-box-arrow-right"></i> <span>Keluar</span>
-    </div>
-</nav>
-<!-- OVERLAY TAMPILAN SERVICE KERJA -->
-<div id="serviceWorkspaceOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-utama); z-index:9999; overflow-y:auto; animation: slideUp 0.3s ease-out;">
-    
-    <!-- Sticky Header -->
-    <div style="background:var(--bg-kartu); padding:15px; position:sticky; top:0; z-index:10; border-bottom:1px solid var(--border-line); display:flex; justify-content:space-between; align-items:center;">
-        <button onclick="tutupWorkspace()" style="background:none; border:none; font-size:1.2rem; color:var(--teks-utama);"><i class="bi bi-arrow-left"></i></button>
-        <h3 style="font-size:1.1rem; margin:0;" id="wsKodeOrder">Order -</h3>
-        <span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold;">Diproses</span>
+    <!-- MAIN WRAPPER -->
+    <div class="main-wrapper">
+        
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+                <span class="topbar-title">Teknisi Panel</span>
+            </div>
+            <div class="topbar-right">
+                <div class="notif-btn">
+                    <i class="bi bi-bell"></i>
+                    <div class="notif-dot"></div>
+                </div>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Teknisi&background=0D8ABC&color=fff" id="imgAvatar" alt="Avatar">
+                    <span class="nama" id="namaHeader">Teknisi</span>
+                    <div class="status-duty" id="btnStatusKerja" onclick="toggleStatus()">On Duty</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- KONTEN 1: DASHBOARD (Utama) -->
+        <main class="content active" id="tab-dashboard">
+            <div class="mobile-profile-card" style="display: none;" id="mobileProfile">
+                <div class="mobile-profile-info">
+                    <img src="https://ui-avatars.com/api/?name=Teknisi&background=0D8ABC&color=fff" id="imgAvatarMobile" alt="Avatar">
+                    <div>
+                        <h3 id="namaMobile">Teknisi</h3>
+                        <div class="status-duty" id="btnStatusKerjaMobile" onclick="toggleStatus()" style="margin-top: 5px;">On Duty</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card" onclick="bukaTab('orderMasuk', document.querySelectorAll('.sidebar-menu li')[1])" style="cursor:pointer;">
+                    <div class="stat-info">
+                        <h3>Order Tersedia</h3>
+                        <h2 id="statOrderMasuk">0</h2>
+                        <p>Area Anda</p>
+                    </div>
+                    <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;"><i class="bi bi-bag"></i></div>
+                </div>
+                <div class="stat-card" onclick="bukaTab('tugasAktif', document.querySelectorAll('.sidebar-menu li')[2])" style="cursor:pointer;">
+                    <div class="stat-info">
+                        <h3>Tugas Diambil</h3>
+                        <h2 id="statTugasAktif">0</h2>
+                        <p>Sedang dikerjakan</p>
+                    </div>
+                    <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="bi bi-tools"></i></div>
+                </div>
+            </div>
+
+            <div class="bawah-grid">
+                <div class="card-box">
+                    <div class="card-header">
+                        <h3>Tugas Aktif Terkini</h3>
+                        <a onclick="bukaTab('tugasAktif', document.querySelectorAll('.sidebar-menu li')[2])" class="btn-link">Lihat Semua</a>
+                    </div>
+                    <div class="list-container" id="listTugasAktifDashboard">
+                        <!-- Data disuntikkan oleh JS -->
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <div class="card-header">
+                        <h3>Ringkasan Anda</h3>
+                    </div>
+                    <div class="donut-container">
+                        <div class="donut-chart">
+                            <div class="donut-inner">
+                                <h2 id="chartTotalOrder">0</h2>
+                                <span>Total Order</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- KONTEN 2: ORDER MASUK -->
+        <main class="content" id="tab-orderMasuk">
+            <h2 style="margin-bottom: 1rem; font-size: 1.3rem;">Order Masuk (Radar)</h2>
+            <div class="card-box">
+                <div id="radarKosong" class="empty-state">
+                    <i class="bi bi-radar"></i>
+                    <h3>Belum ada pesanan</h3>
+                    <p style="font-size: 0.9rem;">Pastikan status Anda "On Duty".</p>
+                </div>
+                <div id="listOrderMasukFull"></div>
+            </div>
+        </main>
+
+        <!-- KONTEN 3: TUGAS AKTIF -->
+        <main class="content" id="tab-tugasAktif">
+            <h2 style="margin-bottom: 1rem; font-size: 1.3rem;">Tugas Aktif (Work in Progress)</h2>
+            <div class="card-box">
+                <div id="aktifKosong" class="empty-state">
+                    <i class="bi bi-clipboard-check"></i>
+                    <h3>Tidak Ada Tugas</h3>
+                    <p style="font-size: 0.9rem;">Ambil order dari menu "Order Masuk".</p>
+                </div>
+                <div id="listTugasAktifFull"></div>
+            </div>
+        </main>
     </div>
 
-    <div class="container" style="padding-bottom: 80px;" id="wsKonten">
-        <!-- Konten Detail akan disuntikkan via JS -->
+    <!-- OVERLAY WORKSPACE (RUANG KERJA & QC) -->
+    <div id="serviceWorkspaceOverlay" class="full-overlay">
+        <div class="overlay-header">
+            <button onclick="tutupWorkspace()" style="background:none; border:none; font-size:1.5rem; color:var(--text-main); cursor:pointer;"><i class="bi bi-arrow-left"></i></button>
+            <h3 style="margin:0; flex:1;" id="wsKodeOrder">Ruang Kerja - </h3>
+        </div>
+        <div style="padding: 1.5rem; flex: 1; overflow-y: auto;" id="wsKonten">
+            <!-- Disuntikkan JS -->
+        </div>
+        <div style="background:var(--bg-card); padding:15px; border-top:1px solid var(--border); display:flex; gap:10px; position: sticky; bottom: 0;">
+            <button class="btn" style="flex:1; background:#f8fafc; border:1px solid var(--primary); color:var(--primary);" id="btnWsChat"><i class="bi bi-chat-dots-fill"></i> Chat User</button>
+            <button class="btn btn-take" style="flex:2;" id="btnWsSelesai"><i class="bi bi-check-circle-fill"></i> Selesaikan Servis</button>
+        </div>
     </div>
-<!-- OVERLAY CHAT TEKNISI -->
-<div id="chatTeknisiOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-utama); z-index:10000; flex-direction:column; animation: slideUp 0.3s ease-out;">
-    <div style="background:var(--bg-kartu); padding:15px; border-bottom:1px solid var(--border-line); display:flex; align-items:center; gap:10px; position:sticky; top:0;">
-        <button onclick="tutupChatTeknisi()" style="background:none; border:none; font-size:1.2rem; color:var(--teks-utama);"><i class="bi bi-arrow-left"></i></button>
-        <h3 style="font-size:1.1rem; margin:0;">Ruang Chat: <span id="chatKodeOrderTitle" style="color:var(--primary);"></span></h3>
-    </div>
-    
-    <div id="chatBoxTeknisi" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:10px; background:var(--bg-utama);">
-        <!-- Pesan Chat akan Muncul di Sini -->
-    </div>
-    
-    <div style="background:var(--bg-kartu); padding:15px; border-top:1px solid var(--border-line); display:flex; gap:10px; position:sticky; bottom:0;">
-        <input type="text" id="inputChatTeknisi" placeholder="Ketik pesan untuk pelanggan..." style="flex:1; padding:12px; border-radius:12px; border:1px solid var(--border-line); outline:none;" onkeypress="if(event.key === 'Enter') kirimChatTeknisi()">
-        <button class="btn btn-take" style="margin:0; width:auto; padding:0 20px; border-radius:12px;" onclick="kirimChatTeknisi()"><i class="bi bi-send-fill"></i></button>
-    </div>
-</div>
-    <!-- Sticky Bottom Actions -->
-    <div style="position:fixed; bottom:0; left:0; width:100%; background:var(--bg-kartu); padding:15px; border-top:1px solid var(--border-line); display:flex; gap:10px;">
-        <button class="btn" style="flex:1; background:var(--bg-utama); color:var(--primary); border:1px solid var(--border-line);" id="btnWsChat">
-            <i class="bi bi-chat-dots-fill"></i> Chat
-        </button>
-        <button class="btn btn-take" style="flex:2; margin:0;" id="btnWsSelesai">
-            <i class="bi bi-check-circle-fill"></i> Selesaikan Servis
-        </button>
-    </div>
-</div>
 
-<style>
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .qc-box { background: var(--bg-kartu); border: 1px solid var(--border-line); border-radius: 12px; padding: 15px; margin-top: 15px; }
-    .qc-box label { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border-line); font-size: 0.9rem;}
-</style>
+    <!-- OVERLAY CHAT TEKNISI -->
+    <div id="chatTeknisiOverlay" class="full-overlay" style="z-index: 10001;">
+        <div class="overlay-header">
+            <button onclick="tutupChatTeknisi()" style="background:none; border:none; font-size:1.5rem; color:var(--text-main); cursor:pointer;"><i class="bi bi-arrow-left"></i></button>
+            <h3 style="margin:0;">Chat: <span id="chatKodeOrderTitle" style="color:var(--primary);"></span></h3>
+        </div>
+        <div id="chatBoxTeknisi" style="flex:1; overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:10px;"></div>
+        <div style="background:var(--bg-card); padding:15px; border-top:1px solid var(--border); display:flex; gap:10px; position: sticky; bottom: 0;">
+            <input type="text" id="inputChatTeknisi" placeholder="Ketik pesan..." style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border); outline:none;" onkeypress="if(event.key === 'Enter') kirimChatTeknisi()">
+            <button class="btn btn-take" style="padding:0 20px;" onclick="kirimChatTeknisi()"><i class="bi bi-send-fill"></i></button>
+        </div>
+    </div>
+
+    <!-- SCRIPT FUNGSI (PENGGABUNGAN JS LAMA KE UI BARU) -->
     <script>
         const socket = io(window.location.origin);
-        let profilTeknisi = { nama: "", keahlian: [] };
+        let profilTeknisi = { nama: "Teknisi" };
         let isAktif = true;
+        let daftarTugasAktif = []; 
+        let aktifChatKode = "";
 
-        // Helper Header Authorization untuk endpoint khusus Teknisi
+        // 1. Inisialisasi Auth & UI
         function getAuthHeaderTeknisi() {
             const token = sessionStorage.getItem("teknisiToken");
             return token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -248,435 +350,297 @@
             if(token) {
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
                 profilTeknisi.nama = sessionStorage.getItem("teknisiNama") || "Teknisi";
-                document.getElementById("namaHeader").textContent = profilTeknisi.nama;
+                updateNamaUI(profilTeknisi.nama);
                 muatOrderTersedia(); 
             }
+            checkMobile();
         });
-        
 
+        function updateNamaUI(nama) {
+            document.getElementById("namaHeader").textContent = nama;
+            document.getElementById("namaMobile").textContent = nama;
+            const urlAvatar = `https://ui-avatars.com/api/?name=${nama}&background=0D8ABC&color=fff`;
+            document.getElementById("imgAvatar").src = urlAvatar;
+            document.getElementById("imgAvatarMobile").src = urlAvatar;
+        }
+
+        function checkMobile() {
+            const isMob = window.innerWidth <= 992;
+            document.getElementById('mobileProfile').style.display = isMob ? 'flex' : 'none';
+        }
+        window.addEventListener('resize', checkMobile);
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        function bukaTab(tabId, elLi) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+            elLi.classList.add('active');
+
+            if(window.innerWidth <= 992) toggleSidebar(); // Tutup sidebar otomatis di mobile
+        }
+
+        // 2. Fungsi Login/Logout
         function prosesLoginTeknisi() {
             const username = document.getElementById("teknisiUsername").value.trim();
             const password = document.getElementById("teknisiPassword").value;
-            if(!username || !password) return Swal.fire('Peringatan', 'Username dan Password wajib diisi', 'warning');
+            if(!username || !password) return Swal.fire('Peringatan', 'Isi username dan password', 'warning');
 
             const btn = document.querySelector('.login-box .btn-take');
-            btn.innerHTML = '<i class="bi bi-hourglass"></i> Memproses...';
-            btn.disabled = true;
+            btn.innerHTML = 'Memproses...'; btn.disabled = true;
 
             fetch(`${window.location.origin}/api/teknisi/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
-            })
-            .then(async res => {
+            }).then(async res => {
                 const data = await res.json();
                 if(!res.ok) throw new Error(data.message || "Login gagal");
                 return data;
-            })
-            .then(data => {
+            }).then(data => {
                 sessionStorage.setItem("teknisiToken", data.token);
                 sessionStorage.setItem("teknisiNama", data.nama);
-                profilTeknisi.nama = data.nama;
-                document.getElementById("namaHeader").textContent = data.nama;
-                
+                profilTeknisi.nama = data.nama; updateNamaUI(data.nama);
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
-                Swal.fire({ icon: 'success', title: data.message, timer: 1500, showConfirmButton: false });
-                
                 muatOrderTersedia(); 
-            })
-            .catch((err) => {
-                Swal.fire('Gagal', err.message, 'error');
-            })
-            .finally(() => {
-                btn.innerHTML = 'Masuk Panel Teknisi';
-                btn.disabled = false;
-            });
+            }).catch(err => Swal.fire('Gagal', err.message, 'error'))
+            .finally(() => { btn.innerHTML = 'Masuk Panel'; btn.disabled = false; });
         }
 
-        function logoutTeknisi() {
-            sessionStorage.removeItem("teknisiToken");
-            sessionStorage.removeItem("teknisiNama");
-            location.reload();
-        }
-        let daftarTugasAktif = []; // Menyimpan state tugas yang sedang dipegang
+        function logoutTeknisi() { sessionStorage.clear(); location.reload(); }
 
-// 1. Sistem Navigasi Tab (Order Baru vs Tugas Aktif)
-function gantiTab(target) {
-    const secBaru = document.getElementById('sectionOrderBaru');
-    const secAktif = document.getElementById('sectionTugasAktif');
-    const btnBaru = document.getElementById('tabBtnBaru');
-    const btnAktif = document.getElementById('tabBtnAktif');
-
-    if(target === 'baru') {
-        secBaru.style.display = 'block';
-        secAktif.style.display = 'none';
-        btnBaru.style.background = 'var(--primary)';
-        btnBaru.style.color = 'white';
-        btnAktif.style.background = 'var(--bg-utama)';
-        btnAktif.style.color = 'var(--teks-utama)';
-    } else {
-        secBaru.style.display = 'none';
-        secAktif.style.display = 'block';
-        btnAktif.style.background = 'var(--primary)';
-        btnAktif.style.color = 'white';
-        btnBaru.style.background = 'var(--bg-utama)';
-        btnBaru.style.color = 'var(--teks-utama)';
-    }
-}
-
-// 2. Implementasi Skeleton Loading saat memuat data awal
-function tampilkanSkeletonLoading() {
-    const list = document.getElementById('listOrderBaru');
-    list.innerHTML = `
-        <div style="background: var(--bg-kartu); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; animation: pulse 1.5s infinite;">
-            <div style="height: 20px; background: #e2e8f0; border-radius: 4px; width: 40%; margin-bottom: 10px;"></div>
-            <div style="height: 15px; background: #e2e8f0; border-radius: 4px; width: 70%; margin-bottom: 8px;"></div>
-            <div style="height: 40px; background: #e2e8f0; border-radius: 8px; margin-top: 15px;"></div>
-        </div>
-    `;
-}
-
+        // 3. Sistem Status & Order Masuk
         function toggleStatus() {
             isAktif = !isAktif;
-            const btn = document.getElementById('btnStatusKerja');
-            const lbl = document.getElementById('lblStatus');
+            const statusBtns = [document.getElementById('btnStatusKerja'), document.getElementById('btnStatusKerjaMobile')];
             const statusBaru = isAktif ? "luang" : "offline";
             
-            if(isAktif) {
-                btn.classList.add('aktif');
-                lbl.innerText = "On Duty";
-            } else {
-                btn.classList.remove('aktif');
-                lbl.innerText = "Offline";
-            }
+            statusBtns.forEach(btn => {
+                if(isAktif) { btn.classList.remove('offline'); btn.innerText = "On Duty"; } 
+                else { btn.classList.add('offline'); btn.innerText = "Offline"; }
+            });
 
             fetch(`${window.location.origin}/api/teknisi/status`, {
-                method: 'PUT',
-                headers: getAuthHeaderTeknisi(),
+                method: 'PUT', headers: getAuthHeaderTeknisi(),
                 body: JSON.stringify({ statusKerja: statusBaru })
-            }).catch(err => console.error("Gagal sinkron status:", err));
+            });
         }
 
-// Modifikasi fungsi muatOrderTersedia dengan Skeleton
-function muatOrderTersedia() {
-    tampilkanSkeletonLoading();
-    fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById('listOrderBaru').innerHTML = "";
-        if(data && data.length > 0) {
-            data.forEach(order => tampilkanKartuOrder(order));
+        function muatOrderTersedia() {
+            document.getElementById('listOrderMasukFull').innerHTML = "<div style='text-align:center; padding:2rem;'>Memuat data...</div>";
+            fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
+            .then(res => res.json()).then(data => {
+                document.getElementById('listOrderMasukFull').innerHTML = "";
+                if(data && data.length > 0) {
+                    data.forEach(order => tampilkanKartuOrder(order));
+                }
+                cekStatsUpdate();
+            });
         }
-        cekEmptyState();
-    }).catch(err => console.error("Gagal memuat order: ", err));
-}
 
         socket.on('orderSudahDiambil', (data) => {
-    const kartuTarget = document.getElementById(`order-${data.kodeOrder}`);
-    if (kartuTarget) {
-        // PERBAIKAN: Hanya hapus kartu dari layar JIKA yang mengambil BUKAN teknisi ini
-        if (data.oleh !== profilTeknisi.nama) {
-            kartuTarget.remove();
-            cekEmptyState();
-            
-            Swal.fire({
-                title: 'Terlewat!',
-                text: `Order ${data.kodeOrder} baru saja diambil oleh ${data.oleh}`,
-                icon: 'info',
-                timer: 2000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-        }
-    }
-});
+            const k = document.getElementById(`ordBaru-${data.kodeOrder}`);
+            if (k && data.oleh !== profilTeknisi.nama) { k.remove(); cekStatsUpdate(); }
+        });
 
         function tampilkanKartuOrder(order) {
-            if (document.getElementById(`order-${order.kode}`)) return; 
-
-            document.getElementById('radarKosong').style.display = 'none';
-
-            const div = document.createElement('div');
-            div.className = 'order-card';
-            div.id = `order-${order.kode}`;
+            if (document.getElementById(`ordBaru-${order.kode}`)) return; 
             
-            let ikonUnit = order.layanan && order.layanan.toLowerCase().includes("laptop") ? "bi-laptop" : "bi-phone";
-            
-            let linkMaps = "";
-            if(order.lat && order.lng) {
-                linkMaps = `<a href="https://www.google.com/maps?q=${order.lat},${order.lng}" target="_blank" class="btn btn-secondary" style="width: 100%; font-size:0.9rem; margin-top:5px;">
-                                <i class="bi bi-compass-fill"></i> Navigasi Rute Maps
-                            </a>`;
-            }
-
-            div.innerHTML = `
-                <div class="order-header">
-                    <h4>${order.kode}</h4>
-                    <span class="badge-layanan">
-                        ${order.lokasiServis === 'home_service' ? '<i class="bi bi-house-door-fill"></i> On-Site' : '<i class="bi bi-geo-alt-fill"></i> COD'}
-                    </span>
-                </div>
-                
-                <div class="info-row">
-                    <i class="bi bi-person-bounding-box"></i>
-                    <div>
-                        <strong style="color: var(--teks-utama); font-size: 1rem;">${order.nama}</strong>
-                        <div style="font-size: 0.8rem; margin-top: 2px;">${order.wa}</div>
+            const layoutHTML = `
+                <div class="list-item" id="ordBaru-${order.kode}">
+                    <div class="list-info">
+                        <h4>${order.kode} <span class="badge-status status-baru" style="margin-left:5px;">Baru</span></h4>
+                        <p>${order.nama} - ${order.merek} ${order.tipe}</p>
+                        <span><i class="bi bi-geo-alt"></i> ${order.lokasiServis === 'home_service' ? 'Kunjungan (On-Site)' : 'Titik COD'}</span>
+                        <div style="font-size:0.8rem; background:#fffbeb; padding:5px 8px; border-radius:6px; margin-top:5px; border-left:3px solid #f59e0b;">
+                            Keluhan: ${order.kerusakan}
+                        </div>
+                    </div>
+                    <div class="list-action">
+                        <button class="btn btn-take" onclick="tarikOrder('${order.kode}', '${order.nama}', '${order.merek} ${order.tipe}')">Ambil</button>
                     </div>
                 </div>
-
-                <div class="info-row">
-                    <i class="bi ${ikonUnit}"></i>
-                    <div>
-                        <strong style="color: var(--teks-utama); font-size: 0.95rem;">${order.merek} ${order.tipe}</strong>
-                    </div>
-                </div>
-                
-                <div class="kerusakan-box">
-                    <div class="kerusakan-box-title"><i class="bi bi-exclamation-triangle-fill"></i> Detail Kerusakan:</div>
-                    <div class="kerusakan-box-text">${order.kerusakan || "Tidak ada detail keluhan."}</div>
-                </div>
-
-                <div id="map-${order.kode}" style="height: 140px; width: 100%; border-radius: 12px; margin-top: 5px; z-index: 1; border: 1px solid var(--border-line); display: ${order.lat ? 'block' : 'none'};"></div>
-                
-                ${linkMaps}
-
-                <button class="btn btn-take" onclick="tarikOrder('${order.kode}')">
-                    Ambil Pekerjaan <i class="bi bi-arrow-right-circle-fill"></i>
-                </button>
             `;
+            document.getElementById('listOrderMasukFull').innerHTML += layoutHTML;
+            cekStatsUpdate();
+        }
+
+        // 4. Sistem Ambil Order -> Tugas Aktif
+        function tarikOrder(kodeOrder, nama, unit) {
+            socket.emit('teknisiAmbilOrder', { kodeOrder: kodeOrder, namaTeknisi: profilTeknisi.nama });
             
-            document.getElementById('listOrderBaru').prepend(div);
+            Swal.fire({ title: 'Tugas Diterima!', icon: 'success', timer: 1500, showConfirmButton: false });
             
-            if(order.lat && order.lng) {
-                setTimeout(() => {
-                    const mapCenter = [parseFloat(order.lat), parseFloat(order.lng)];
-                    const mapMini = L.map(`map-${order.kode}`, {
-                        zoomControl: false, dragging: false, scrollWheelZoom: false
-                    }).setView(mapCenter, 15);
+            // Pindahkan elemen
+            const k = document.getElementById(`ordBaru-${kodeOrder}`);
+            if(k) k.remove();
+
+            if (!daftarTugasAktif.includes(kodeOrder)) daftarTugasAktif.push(kodeOrder);
+            renderTugasAktif(kodeOrder, nama, unit);
+            cekStatsUpdate();
+        }
+
+        function renderTugasAktif(kodeOrder, nama, unit) {
+            const html = `
+                <div class="list-item" id="ordAktif-${kodeOrder}">
+                    <div class="list-info">
+                        <h4>${kodeOrder}</h4>
+                        <p>${nama}</p>
+                        <span>${unit}</span>
+                    </div>
+                    <div class="list-action">
+                        <span class="badge-status status-diagnosa">Diproses</span>
+                        <button class="btn btn-workspace" onclick="bukaWorkspace('${kodeOrder}')"><i class="bi bi-tools"></i> Buka</button>
+                    </div>
+                </div>
+            `;
+            // Pasang di Tab Full & Dashboard Mini
+            document.getElementById('listTugasAktifFull').innerHTML += html;
+            document.getElementById('listTugasAktifDashboard').innerHTML += html;
+        }
+
+        function cekStatsUpdate() {
+            const countMasuk = document.getElementById('listOrderMasukFull').children.length;
+            const countAktif = daftarTugasAktif.length;
+            
+            document.getElementById('radarKosong').style.display = countMasuk === 0 ? 'block' : 'none';
+            document.getElementById('aktifKosong').style.display = countAktif === 0 ? 'block' : 'none';
+            
+            // Update Angka di UI
+            document.getElementById('badgeOrderMasuk').innerText = countMasuk;
+            document.getElementById('statOrderMasuk').innerText = countMasuk;
+            
+            document.getElementById('badgeTugasAktif').innerText = countAktif;
+            document.getElementById('statTugasAktif').innerText = countAktif;
+            
+            document.getElementById('chartTotalOrder').innerText = countMasuk + countAktif;
+        }
+
+        // 5. Sistem Workspace & Penyelesaian Tugas
+        function bukaWorkspace(kodeOrder) {
+            fetch(`${window.location.origin}/api/orders/${kodeOrder}`, { headers: getAuthHeaderTeknisi() })
+            .then(res => res.json()).then(order => {
+                document.getElementById('serviceWorkspaceOverlay').style.display = 'flex';
+                document.getElementById('wsKodeOrder').innerText = "Ruang Kerja - " + kodeOrder;
+                
+                document.getElementById('wsKonten').innerHTML = `
+                    <div class="card-box">
+                        <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-person-lines-fill"></i> Data Pelanggan</h4>
+                        <p><strong>Nama:</strong> ${order.nama}</p>
+                        <p><strong>Unit:</strong> ${order.merek} ${order.tipe}</p>
+                        <p><strong>Keluhan:</strong> ${order.kerusakan}</p>
+                    </div>
                     
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapMini);
-                    L.marker(mapCenter).addTo(mapMini);
-                }, 300);
-            }
-            
-            if(window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]); 
-        }
+                    <div class="card-box" style="margin-top:1rem;">
+                        <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-ui-checks"></i> QC Checklist (Akhir)</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <label><input type="checkbox" id="qc_layar"> Layar & Sentuhan</label>
+                            <label><input type="checkbox" id="qc_baterai"> Baterai & Charging</label>
+                            <label><input type="checkbox" id="qc_kamera"> Kamera / Sinyal</label>
+                        </div>
+                    </div>
 
-     // 1. Modifikasi tarikOrder
-function tarikOrder(kodeOrder) {
-    // Beritahu server bahwa teknisi ini mengambil order
-    socket.emit('teknisiAmbilOrder', { 
-        kodeOrder: kodeOrder, 
-        namaTeknisi: profilTeknisi.nama 
-    });
-    
-    Swal.fire({
-        title: 'Tugas Diterima!',
-        text: 'Order telah masuk ke antrean tugas aktif Anda.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-    });
+                    <div class="card-box" style="margin-top:1rem;">
+                        <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-receipt"></i> Pelaporan</h4>
+                        <label style="font-size:0.85rem; font-weight:bold;">Biaya Sparepart / Jasa (Rp):</label>
+                        <input type="number" id="biayaPart-${kodeOrder}" value="${order.biayaSuku || 0}" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border);">
+                    </div>
+                `;
 
-    const kartu = document.getElementById(`order-${kodeOrder}`);
-    if(kartu) {
-        kartu.style.borderLeft = "6px solid var(--success)";
-        
-        // Ubah tombol di kartu agar berubah menjadi tombol "Buka Ruang Kerja"
-        const btnArea = kartu.querySelector('.btn-take');
-        if(btnArea) {
-            btnArea.outerHTML = `
-                <button class="btn" style="width: 100%; background: var(--warning); color: white; margin-top: 10px;" onclick="bukaWorkspace('${kodeOrder}')">
-                    <i class="bi bi-tools"></i> Buka Ruang Kerja
-                </button>
-            `;
-        }
-        
-        // PERBAIKAN: Cukup gunakan prepend. Metode append/prepend otomatis memindahkan elemen di DOM tanpa perlu removeChild()
-        document.getElementById('listTugasAktif').prepend(kartu);
-        document.getElementById('aktifKosong').style.display = 'none';
-        
-        // Tambahkan ke array state lokal
-        if (!daftarTugasAktif.includes(kodeOrder)) {
-            daftarTugasAktif.push(kodeOrder);
-        }
-        document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
-        
-        // Periksa apakah daftar radar kosong setelah diambil
-        cekEmptyState();
-    }
-}
-
-        function updateStatusKerja(kode, statusBaru) {
-            fetch(`${window.location.origin}/api/orders/${kode}`, {
-                method: "PUT", headers: getAuthHeaderTeknisi(),
-                body: JSON.stringify({ status: statusBaru })
-            }).then(res => {
-                if(res.ok) Swal.fire('Tersimpan', `Status pekerjaan berhasil diubah.`, 'success');
+                document.getElementById('btnWsChat').onclick = () => bukaChatTeknisi(kodeOrder);
+                document.getElementById('btnWsSelesai').onclick = () => selesaikanTugas(kodeOrder);
             });
         }
-        
-        function hubungiPelanggan(kode) {
-            Swal.fire('Fitur Chat', `Membuka ruang chat untuk pesanan ${kode}...`, 'info');
-        }
 
-        function cekEmptyState() {
-            const list = document.getElementById('listOrderBaru');
-            const empty = document.getElementById('radarKosong');
-            empty.style.display = list.children.length === 0 ? 'block' : 'none';
-        }
-let aktifChatKode = "";
+        function tutupWorkspace() { document.getElementById('serviceWorkspaceOverlay').style.display = 'none'; }
 
-// 1. FUNGSI WORKSPACE MENGGUNAKAN DATA ASLI DARI SERVER
-function bukaWorkspace(kodeOrder) {
-    // Ambil data detail terbaru dari server
-    fetch(`${window.location.origin}/api/orders/${kodeOrder}`, { headers: getAuthHeaderTeknisi() })
-    .then(res => res.json())
-    .then(order => {
-        document.getElementById('serviceWorkspaceOverlay').style.display = 'block';
-        document.getElementById('wsKodeOrder').innerText = kodeOrder;
-        
-        document.getElementById('wsKonten').innerHTML = `
-            <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
-                <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-person-lines-fill"></i> Detail Pelanggan</h4>
-                <p style="margin:0; font-size:0.9rem;"><strong>Nama:</strong> ${order.nama}</p>
-                <p style="margin:5px 0 0 0; font-size:0.9rem;"><strong>Unit:</strong> ${order.merek} ${order.tipe}</p>
-                <p style="margin:5px 0 0 0; font-size:0.9rem; color:var(--warning);"><strong>Kendala:</strong> ${order.kerusakan}</p>
-            </div>
-
-            <div class="qc-box">
-                <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-ui-checks"></i> QC Checklist (Akhir)</h4>
-                <label><input type="checkbox" id="qc_layar" style="width:18px; height:18px;"> Layar & Sentuhan</label>
-                <label><input type="checkbox" id="qc_baterai" style="width:18px; height:18px;"> Baterai & Charging</label>
-                <label style="border:none;"><input type="checkbox" id="qc_kamera" style="width:18px; height:18px;"> Kamera / Sinyal / Lainnya</label>
-            </div>
-
-            <div style="background:var(--bg-kartu); padding:15px; border-radius:12px; margin-top:15px; border:1px solid var(--border-line);">
-                <h4 style="margin-bottom:10px; font-size:1rem; color:var(--primary);"><i class="bi bi-receipt"></i> Logistik & Tagihan</h4>
-                <label style="font-size:0.85rem; font-weight:bold;">Biaya Sparepart / Jasa (Rp):</label>
-                <input type="number" id="biayaPart-${kodeOrder}" value="${order.biayaSuku || 0}" placeholder="0" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border-line);">
-                
-                <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:15px;">Upload Bukti / Foto Komponen (Opsional):</label>
-                <input type="file" id="fotoBukti-${kodeOrder}" accept="image/*" style="width:100%; padding:10px; margin-top:5px; background:var(--bg-utama); border-radius:8px;">
-            </div>
-        `;
-
-        document.getElementById('btnWsChat').onclick = () => bukaChatTeknisi(kodeOrder);
-        document.getElementById('btnWsSelesai').onclick = () => selesaikanTugas(kodeOrder);
-    });
-}
-
-// 2. FUNGSI SELESAIKAN TUGAS (MENGGUNAKAN ENDPOINT YANG BENAR)
-function selesaikanTugas(kodeOrder) {
-    const biayaPart = document.getElementById(`biayaPart-${kodeOrder}`).value || 0;
-    const fileInput = document.getElementById(`fotoBukti-${kodeOrder}`);
-    
-    Swal.fire({
-        title: 'Selesaikan Pekerjaan?',
-        text: `Tandai selesai dengan biaya Rp ${biayaPart}?`,
-        icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Selesai'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const formData = new FormData();
-            formData.append('status', 'selesai_servis');
-            formData.append('biayaSuku', biayaPart);
+        function selesaikanTugas(kodeOrder) {
+            const biayaPart = document.getElementById(`biayaPart-${kodeOrder}`).value || 0;
             
-            // Simpan data QC
-            formData.append('qcChecklist[layar]', document.getElementById('qc_layar').checked);
-            formData.append('qcChecklist[baterai]', document.getElementById('qc_baterai').checked);
-            formData.append('qcChecklist[kamera]', document.getElementById('qc_kamera').checked);
+            Swal.fire({
+                title: 'Selesai Servis?', text: `Laporan dengan biaya Rp ${biayaPart}?`,
+                icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const payload = {
+                        status: 'selesai_servis',
+                        biayaSuku: biayaPart,
+                        qcChecklist: {
+                            layar: document.getElementById('qc_layar').checked,
+                            baterai: document.getElementById('qc_baterai').checked,
+                            kamera: document.getElementById('qc_kamera').checked
+                        }
+                    };
 
-            if (fileInput.files.length > 0) formData.append('fotoPart', fileInput.files[0]);
-
-            // Endpoint yang benar adalah PUT /api/orders/:kode
-            fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
-                method: "PUT",
-                headers: { "Authorization": `Bearer ${sessionStorage.getItem("teknisiToken")}` },
-                body: formData
-            }).then(res => {
-                if(res.ok) {
-                    Swal.fire('Sukses', 'Servis selesai dilaporkan!', 'success');
-                    document.getElementById(`order-${kodeOrder}`).remove();
-                    daftarTugasAktif = daftarTugasAktif.filter(item => item !== kodeOrder);
-                    document.getElementById('badgeTugasAktif').innerText = daftarTugasAktif.length;
-                    if(daftarTugasAktif.length === 0) document.getElementById('aktifKosong').style.display = 'block';
-                    tutupWorkspace();
+                    fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
+                        method: "PUT", headers: getAuthHeaderTeknisi(), body: JSON.stringify(payload)
+                    }).then(res => {
+                        if(res.ok) {
+                            Swal.fire('Sukses', 'Servis selesai dilaporkan!', 'success');
+                            
+                            // Hapus Element List dari Tab & Dashboard
+                            document.querySelectorAll(`#ordAktif-${kodeOrder}`).forEach(e => e.remove());
+                            
+                            daftarTugasAktif = daftarTugasAktif.filter(item => item !== kodeOrder);
+                            cekStatsUpdate(); tutupWorkspace();
+                        }
+                    });
                 }
             });
         }
-    });
-}
 
-// 3. LOGIKA SISTEM CHAT TEKNISI
-function bukaChatTeknisi(kodeOrder) {
-    aktifChatKode = kodeOrder;
-    document.getElementById('chatTeknisiOverlay').style.display = 'flex';
-    document.getElementById('chatKodeOrderTitle').innerText = kodeOrder;
-    muatPesanTeknisi();
-}
+        // 6. Sistem Chat
+        function bukaChatTeknisi(kodeOrder) {
+            aktifChatKode = kodeOrder;
+            document.getElementById('chatTeknisiOverlay').style.display = 'flex';
+            document.getElementById('chatKodeOrderTitle').innerText = kodeOrder;
+            muatPesanTeknisi();
+        }
 
-function tutupChatTeknisi() {
-    document.getElementById('chatTeknisiOverlay').style.display = 'none';
-    aktifChatKode = "";
-}
+        function tutupChatTeknisi() {
+            document.getElementById('chatTeknisiOverlay').style.display = 'none';
+            aktifChatKode = "";
+        }
 
-function muatPesanTeknisi() {
-    if(!aktifChatKode) return;
-    const box = document.getElementById("chatBoxTeknisi");
-    fetch(`${window.location.origin}/api/chats/${aktifChatKode}`, { headers: getAuthHeaderTeknisi() })
-    .then(res => res.json())
-    .then(data => {
-        let html = "";
-        data.forEach(msg => {
-            let isSelf = (msg.pengirim === 'teknisi' || msg.pengirim === 'admin');
-            let align = isSelf ? 'align-self: flex-end; background:var(--primary); color:white;' : 'align-self: flex-start; background:white; color:black; border:1px solid var(--border-line);';
-            let label = msg.pengirim === 'user' ? '📱 Pelanggan' : (msg.pengirim === 'teknisi' ? `👨‍🔧 Saya (${msg.namaTeknisi || 'Teknisi'})` : '👨‍💻 Admin');
-            
-            html += `<div style="max-width:80%; padding:10px 14px; border-radius:12px; font-size:0.9rem; ${align}">
-                <strong style="font-size:0.8rem; opacity:0.9;">${label}:</strong><br>${msg.teks}
-                <span style="font-size:0.65rem; display:block; text-align:right; margin-top:5px; opacity:0.8;">${msg.waktu}</span>
-            </div>`;
+        function muatPesanTeknisi() {
+            if(!aktifChatKode) return;
+            const box = document.getElementById("chatBoxTeknisi");
+            fetch(`${window.location.origin}/api/chats/${aktifChatKode}`, { headers: getAuthHeaderTeknisi() })
+            .then(res => res.json()).then(data => {
+                let html = "";
+                data.forEach(msg => {
+                    let isSelf = (msg.pengirim === 'teknisi' || msg.pengirim === 'admin');
+                    let align = isSelf ? 'align-self: flex-end; background:var(--primary); color:white;' : 'align-self: flex-start; background:white; color:black; border:1px solid var(--border);';
+                    let label = msg.pengirim === 'user' ? '👤 Pelanggan' : '👨‍🔧 Saya';
+                    
+                    html += `<div style="max-width:80%; padding:10px 14px; border-radius:12px; font-size:0.9rem; ${align}">
+                        <strong style="font-size:0.8rem; opacity:0.9;">${label}:</strong><br>${msg.teks}
+                        <span style="font-size:0.65rem; display:block; text-align:right; margin-top:5px; opacity:0.8;">${msg.waktu}</span>
+                    </div>`;
+                });
+                box.innerHTML = html || `<div style="text-align:center; color:gray; margin-top:20px;">Mulai percakapan dengan pelanggan...</div>`;
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        function kirimChatTeknisi() {
+            const input = document.getElementById("inputChatTeknisi");
+            const teks = input.value.trim();
+            if(!teks || !aktifChatKode) return;
+
+            fetch(`${window.location.origin}/api/chats`, {
+                method: "POST", headers: getAuthHeaderTeknisi(),
+                body: JSON.stringify({ 
+                    kode: aktifChatKode, pengirim: 'teknisi', namaTeknisi: profilTeknisi.nama,
+                    teks: teks, waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) 
+                })
+            }).then(() => { input.value = ""; muatPesanTeknisi(); });
+        }
+
+        socket.on('chatBaruDiterima', (data) => {
+            if ((data.kode || data) === aktifChatKode) muatPesanTeknisi();
         });
-        box.innerHTML = html || `<div style="text-align:center; color:gray; margin-top:20px;">Mulai percakapan dengan pelanggan...</div>`;
-        box.scrollTop = box.scrollHeight;
-    });
-}
-
-function kirimChatTeknisi() {
-    const input = document.getElementById("inputChatTeknisi");
-    const teks = input.value.trim();
-    if(!teks || !aktifChatKode) return;
-
-    fetch(`${window.location.origin}/api/chats`, {
-        method: "POST", headers: getAuthHeaderTeknisi(),
-        body: JSON.stringify({ 
-            kode: aktifChatKode, 
-            pengirim: 'teknisi', 
-            namaTeknisi: profilTeknisi.nama,
-            teks: teks, 
-            waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) 
-        })
-    }).then(() => {
-        input.value = "";
-        muatPesanTeknisi();
-    });
-}
-
-// Dengarkan balasan baru via Websocket
-socket.on('chatBaruDiterima', (data) => {
-    const kodeTarget = data.kode || data;
-    if (kodeTarget === aktifChatKode) muatPesanTeknisi();
-});
-function tutupWorkspace() {
-    document.getElementById('serviceWorkspaceOverlay').style.display = 'none';
-}
-
-function cekEmptyState() {
-    const listBaru = document.getElementById('listOrderBaru');
-    document.getElementById('radarKosong').style.display = listBaru.children.length === 0 ? 'block' : 'none';
-}
     </script>
 </body>
 </html>
