@@ -1355,8 +1355,18 @@ function bukaModalKelola(kode) {
         document.getElementById("modalKelola").style.display = "block";
         document.getElementById("txtKodeHeader").textContent = kode;
         document.getElementById("kodePesanan").value = kode;
-        
         document.querySelectorAll(".tab-btn-modal")[0].click();
+        const statusValid = data.finansial.statusPembayaran === 'lunas' || data.pengerjaan.status === 'selesai';
+        document.getElementById("infoNama").textContent = data.pelanggan.nama;
+        document.getElementById("infoWa").textContent = data.pelanggan.wa;
+        document.getElementById("infoImei").textContent = data.perangkat.imeiSerial || "Tidak ada data";
+        document.getElementById("infoKeluhan").textContent = data.perangkat.keluhan || "-";
+        
+        document.getElementById("statusPesanan").value = data.pengerjaan.status || "pending";
+        document.getElementById("teknisi").value = data.pengerjaan.teknisi || "";
+        document.getElementById("biayaSuku").value = data.finansial.biayaSukuCadang || "";
+        document.getElementById("biayaJasa").value = data.finansial.biayaJasa || "";
+        document.getElementById("statusSparepart").value = data.finansial.inden.statusPart || "tersedia";
 
         const isLocked = data.pembayaranValid || data.status === "selesai";
         document.getElementById("bannerTerkunci").style.display = isLocked ? "block" : "none";
@@ -1593,6 +1603,7 @@ function hitungTotal(indenDibayar = false) {
 
 function tutupModal() { document.getElementById("modalKelola").style.display = "none"; aktifMembukaKode = ""; }
 
+/ 1. UPDATE FUNGSI PENYIMPANAN PERUBAHAN OLEH ADMIN
 function simpanPerubahan() {
     const kode = document.getElementById("kodePesanan").value;
     const chkTambahan = document.getElementById("chkAdaTambahan").checked;
@@ -1606,21 +1617,23 @@ function simpanPerubahan() {
 
     if (chkTambahan && !infoTamb) return Swal.fire('Peringatan', 'Deskripsi komponen tambahan harus diisi!', 'warning');
 
-    const updateData = {
-        status: document.getElementById("statusPesanan").value,
-        teknisi: document.getElementById("teknisi").value,
-        jadwal: document.getElementById("jadwal").value,
-        etaTeknisi: document.getElementById("etaUpdate").value,
-        statusSparepart: document.getElementById("statusSparepart").value,
-        biayaSuku: parseFloat(document.getElementById("biayaSuku").value) || 0,
-        biayaJasa: parseFloat(document.getElementById("biayaJasa").value) || 0,
-        adaKerusakanTambahan: chkTambahan,
-        infoKerusakanTambahan: infoTamb,
-        biayaSukuTambahan: biayaTamb,
-        statusPersetujuanTambahan: chkTambahan ? statusPersetujuanLama : null,
+const updateData = {
+        "pengerjaan.status": document.getElementById("statusPesanan").value,
+        "pengerjaan.teknisi": document.getElementById("teknisi").value,
+        "pengerjaan.jadwal": document.getElementById("jadwal").value,
+        "pengerjaan.etaTeknisi": document.getElementById("etaUpdate").value,
         
-        // ✨ SKEMA 4: Simpan Data QC Checklist
-        qcChecklist: {
+        "finansial.inden.statusPart": document.getElementById("statusSparepart").value,
+        "finansial.biayaSukuCadang": parseFloat(document.getElementById("biayaSuku").value) || 0,
+        "finansial.biayaJasa": parseFloat(document.getElementById("biayaJasa").value) || 0,
+        
+        // Data Tambahan (Jika Anda menaruhnya di skema pengerjaan/finansial, sesuaikan jalurnya)
+        "perangkat.adaKerusakanTambahan": chkTambahan,
+        "perangkat.infoKerusakanTambahan": infoTamb,
+        "finansial.biayaSukuTambahan": biayaTamb,
+        "pengerjaan.statusPersetujuanTambahan": chkTambahan ? statusPersetujuanLama : null,
+        
+        "pengerjaan.qcChecklist": {
             layar: document.getElementById("qc_layar").checked,
             baterai: document.getElementById("qc_baterai").checked,
             kamera: document.getElementById("qc_kamera").checked,
@@ -1641,7 +1654,6 @@ function simpanPerubahan() {
         muatData(); bukaModalKelola(kode); 
     }).catch(() => { btnSimpan.innerHTML = '<i class="bi bi-save"></i> Simpan Semua Perubahan Data'; btnSimpan.disabled = false; });
 }
-
 // ✨ SKEMA 3: Upload Fungsi Media Transparansi Workshop
 function uploadMediaTransparansi() {
     const kode = document.getElementById("kodePesanan").value;
