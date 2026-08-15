@@ -1757,9 +1757,13 @@ function cekStatus() {
     }).catch(() => console.warn("Sinkronisasi tertunda."));
 }
 
+// 1. UPDATE FUNGSI SINKRONISASI BIAYA
 function sinkronBiayaTampil(data) {
-    let biayaCek = 50000;
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+    let biayaCek = data.finansial.biayaPengecekan || 50000;
+    let suku = data.finansial.biayaSukuCadang || 0, 
+        jasa = data.finansial.biayaJasa || 0, 
+        tamb = (data.pengerjaan.statusPersetujuanTambahan === 'disetujui') ? (data.finansial.biayaSukuTambahan || 0) : 0;
+    
     let totalTagihan = biayaCek + suku + jasa + tamb;
     
     document.getElementById("lblBiayaCek").textContent = biayaCek.toLocaleString("id-ID");
@@ -1770,26 +1774,31 @@ function sinkronBiayaTampil(data) {
     document.getElementById("bayarTotal").textContent = totalTagihan.toLocaleString("id-ID");
 }
 
+// 2. UPDATE FUNGSI PENGISIAN FAKTUR
 function isiDataFaktur(data) {
     document.getElementById("fakturKode").textContent = data.kode;
-    document.getElementById("fakturNama").textContent = data.nama;
-    document.getElementById("fakturMerekTipe").textContent = `${data.merek.toUpperCase()} ${data.tipe}`;
-    document.getElementById("fakturKerusakan").textContent = data.kerusakan;
-    document.getElementById("fakturLayanan").textContent = data.layanan;
-    document.getElementById("fakturTeknisi").textContent = data.teknisi || "Belum ada teknisi";
+    document.getElementById("fakturNama").textContent = data.pelanggan.nama; // Update ke struktur baru
+    document.getElementById("fakturMerekTipe").textContent = `${data.perangkat.merek.toUpperCase()} ${data.perangkat.tipe}`;
+    document.getElementById("fakturKerusakan").textContent = data.perangkat.keluhan;
+    document.getElementById("fakturLayanan").textContent = data.perangkat.layanan;
+    document.getElementById("fakturTeknisi").textContent = data.pengerjaan.teknisi || "Belum ada teknisi";
     document.getElementById("noFaktur").textContent = "INV-" + data.kode.replace("HS-", "");
+    
     let tanggalFaktur = new Date().toLocaleString("id-ID");
-    if(data.jadwal) {
-        const df = new Date(data.jadwal);
+    if(data.pengerjaan.jadwal) {
+        const df = new Date(data.pengerjaan.jadwal);
         if (!isNaN(df.getTime())) {
             tanggalFaktur = df.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + " " + df.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         }
     }
     document.getElementById("fakturTanggal").textContent = tanggalFaktur;
-    document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
+    document.getElementById("fakturMetode").textContent = data.finansial.metodePembayaran || "Tunai";
 
-    let biayaCek = 50000;
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+    let biayaCek = data.finansial.biayaPengecekan || 50000;
+    let suku = data.finansial.biayaSukuCadang || 0, 
+        jasa = data.finansial.biayaJasa || 0, 
+        tamb = (data.pengerjaan.statusPersetujuanTambahan === 'disetujui') ? (data.finansial.biayaSukuTambahan || 0) : 0;
+        
     let biayaPokok = suku + jasa;
     let totalKeseluruhan = biayaCek + biayaPokok + tamb;
 
