@@ -229,52 +229,77 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// Definisi Skema Database (Mongoose Schemas)
 const OrderSchema = new mongoose.Schema({
-    kode: { type: String, required: true, unique: true }, 
-    nama: { type: String, required: true }, 
-    wa: { type: String, required: true }, 
-    merek: { type: String, required: true }, 
-    tipe: { type: String, required: true }, 
-    imeiSerial: { type: String, default: "" }, 
-    kerusakan: { type: String, default: "" }, 
-    layanan: { type: String, default: "" },
-    shareloc: { type: String, default: "" }, 
-    lat: { type: String, default: "" },
-    lng: { type: String, default: "" },
-    status: { type: String, default: "pending" }, 
-    tanggalInput: { type: String, default: () => new Date().toISOString().split('T')[0] },
-    waktuPesan: { type: Date, default: Date.now }, 
-    teknisi: { type: String, default: "" }, 
-    teknisiFoto: { type: String, default: "" }, 
-    jadwal: { type: String, default: "" }, 
-    lokasiServis: { type: String, default: "home_service" }, 
-    buktiPelunasan: { type: String, default: "" },  
-    etaTeknisi: { type: String, default: "" },
-    rating: { type: Number, default: 0 },
-    ulasan: { type: String, default: "" },
-    biayaSuku: { type: Number, default: 0 },
-    biayaJasa: { type: Number, default: 0 },
-    biayaPengecekan: { type: Number, default: 50000 },
-    metodePembayaran: { type: String, default: "" },
-    pembayaranDikonfirmasi: { type: Boolean, default: false },
-    pembayaranValid: { type: Boolean, default: false },
-    adaKerusakanTambahan: { type: Boolean, default: false },
-    infoKerusakanTambahan: { type: String, default: "" },
-    biayaSukuTambahan: { type: Number, default: 0 },
-    statusPersetujuanTambahan: { type: String, default: "pending" },
-    kondisiHP: { type: String, default: "" },
-    tipeKondisi: { type: String, default: "" },
-    subStatusWorkshop: { type: String, default: "antrean" },
-    estimasiSelesai: { type: String, default: "" },
-    statusSparepart: { type: String, default: "tersedia" },
-    tanggalDatangPart: { type: String, default: "" }, 
-    buktiBayarInden: { type: String, default: "" },
-    metodeBayarInden: { type: String, default: "" },
-    indenTerbayar: { type: Boolean, default: false },
-    qcChecklist: { type: Object, default: {} }, 
-    riwayatStatus: { type: Array, default: [] }
+    // 1. IDENTIFIKASI UTAMA
+    kode: { type: String, required: true, unique: true, index: true }, 
+    
+    // 2. DATA PELANGGAN
+    pelanggan: {
+        nama: { type: String, required: true },
+        wa: { type: String, required: true },
+        lokasi: {
+            tipeServis: { type: String, enum: ['home_service', 'cod', 'workshop'], default: 'home_service' },
+            lat: { type: String, default: "" },
+            lng: { type: String, default: "" },
+            shareloc: { type: String, default: "" }
+        }
+    },
+
+    // 3. DATA PERANGKAT & KERUSAKAN
+    perangkat: {
+        layanan: { type: String, default: "Smartphone" }, 
+        merek: { type: String, required: true },
+        tipe: { type: String, required: true },
+        imeiSerial: { type: String, default: "" },
+        kondisiHP: { type: String, default: "" }, // Path foto
+        keluhan: { type: String, default: "" }
+    },
+
+    // 4. STATUS & PENGERJAAN
+    pengerjaan: {
+        teknisi: { type: String, default: "", index: true }, 
+        status: { 
+            type: String, 
+            enum: ['pending', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis', 'selesai', 'batal'], 
+            default: 'pending',
+            index: true
+        },
+        jadwal: { type: String, default: "" },
+        estimasiSelesai: { type: String, default: "" },
+        qcChecklist: { type: Map, of: Boolean, default: {} }, // Menggunakan Map agar lebih aman dari Object biasa
+        riwayatStatus: [{
+            status: String,
+            detail: String,
+            waktu: { type: Date, default: Date.now }
+        }]
+    },
+
+    // 5. FINANSIAL & SPAREPART
+    finansial: {
+        biayaPengecekan: { type: Number, default: 50000 },
+        biayaJasa: { type: Number, default: 0 },
+        biayaSukuCadang: { type: Number, default: 0 },
+        statusPembayaran: { type: String, enum: ['belum_lunas', 'menunggu_konfirmasi', 'lunas'], default: 'belum_lunas' },
+        metodePembayaran: { type: String, default: "" },
+        buktiPelunasan: { type: String, default: "" },
+        
+        // Fitur Inden Part
+        inden: {
+            statusPart: { type: String, default: "tersedia" },
+            buktiBayarInden: { type: String, default: "" },
+            indenTerbayar: { type: Boolean, default: false }
+        }
+    },
+
+    // 6. ULASAN
+    ulasan: {
+        rating: { type: Number, min: 0, max: 5, default: 0 },
+        teks: { type: String, default: "" }
+    }
+}, { 
+    timestamps: true // Otomatis membuat 'createdAt' dan 'updatedAt'
 });
+
 const Order = mongoose.model('Order', OrderSchema, 'orders');
 
 const ChatSchema = new mongoose.Schema({
