@@ -7,87 +7,105 @@
     <title>SF Tech - Servis HP, Laptop & Elektronik Bergaransi</title>
     <meta name="description" content="Layanan servis HP, Laptop/PC, dan elektronik rumah tangga profesional. Panggil teknisi ke rumah atau workshop. Lacak progres secara real-time.">
     
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
+    <!-- Libraries -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- IMPORT SOCKET.IO UNTUK REAL-TIME NOTIF -->
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     
     <style>
+        /* =========================================
+           UI BARU: HEADER, SIDEBAR & HERO SECTION
+           ========================================= */
         * {margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans', sans-serif;}
         body {background:#f8fafc; color:#1e293b; line-height:1.6; display: flex; flex-direction: column; min-height: 100vh;}
         
-        header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            color:white; 
-            padding:1.2rem 5%; 
-            display:flex; 
-            justify-content:space-between; 
-            align-items:center; 
-            flex-wrap:wrap;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
-            border-bottom: 2px solid #0ea5e9;
-        }
-        .logo {font-size:1.4rem; font-weight:700; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;}
-        .logo i {color: #38bdf8;}
-        nav a {color:white; text-decoration:none; margin-left:1.5rem; font-weight: 500; transition: all 0.3s; cursor: pointer;}
-        nav a:hover {color:#38bdf8; transform: translateY(-1px);}
-        
+        /* Header Mobile First */
+        .app-header { background: #0f172a; color: white; display: flex; flex-direction: column; width: 100%; z-index: 100; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; }
+        .header-top .menu-btn, .header-top .dark-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; transition: 0.2s;}
+        .header-top .menu-btn:hover, .header-top .dark-btn:hover { color: #38bdf8; }
+        .header-top .logo { display: flex; align-items: center; cursor: pointer; }
+        .header-top .logo img { height: 32px; object-fit: contain; }
+
+        /* Tabs & Tombol Aksi */
+        .header-tabs { display: flex; justify-content: space-between; padding: 0 1.5rem; border-bottom: 1px solid #1e293b; }
+        .tab-item { flex: 1; text-align: center; color: #94a3b8; padding: 0.8rem 0; text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 4px;}
+        .tab-item i { font-size: 1.1rem; }
+        .tab-item.active { color: #38bdf8; border-bottom: 2px solid #38bdf8; }
+        .header-actions { display: flex; gap: 12px; padding: 1.2rem 1.5rem; background: #0f172a; }
+        .header-actions .btn-solid { flex: 1; padding: 0.8rem; border-radius: 8px; font-weight: 600; background: #0ea5e9; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        .header-actions .btn-solid:hover { background: #0284c7; }
+
+        /* Sidebar Hamburger */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        .sidebar-content { position: absolute; top: 0; left: -100%; width: 85%; max-width: 320px; height: 100%; background: #0f172a; color: white; box-shadow: 5px 0 15px rgba(0,0,0,0.3); transition: all 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar-overlay.active .sidebar-content { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-header .close-btn { background: none; border: none; color: #94a3b8; font-size: 1.6rem; cursor: pointer; }
+        .sidebar-links { padding: 1rem 0; display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
+        .sidebar-links a { display: flex; align-items: center; gap: 15px; padding: 1.2rem 1.5rem; color: #cbd5e1; text-decoration: none; font-size: 1rem; font-weight: 500; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .sidebar-links a:hover { background: #1e293b; color: white; }
+        .sidebar-links i { font-size: 1.3rem; color: #38bdf8; width: 25px; text-align: center; }
+        .sidebar-footer { padding: 1.5rem; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Switch Toggle Sidebar */
+        .theme-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
+        input:checked + .slider { background-color: #0ea5e9; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .slider.round { border-radius: 34px; }
+        .slider.round:before { border-radius: 50%; }
+
+        /* Hero Section & Card Lacak (Default Mobile) */
+        .hero-container { background: linear-gradient(135deg, #0284c7 0%, #1e3a8a 100%); padding: 3rem 5% 5rem; display: flex; flex-direction: column; gap: 2rem; border-radius: 0 0 25px 25px; margin-bottom: 2rem; }
+        .hero-content { color: white; text-align: center; }
+        .hero-content h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2; }
+        .hero-content p { font-size: 1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+
+        .lacak-cepat-container { background: white; padding: 2.2rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1); text-align: center; width: 100%; margin: 0 auto; border: none; }
+        .lacak-cepat-container h3 { color: #0f172a; margin-bottom: 0.5rem; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800;}
+        .lacak-input-group { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; justify-content: center; }
+        .lacak-input-group input { flex: 1; min-width: 240px; padding: 1rem 1.2rem; font-size: 1rem; border-radius: 8px; border: 2px solid #cbd5e1; background: #f8fafc; font-weight: 600; text-align: center; transition: all 0.3s ease;}
+        .lacak-input-group input:focus { border-color: #0ea5e9; background: white; outline: none;}
+        .lacak-input-group button { flex: 1; padding: 0.9rem; font-size: 0.9rem; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase;}
+        .btn-lacak-utama { background: #0ea5e9; color: white; border: none; }
+        .btn-lacak-utama:hover { background: #0284c7; }
+        .btn-scan-outline { background: transparent; color: #0ea5e9; border: 2px solid #0ea5e9; }
+        .btn-scan-outline:hover { background: #f0f9ff; }
+
+        /* =========================================
+           KOMPONEN HALAMAN UTAMA LAINNYA
+           ========================================= */
         .main-content {flex: 1;}
         .container {max-width:900px; margin:2.5rem auto; padding:0 5%;}
 
-        .lacak-cepat-container {
-    background: rgba(255, 255, 255, 0.98); 
-    backdrop-filter: blur(10px); 
-    padding: 2.5rem; 
-    border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(226, 232, 240, 0.8); 
-    margin: -4.5rem auto 2.5rem; /* Menarik card ke atas menimpa hero section */
-    position: relative; 
-    z-index: 10; 
-    max-width: 800px; 
-    text-align: center; 
-    border-top: 5px solid #0ea5e9; /* Garis aksen teknologi di atas */
-}
-.lacak-cepat-container h3 { color: #0f172a; margin-bottom: 0.5rem; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800;}
-.lacak-input-group { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; justify-content: center; }
-.lacak-input-group input { flex: 1; min-width: 240px; padding: 1rem 1.2rem; font-size: 1rem; border-radius: 8px; border: 2px solid #cbd5e1; margin: 0; background: #f8fafc; font-weight: 600; color: #1e293b; text-align: center; transition: all 0.3s ease;}
-.lacak-input-group input:focus { border-color: #0ea5e9; background: white; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15); outline: none;}
-.lacak-input-group button { padding: 1rem 1.5rem; font-size: 0.95rem; border-radius: 8px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none; font-weight: bold; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
-.lacak-input-group button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4); }
         .scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .scanner-box { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; }
-        body.dark-mode .scanner-box { background: #1e293b; color: #f8fafc; }
 
-       .progress-container {
-    display:flex; justify-content:space-between; 
-    background: white; padding: 2rem 1.5rem; 
-    border-radius: 16px; 
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05); 
-    margin-bottom: 2.5rem; 
-    border: 1px solid #f1f5f9;
-    overflow-x: auto;
-}
-.step-item {text-align:center; flex:1; min-width:80px; position:relative;}
-.step-item:not(:last-child):after {content:''; position:absolute; top:20px; left:50%; width:100%; height:4px; background:#f1f5f9; z-index:1; transition: all 0.4s;}
-.step-item.completed:not(:last-child):after {background: #10b981;}
-.step-number {width:40px; height:40px; line-height:36px; margin:0 auto 10px; border-radius:50%; background:#f1f5f9; color:#64748b; font-weight:800; font-size:1rem; position:relative; z-index:2; transition: all 0.4s ease; border: 2px solid white;}
-.step-item.active .step-number {background: linear-gradient(135deg, #0ea5e9, #0284c7); color:white; transform: scale(1.15); box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);}
-.step-item.completed .step-number {background:#10b981; color:white; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);}
-.step-text {font-size:0.8rem; font-weight:600; color:#64748b; letter-spacing: 0.5px;}
-.step-item.active .step-text {color: #0ea5e9;}
+        .progress-container {display:flex; justify-content:space-between; background:white; padding:1.5rem 1.2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-bottom:2.5rem; overflow-x:auto;}
+        .step-item {text-align:center; flex:1; min-width:80px; position:relative;}
+        .step-item:not(:last-child):after {content:''; position:absolute; top:18px; left:50%; width:100%; height:3px; background:#e2e8f0; z-index:1; transition: all 0.4s;}
+        .step-item.completed:not(:last-child):after {background: #10b981;}
+        .step-number {width:36px; height:36px; line-height:36px; margin:0 auto 8px; border-radius:50%; background:#e2e8f0; font-weight:700; font-size:0.9rem; position:relative; z-index:2; transition: all 0.3s;}
+        .step-item.active .step-number {background:#0ea5e9; color:white; scale: 1.1; box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);}
+        .step-item.completed .step-number {background:#10b981; color:white;}
+        .step-text {font-size:0.75rem; font-weight:600; color:#64748b;}
+        .step-item.active .step-text {color: #0ea5e9;}
 
         .content-box {background:white; padding:2.2rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.04); border-left:5px solid #0ea5e9; margin-bottom:2rem; display:none;}
         .content-box.active {display:block; animation:fade 0.4s ease-out;}
@@ -99,18 +117,17 @@
 
         .kategori-wrapper { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 1.5rem 0;}
         @media (min-width: 768px) { .kategori-wrapper { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } }
-        .kategori-card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: all 0.3s ease; }
-        .kategori-card:hover { border-color: #cbd5e1; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
-        .kategori-card h4 { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; color: #0f172a; margin-bottom: 1.2rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem; }
-        
+
+        /* Desain Card Kategori Clean (Dari UI Baru) */
+        .kategori-card { background: white; border: 1px solid #f1f5f9; box-shadow: 0 5px 20px rgba(0,0,0,0.02); border-radius: 12px; padding: 1.2rem; }
+        .kategori-card h4 { border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 0.5rem; font-size: 1rem; color: #0f172a; display: flex; align-items: center; gap: 0.6rem; font-weight: bold;}
         .kategori-card.hp h4 i { color: #0ea5e9; font-size: 1.3rem; }
         .kategori-card.elektronik h4 i { color: #10b981; font-size: 1.3rem; }
         .kategori-card.komputer h4 i { color: #8b5cf6; font-size: 1.3rem; }
         
-        .layanan-item { display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; margin:0.6rem 0; border:1px solid #e2e8f0; border-radius:8px; cursor: pointer; transition: all 0.2s ease; background: #f8fafc; }
-        .layanan-item:hover { border-color: #0ea5e9; background: #f0f9ff; }
-        .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; background: #f0fdf4; }
-        .kategori-card.komputer .layanan-item:hover { border-color: #8b5cf6; background: #f5f3ff; }
+        .layanan-item { display: flex; justify-content: space-between; align-items: center; border: none; border-bottom: 1px dashed #f1f5f9; background: white; padding: 0.8rem 0.5rem; border-radius: 0; margin: 0; cursor: pointer; transition: all 0.2s ease;}
+        .layanan-item:last-child { border-bottom: none; }
+        .layanan-item:hover { background: #f8fafc; border-color: transparent; }
         
         .layanan-item label {cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; width: 100%; font-size: 0.9rem;}
         .layanan-item input[type="checkbox"] {width: 18px; height: 18px; accent-color: #0ea5e9;}
@@ -177,9 +194,9 @@
         .alert-bahaya {background:#fef2f2; color:#991b1b; border-left:4px solid #ef4444; padding:1.2rem; border-radius:8px; margin:1rem 0; font-size: 0.9rem;}
         .alert-warning-box {background:#fff7ed; color:#c2410c; border-left:4px solid #f97316; padding:1.2rem; border-radius:8px; margin:1rem 0;}
 
+        /* Chat Widget */
         .chat-widget { position: fixed; bottom: 25px; right: 25px; width: 340px; max-width: calc(100vw - 50px); background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); z-index: 9999; border: 1px solid #e2e8f0; overflow: hidden; display: none; flex-direction: column; animation: chatSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transition: all 0.3s ease; }
         @keyframes chatSlide { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        
         .chat-widget.minimized { width: 65px; height: 65px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4); display: flex; align-items: center; justify-content: center; flex-direction: row; }
         .chat-widget.minimized .chat-header { background: transparent; padding: 0; box-shadow: none; width: 100%; height: 100%; justify-content: center; cursor: pointer; }
         .chat-widget.minimized .chat-header-left span, .chat-widget.minimized .chat-toggle-btn { display: none; }
@@ -201,44 +218,19 @@
         .chat-input-row button {background: #0ea5e9; color: white; border: none; padding: 0 1.4rem; cursor: pointer; font-weight: 600; transition: background 0.2s;}
         .chat-input-row button:hover {background: #0284c7;}
 
+        /* Tema Gelap Khusus Gabungan */
         body.dark-mode { background:#0f172a; color:#f8fafc; }
+        body.dark-mode .lacak-cepat-container, body.dark-mode .kategori-card { background: #1e293b; border-color: #334155; box-shadow: none; }
+        body.dark-mode .layanan-item { background: transparent; border-bottom-color: #334155; }
+        body.dark-mode .layanan-item:hover { background: #334155; }
         body.dark-mode .content-box, body.dark-mode .progress-container, body.dark-mode .chat-widget, body.dark-mode .chat-input-row input, body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background:#1e293b; color:#f8fafc; border-color:#334155; }
-        body.dark-mode .lacak-cepat-container { background:#1e293b; border-color:#334155;}
-        body.dark-mode .lacak-cepat-container h3 { color: #f8fafc; }
-        body.dark-mode .lacak-input-group input { background: #0f172a; border-color: #334155; color: #f8fafc;}
         body.dark-mode h2, body.dark-mode h3, body.dark-mode .step-text, body.dark-mode label, body.dark-mode .faktur-header h4, body.dark-mode .faktur .total { color:#f8fafc; }
-        body.dark-mode .layanan-item, body.dark-mode .metode-item { border-color:#334155; background: #1e293b; }
-        body.dark-mode .layanan-item:hover, body.dark-mode .metode-item:hover { background: #334155; border-color: #0ea5e9;}
-        body.dark-mode .kategori-card.elektronik .layanan-item:hover { border-color: #10b981; }
-        body.dark-mode .kategori-card.komputer .layanan-item:hover { border-color: #8b5cf6; }
         body.dark-mode .faktur { background: #0f172a; border-color: #3b82f6;}
-        body.dark-mode .kategori-card { background: #0f172a; border-color: #334155; }
-        body.dark-mode .kategori-card h4 { color: #f8fafc; border-color: #1e293b; }
         body.dark-mode optgroup { background: #0f172a; color: #0ea5e9;}
         body.dark-mode .review-card { background: #1e293b; color: #f8fafc; border-color: #334155; }
-        
         body.dark-mode .swal2-popup { background: #1e293b !important; color: #f8fafc !important; }
         body.dark-mode .swal2-title, body.dark-mode .swal2-html-container { color: #f8fafc !important; }
         body.dark-mode .swal2-input { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
-        
-       .hero-section { 
-    background: linear-gradient(135deg, #0ea5e9 0%, #1e3a8a 100%); 
-    color: white; 
-    padding: 5rem 2rem 6rem; /* Padding bawah lebih dalam untuk efek overlap */
-    text-align: center; 
-    border-radius: 0 0 30px 30px; 
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); 
-    margin-bottom: 2rem;
-}
-.hero-section::before {
-    content: ''; position: absolute; top: -50%; left: 20%; width: 60%; height: 200%;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
-    pointer-events: none;
-}
-.hero-section h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 1.2rem; letter-spacing: -0.5px; position: relative; z-index: 2;}
-.hero-section p { font-size: 1.1rem; max-width: 600px; margin: 0 auto; opacity: 0.9; position: relative; z-index: 2;}
         
         .skeleton { animation: skeleton-loading 1.2s linear infinite alternate; background-color: #e2e8f0 !important; color: transparent !important; border-color: transparent !important; pointer-events: none; border-radius:4px;}
         body.dark-mode .skeleton { background-color: #334155 !important; }
@@ -254,13 +246,6 @@
         .page-content { display: none; animation: fadeIn 0.4s; }
         .page-content.active { display: block; }
         .footer-section { background: #0f172a; color: #94a3b8; padding: 2.5rem 5%; text-align: center; margin-top: auto; border-top: 2px solid #38bdf8;}
-        .alur-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .alur-item { background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
-        .alur-item i { font-size: 2rem; color: #0ea5e9; margin-bottom: 1rem; display: block;}
-        body.dark-mode .alur-item { background: #1e293b; border-color: #334155; }
-        .foto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .foto-item { background: #e2e8f0; height: 200px; border-radius: 12px; display: flex; flex-direction:column; align-items: center; justify-content: center; color: #64748b; font-weight: bold; border: 2px dashed #cbd5e1; }
-        body.dark-mode .foto-item { background: #334155; border-color: #475569; color: #94a3b8;}
 
         .ws-step { font-size: 0.85rem; padding: 0.8rem 1rem; border-radius: 8px; background: #f1f5f9; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: all 0.3s ease; margin-bottom: 8px; border: 1px solid #e2e8f0; }
         .ws-step.aktif { background: #0ea5e9; color: white; border-color: #0ea5e9; transform: scale(1.02); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2); }
@@ -270,13 +255,33 @@
         
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* =========================================
+           MEDIA QUERY DESKTOP (Split Layout 2 Kolom)
+           ========================================= */
+        @media (min-width: 992px) {
+            .header-top .menu-btn { display: none; }
+            .app-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 5%; height: 85px; }
+            .header-tabs { border: none; padding: 0; gap: 30px; margin-left: auto; margin-right: 2rem; flex-direction: row; }
+            .tab-item { flex-direction: row; padding: 1.8rem 0; color: #f8fafc; font-size: 1rem; border-bottom: 3px solid transparent; border-radius: 0;}
+            .tab-item.active { border-bottom: 3px solid #38bdf8; }
+            .header-actions { background: transparent; padding: 0; }
+            .header-actions .btn-solid { background: transparent; border: 1px solid white; color: white; padding: 0.6rem 1.2rem; }
+            
+            .hero-container {
+                flex-direction: row; align-items: center; justify-content: space-between;
+                padding: 5rem 6% 9rem; gap: 4rem; border-radius: 0 0 40px 40px;
+            }
+            .hero-content { text-align: left; flex: 1.2; }
+            .hero-content h1 { font-size: 3.5rem; margin-bottom: 1.5rem; }
+            .hero-content p { margin: 0; font-size: 1.15rem; }
+            
+            .lacak-cepat-container { flex: 1; max-width: 480px; margin: 0; }
+            #mainOrderContainer { margin-top: -6rem; position: relative; z-index: 10; max-width: 1100px; }
+        }
+
         @media (max-width: 768px) {
             .container { margin: 1.5rem auto; padding: 0 4%; }
             .content-box { padding: 1.5rem; }
-            .hero-section { padding: 2.5rem 1rem 4rem; }
-            .hero-section h1 { font-size: 2rem; }
-            .lacak-cepat-container { margin: -3.5rem 4% 2rem; padding: 1.5rem; } /* Sesuaikan margin negatifnya */
-            .lacak-input-group { flex-direction: column; }
             .step-item { min-width: 65px; }
             .step-text { font-size: 0.65rem; }
             .metode-bayar { grid-template-columns: 1fr; }
@@ -284,9 +289,6 @@
             .faktur { padding: 1.5rem; margin-top: 1rem; }
             .faktur-header { flex-direction: column; text-align: center; gap: 1rem; }
             .faktur-header h4 { text-align: center; }
-            header { padding: 1rem; flex-direction: column; gap: 12px; }
-            nav { width: 100%; justify-content: center; flex-wrap: wrap; gap: 15px; }
-            nav a { margin-left: 0; font-size: 0.95rem; }
             .chat-widget { width: 100%; bottom: 0; right: 0; border-radius: 16px 16px 0 0; }
             .chat-widget.minimized { width: 60px; height: 60px; bottom: 20px; right: 20px; border-radius: 50%; }
         }
@@ -294,18 +296,48 @@
 </head>
 <body>
 
-<header>
-   <div class="logo" onclick="klikMenuHome();">
-        <img src="Full Horizon_1.png" alt="SF Tech Service Logo" style="height: 38px; width: auto; object-fit: contain;">
+<!-- HEADER BARU (MOBILE & DESKTOP) -->
+<header class="app-header">
+    <div class="header-top">
+        <button class="menu-btn" onclick="toggleMobileMenu()" aria-label="Buka Menu"><i class="bi bi-list"></i></button>
+        <div class="logo" onclick="klikMenuHome(); setActiveTab('tab-home');">
+            <img src="Full Horizon_1.png" alt="SF Tech Service Logo">
+        </div>
+        <button class="dark-btn" onclick="toggleDarkMode()" aria-label="Ganti Tema"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
     </div>
-    <nav style="display:flex; align-items:center;">
-        <button onclick="toggleDarkMode()" aria-label="Ganti Tema Tampilan" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; margin-right:10px;"><i class="bi bi-moon-stars-fill" id="iconDark"></i></button>
-        <a onclick="klikMenuHome();"><i class="bi bi-house"></i> Home</a>
-        <a onclick="tampilHalaman('about')"><i class="bi bi-info-circle"></i> About Us</a>
-        <a onclick="tampilHalaman('profile')"><i class="bi bi-images"></i> Profile</a>
-        <a onclick="bukaScannerQR()"><i class="bi bi-upc-scan"></i> Scan Barcode</a>
+    
+    <nav class="header-tabs">
+        <a class="tab-item active" id="tab-home" onclick="klikMenuHome(); setActiveTab('tab-home')"><i class="bi bi-house"></i> Home</a>
+        <a class="tab-item" id="tab-about" onclick="tampilHalaman('about'); setActiveTab('tab-about')"><i class="bi bi-info-circle"></i> Tentang Kami</a>
+        <a class="tab-item" id="tab-profile" onclick="tampilHalaman('profile'); setActiveTab('tab-profile')"><i class="bi bi-person-vcard"></i> Profil</a>
     </nav>
+
+    <div class="header-actions">
+        <button class="btn-solid" onclick="bukaScannerQR()"><i class="bi bi-qr-code-scan"></i> Scan Barcode</button>
+    </div>
 </header>
+
+<!-- SIDEBAR MOBILE MENU (HAMBURGER) -->
+<div class="sidebar-overlay" id="sidebarMenu" onclick="if(event.target === this) toggleMobileMenu()">
+    <div class="sidebar-content">
+        <div class="sidebar-header">
+            <img src="Full Horizon_1.png" alt="SF Tech Service Logo" style="height: 28px;">
+            <button class="close-btn" onclick="toggleMobileMenu()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="sidebar-links">
+            <a onclick="klikMenuHome(); setActiveTab('tab-home'); toggleMobileMenu();"><i class="bi bi-house-door"></i> Home</a>
+            <a onclick="tampilHalaman('about'); setActiveTab('tab-about'); toggleMobileMenu();"><i class="bi bi-info-circle"></i> Tentang Kami</a>
+            <a onclick="tampilHalaman('profile'); setActiveTab('tab-profile'); toggleMobileMenu();"><i class="bi bi-person"></i> Profil</a>
+            <a onclick="fokusKeLacak(); toggleMobileMenu();"><i class="bi bi-search"></i> Lacak Servis</a>
+            <a onclick="bukaScannerQR(); toggleMobileMenu();"><i class="bi bi-qr-code-scan"></i> Scan QR</a>
+            <a href="https://wa.me/628889999765" target="_blank"><i class="bi bi-telephone"></i> Kontak</a>
+        </div>
+        <div class="sidebar-footer">
+            <div style="display:flex; align-items:center; gap: 10px; font-weight: 500; font-size: 0.95rem;"><i class="bi bi-moon-stars-fill"></i> Mode Gelap</div>
+            <label class="theme-switch"><input type="checkbox" id="toggleDarkSidebar" onchange="toggleDarkMode()"><span class="slider round"></span></label>
+        </div>
+    </div>
+</div>
 
 <!-- Modal QR Code Scanner -->
 <div class="scanner-modal" id="scannerModal">
@@ -320,21 +352,24 @@
 <div class="main-content">
     
     <div id="page-home" class="page-content active">
-        <div class="hero-section" id="heroLandingPage">
-            <h1>Servis HP, Laptop & Elektronik Bergaransi</h1>
-            <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari perangkat Anda.</p>
-        </div>
+        
+        <!-- HERO AREA (DESKTOP SPLIT LAYOUT & MOBILE) -->
+        <div class="hero-container" id="heroLandingPage">
+            <div class="hero-content">
+                <h1>Servis HP, Laptop &<br>Elektronik Bergaransi</h1>
+                <p>Panggil teknisi ke rumah atau serahkan ke workshop kami. Pantau proses perbaikan secara real-time langsung dari perangkat Anda.</p>
+            </div>
 
-       <!-- Kolom Lacak Cepat (Ketik Kode atau Scan Barcode) -->
-<div class="lacak-cepat-container" id="lacakCepatBox">
-    <h3><i class="bi bi-search" style="color: #0ea5e9;"></i> Lacak Pesanan / Cek Faktur</h3>
-    <p style="font-size: 0.9rem; color: #64748b; margin-top: 5px;">Ketik kode pemesanan Anda atau klik tombol Scan Barcode untuk melacak status servis.</p>
-    <div class="lacak-input-group">
-        <input type="text" id="inputLacakCepat" placeholder="Contoh: HS-2026..." onkeypress="if(event.key === 'Enter') prosesLacakCepat()">
-        <button onclick="prosesLacakCepat()"><i class="bi bi-search"></i> Lacak</button>
-        <button type="button" onclick="bukaScannerQR()"><i class="bi bi-upc-scan"></i> Scan Barcode</button>
-    </div>
-</div>
+            <div class="lacak-cepat-container" id="lacakCepatBox">
+                <h3><i class="bi bi-search" style="color: #0ea5e9;"></i> Lacak Pesanan / Cek Faktur</h3>
+                <p style="font-size: 0.9rem; color: #64748b; margin-top: 5px;">Ketik kode pemesanan Anda atau klik tombol Scan Barcode untuk melacak status servis.</p>
+                <div class="lacak-input-group">
+                    <input type="text" id="inputLacakCepat" placeholder="Contoh: HS-2026..." onkeypress="if(event.key === 'Enter') prosesLacakCepat()">
+                    <button class="btn-lacak-utama" onclick="prosesLacakCepat()"><i class="bi bi-search"></i> Lacak</button>
+                    <button class="btn-scan-outline" type="button" onclick="bukaScannerQR()"><i class="bi bi-upc-scan"></i> Scan Barcode</button>
+                </div>
+            </div>
+        </div>
 
         <div class="container" id="mainOrderContainer">
             <div class="progress-container">
@@ -400,154 +435,154 @@
 
             <!-- STEP 2: DATA DIRI & PERANGKAT -->
             <div class="content-box" id="step-2">
-    <h3><i class="bi bi-person-vcard"></i> Data Diri & Perangkat</h3>
-    
-    <!-- 1. PEMILIHAN METODE LAYANAN -->
-    <label>Metode Layanan Servis <span style="color:red;">*</span></label>
-    <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
-        <label id="lblHomeService" style="flex:1; min-width:200px; border: 2px solid #0ea5e9; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f0f9ff; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
-            <input type="radio" name="tipeLayanan" value="home_service" checked onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;"> 
-            <span><i class="bi bi-house-gear-fill" style="color:#0ea5e9;"></i> Panggil Teknisi (Home Service)</span>
-        </label>
-        <label id="lblCOD" style="flex:1; min-width:200px; border: 2px solid #e2e8f0; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f8fafc; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
-            <input type="radio" name="tipeLayanan" value="cod" onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;">
-            <span><i class="bi bi-geo-alt-fill" style="color:#64748b;"></i> Sistem COD / Ketemuan</span>
-        </label>
-    </div>
+                <h3><i class="bi bi-person-vcard"></i> Data Diri & Perangkat</h3>
+                
+                <!-- 1. PEMILIHAN METODE LAYANAN -->
+                <label>Metode Layanan Servis <span style="color:red;">*</span></label>
+                <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <label id="lblHomeService" style="flex:1; min-width:200px; border: 2px solid #0ea5e9; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f0f9ff; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
+                        <input type="radio" name="tipeLayanan" value="home_service" checked onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;"> 
+                        <span><i class="bi bi-house-gear-fill" style="color:#0ea5e9;"></i> Panggil Teknisi (Home Service)</span>
+                    </label>
+                    <label id="lblCOD" style="flex:1; min-width:200px; border: 2px solid #e2e8f0; padding: 1rem; border-radius: 8px; cursor: pointer; background: #f8fafc; display: flex; align-items: center; gap: 10px; font-weight:600; transition:0.2s;">
+                        <input type="radio" name="tipeLayanan" value="cod" onchange="toggleTipeLayanan()" style="width: 20px; height: 20px; margin:0; accent-color:#0ea5e9;">
+                        <span><i class="bi bi-geo-alt-fill" style="color:#64748b;"></i> Sistem COD / Ketemuan</span>
+                    </label>
+                </div>
 
-    <!-- 2. DATA UTAMA -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-        <div>
-            <label>Nama Lengkap <span style="color:red;">*</span></label>
-            <input type="text" id="nama" placeholder="Contoh: Farhan" oninput="simpanDraft()">
-            <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
-        </div>
-        <div>
-            <label>Nomor WhatsApp <span style="color:red;">*</span></label>
-            <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
-            <div class="error-text" id="errWa">Format nomor WA tidak valid</div>
-        </div>
-    </div>
+                <!-- 2. DATA UTAMA -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label>Nama Lengkap <span style="color:red;">*</span></label>
+                        <input type="text" id="nama" placeholder="Contoh: Farhan" oninput="simpanDraft()">
+                        <div class="error-text" id="errNama">Nama lengkap wajib diisi!</div>
+                    </div>
+                    <div>
+                        <label>Nomor WhatsApp <span style="color:red;">*</span></label>
+                        <input type="tel" id="wa" placeholder="0812xxxxxxx" oninput="simpanDraft()">
+                        <div class="error-text" id="errWa">Format nomor WA tidak valid</div>
+                    </div>
+                </div>
 
-    <!-- 3. AREA LOKASI (Hanya tampil jika Home Service) -->
-   <div id="areaLokasiForm" style="display: block; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.2rem;">
-        <label id="judulLokasi">Alamat Lengkap Kunjungan</label>
-        <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan..." oninput="simpanDraft()"></textarea>
+                <!-- 3. AREA LOKASI -->
+                <div id="areaLokasiForm" style="display: block; padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.2rem;">
+                    <label id="judulLokasi">Alamat Lengkap Kunjungan</label>
+                    <textarea id="alamat" rows="2" placeholder="Jalan, Nomor, RT/RW, Kecamatan..." oninput="simpanDraft()"></textarea>
 
-        <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi Peta GPS</label>
-        <div style="display:flex; gap:10px; margin-bottom:10px; margin-top:5px;">
-            <input type="text" id="inputCariAlamatMap" placeholder="Cari area (Misal: Sukaluyu)..." style="margin:0; flex:1;">
-            <button type="button" class="btn btn-primary" style="margin:0; padding:0.6rem 1.2rem;" onclick="cariAlamatMapOSM()"><i class="bi bi-search"></i></button>
-        </div>
+                    <label><i class="bi bi-geo-alt-fill" style="color:#0ea5e9;"></i> Titik Lokasi Peta GPS</label>
+                    <div style="display:flex; gap:10px; margin-bottom:10px; margin-top:5px;">
+                        <input type="text" id="inputCariAlamatMap" placeholder="Cari area (Misal: Sukaluyu)..." style="margin:0; flex:1;">
+                        <button type="button" class="btn btn-primary" style="margin:0; padding:0.6rem 1.2rem;" onclick="cariAlamatMapOSM()"><i class="bi bi-search"></i></button>
+                    </div>
 
-        <div id="mapPelanggan" style="height: 200px; width: 100%; border-radius: 8px; margin-bottom: 1rem; z-index: 1; border: 2px solid #e2e8f0;"></div>
-        <input type="hidden" id="latLokasi"><input type="hidden" id="lngLokasi">
-        <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; width: 100%; justify-content: center; margin: 0;"><i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini</button>
-    </div>
+                    <div id="mapPelanggan" style="height: 200px; width: 100%; border-radius: 8px; margin-bottom: 1rem; z-index: 1; border: 2px solid #e2e8f0;"></div>
+                    <input type="hidden" id="latLokasi"><input type="hidden" id="lngLokasi">
+                    <button type="button" class="btn" onclick="dapatkanLokasiOtomatis()" id="btnLokasiGPS" style="background: #0f172a; color: white; width: 100%; justify-content: center; margin: 0;"><i class="bi bi-crosshair"></i> Gunakan GPS Saat Ini</button>
+                </div>
 
-    <!-- 🔥 UI Smart Scan AI 🔥 -->
-    <div style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #7dd3fc; text-align: center;">
-        <h4 style="color: #0369a1; margin-bottom: 5px; font-weight: 800;"><i class="bi bi-magic"></i> Auto-Isi Data (AI Vision)</h4>
-        <p style="font-size: 0.85rem; color: #0c4a6e; margin-bottom: 10px;">Unggah foto stiker bawah laptop atau screenshot 'Tentang Ponsel' agar AI mengisi form otomatis.</p>
-        
-        <input type="file" id="fileAIScan" accept="image/*" style="display: none;" onchange="prosesScanAI(this)">
-        <button type="button" class="btn" id="btnUploadAI" style="background: white; color: #0ea5e9; border: 2px solid #0ea5e9; font-weight: bold; width: 100%; justify-content: center;" onclick="document.getElementById('fileAIScan').click()">
-            <i class="bi bi-camera"></i> Pilih Foto / Screenshot Info Perangkat
-        </button>
-        <div id="aiLoadingIndicator" style="display: none; margin-top: 10px; font-size: 0.85rem; color: #0284c7; font-weight: bold;">
-            <i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite; display: inline-block;"></i> AI sedang menganalisis gambar...
-        </div>
-    </div>
+                <!-- 🔥 UI Smart Scan AI 🔥 -->
+                <div style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #7dd3fc; text-align: center;">
+                    <h4 style="color: #0369a1; margin-bottom: 5px; font-weight: 800;"><i class="bi bi-magic"></i> Auto-Isi Data (AI Vision)</h4>
+                    <p style="font-size: 0.85rem; color: #0c4a6e; margin-bottom: 10px;">Unggah foto stiker bawah laptop atau screenshot 'Tentang Ponsel' agar AI mengisi form otomatis.</p>
+                    
+                    <input type="file" id="fileAIScan" accept="image/*" style="display: none;" onchange="prosesScanAI(this)">
+                    <button type="button" class="btn" id="btnUploadAI" style="background: white; color: #0ea5e9; border: 2px solid #0ea5e9; font-weight: bold; width: 100%; justify-content: center;" onclick="document.getElementById('fileAIScan').click()">
+                        <i class="bi bi-camera"></i> Pilih Foto / Screenshot Info Perangkat
+                    </button>
+                    <div id="aiLoadingIndicator" style="display: none; margin-top: 10px; font-size: 0.85rem; color: #0284c7; font-weight: bold;">
+                        <i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite; display: inline-block;"></i> AI sedang menganalisis gambar...
+                    </div>
+                </div>
 
-    <!-- 4. DATA PERANGKAT -->
-    <label>Merek Perangkat <span style="color:red;">*</span></label>
-    <select id="merek" onchange="toggleMerekLainnya()">
-        <option value="">-- Silakan Pilih Kategori Merek --</option>
-        <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
-            <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
-            <option value="OPPO">OPPO / Realme</option>
-            <option value="Infinix">Infinix / Tecno</option>
-            <option value="Samsung">Samsung</option>
-            <option value="Vivo">Vivo</option>
-            <option value="iPhone">Apple / iPhone</option>
-            <option value="Asus">Asus / ROG</option>
-        </optgroup>
-        <optgroup id="optgroup-komputer" label="💻 Kategori Komputer & Laptop">
-            <option value="Asus PC/Laptop">Asus / ROG Laptop</option>
-            <option value="Acer">Acer / Predator</option>
-            <option value="Lenovo">Lenovo / ThinkPad</option>
-            <option value="HP">HP / Compaq</option>
-            <option value="Dell">Dell / Alienware</option>
-            <option value="Apple Mac">Apple / MacBook / iMac</option>
-            <option value="MSI">MSI</option>
-            <option value="Axioo/Zyrex">Axioo / Zyrex</option>
-            <option value="Rakitan">PC Rakitan / Custom</option>
-        </optgroup>
-        <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
-            <option value="Miyako">Miyako</option>
-            <option value="Cosmos">Cosmos</option>
-            <option value="Maspion">Maspion</option>
-            <option value="Philips">Philips</option>
-            <option value="Panasonic">Panasonic</option>
-            <option value="Sharp">Sharp</option>
-        </optgroup>
-        <optgroup label="Lainnya">
-            <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
-        </optgroup>
-    </select>
-    <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
-    <div class="error-text" id="errMerek">Pilih salah satu merek!</div>
-    <div class="error-text" id="errMerekLainnya">Ketikkan merek Anda!</div>
-    
-    <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
-    <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12" oninput="simpanDraft()">
-    <div class="error-text" id="errTipe">Tipe wajib diisi!</div>
+                <!-- 4. DATA PERANGKAT -->
+                <label>Merek Perangkat <span style="color:red;">*</span></label>
+                <select id="merek" onchange="toggleMerekLainnya()">
+                    <option value="">-- Silakan Pilih Kategori Merek --</option>
+                    <optgroup id="optgroup-hp" label="📱 Kategori Smartphone">
+                        <option value="Xiaomi">Xiaomi / Redmi / POCO</option>
+                        <option value="OPPO">OPPO / Realme</option>
+                        <option value="Infinix">Infinix / Tecno</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Vivo">Vivo</option>
+                        <option value="iPhone">Apple / iPhone</option>
+                        <option value="Asus">Asus / ROG</option>
+                    </optgroup>
+                    <optgroup id="optgroup-komputer" label="💻 Kategori Komputer & Laptop">
+                        <option value="Asus PC/Laptop">Asus / ROG Laptop</option>
+                        <option value="Acer">Acer / Predator</option>
+                        <option value="Lenovo">Lenovo / ThinkPad</option>
+                        <option value="HP">HP / Compaq</option>
+                        <option value="Dell">Dell / Alienware</option>
+                        <option value="Apple Mac">Apple / MacBook / iMac</option>
+                        <option value="MSI">MSI</option>
+                        <option value="Axioo/Zyrex">Axioo / Zyrex</option>
+                        <option value="Rakitan">PC Rakitan / Custom</option>
+                    </optgroup>
+                    <optgroup id="optgroup-elektronik" label="🔌 Kategori Elektronik">
+                        <option value="Miyako">Miyako</option>
+                        <option value="Cosmos">Cosmos</option>
+                        <option value="Maspion">Maspion</option>
+                        <option value="Philips">Philips</option>
+                        <option value="Panasonic">Panasonic</option>
+                        <option value="Sharp">Sharp</option>
+                    </optgroup>
+                    <optgroup label="Lainnya">
+                        <option value="Lainnya">Merek Lainnya (Ketik Manual)</option>
+                    </optgroup>
+                </select>
+                <input type="text" id="merekLainnya" placeholder="Ketik merek spesifik Anda..." style="display:none; margin-top: -10px;" oninput="simpanDraft()">
+                <div class="error-text" id="errMerek">Pilih salah satu merek!</div>
+                <div class="error-text" id="errMerekLainnya">Ketikkan merek Anda!</div>
+                
+                <label>Tipe / Model Perangkat <span style="color:red;">*</span></label>
+                <input type="text" id="tipe" placeholder="Contoh: Redmi Note 12" oninput="simpanDraft()">
+                <div class="error-text" id="errTipe">Tipe wajib diisi!</div>
 
-    <label>IMEI / Serial Number <span style="color:#64748b; font-size:0.8rem;">(Otomatis dari AI / Opsional)</span></label>
-    <input type="text" id="imeiSerial" placeholder="Contoh: 8645xxxx / SN: P2XXXX" oninput="simpanDraft()">
-    
-    <label>Keluhan / Kerusakan</label>
-    <textarea id="kerusakan" rows="2" placeholder="Jelaskan kendalanya" oninput="simpanDraft()"></textarea>
+                <label>IMEI / Serial Number <span style="color:#64748b; font-size:0.8rem;">(Otomatis dari AI / Opsional)</span></label>
+                <input type="text" id="imeiSerial" placeholder="Contoh: 8645xxxx / SN: P2XXXX" oninput="simpanDraft()">
+                
+                <label>Keluhan / Kerusakan</label>
+                <textarea id="kerusakan" rows="2" placeholder="Jelaskan kendalanya" oninput="simpanDraft()"></textarea>
 
-    <!-- 5. OPSI LANJUTAN (BAST, PRIVASI, GAMBAR) -->
-    <button type="button" class="btn btn-secondary" onclick="toggleOpsiLanjutan()" style="width: 100%; justify-content: space-between; background: #e2e8f0; color: #334155; margin-bottom: 1.5rem; font-size: 0.9rem;">
-        <span><i class="bi bi-sliders"></i> Pengaturan Tambahan (Upload Foto, BAST, Privasi)</span>
-        <i class="bi bi-chevron-down" id="iconToggleOpsi"></i>
-    </button>
-    
-    <div id="areaOpsiLanjutan" style="display: none; padding: 1.2rem; background: white; border: 2px dashed #cbd5e1; border-radius: 8px; margin-bottom: 1.5rem;">
-        <label style="margin-top:0;">Unggah Kondisi (Foto/Video)</label>
-        <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
-        <div class="pratinjau" id="pratinjauFile" style="margin-top:0; padding:10px;">Belum ada file</div>
+                <!-- 5. OPSI LANJUTAN (BAST, PRIVASI, GAMBAR) -->
+                <button type="button" class="btn btn-secondary" onclick="toggleOpsiLanjutan()" style="width: 100%; justify-content: space-between; background: #e2e8f0; color: #334155; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                    <span><i class="bi bi-sliders"></i> Pengaturan Tambahan (Upload Foto, BAST, Privasi)</span>
+                    <i class="bi bi-chevron-down" id="iconToggleOpsi"></i>
+                </button>
+                
+                <div id="areaOpsiLanjutan" style="display: none; padding: 1.2rem; background: white; border: 2px dashed #cbd5e1; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <label style="margin-top:0;">Unggah Kondisi (Foto/Video)</label>
+                    <input type="file" id="fileKondisi" accept="image/*,video/*" onchange="tampilPratinjau()">
+                    <div class="pratinjau" id="pratinjauFile" style="margin-top:0; padding:10px;">Belum ada file</div>
 
-        <label style="margin-top:1rem;">Kelengkapan Bawaan (BAST)</label>
-        <input type="text" id="kelengkapanBAST" placeholder="Contoh: Unit, Charger" oninput="simpanDraft()">
-        
-        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.85rem; margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 6px;">
-            <input type="checkbox" id="chkBAST" style="width: 18px; height: 18px; margin: 0; accent-color: #10b981;" onchange="simpanDraft()">
-            <span>Saya menyetujui BAST. Kondisi sesuai.</span>
-        </label>
+                    <label style="margin-top:1rem;">Kelengkapan Bawaan (BAST)</label>
+                    <input type="text" id="kelengkapanBAST" placeholder="Contoh: Unit, Charger" oninput="simpanDraft()">
+                    
+                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.85rem; margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 6px;">
+                        <input type="checkbox" id="chkBAST" style="width: 18px; height: 18px; margin: 0; accent-color: #10b981;" onchange="simpanDraft()">
+                        <span>Saya menyetujui BAST. Kondisi sesuai.</span>
+                    </label>
 
-        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.85rem; margin-top: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px;">
-            <input type="checkbox" id="chkPrivasi" style="width: 18px; height: 18px; margin: 0; accent-color: #166534;" onchange="simpanDraft()">
-            <span style="color:#166534;"><strong>Aktifkan Mode Privasi.</strong></span>
-        </label>
-    </div>
+                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.85rem; margin-top: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px;">
+                        <input type="checkbox" id="chkPrivasi" style="width: 18px; height: 18px; margin: 0; accent-color: #166534;" onchange="simpanDraft()">
+                        <span style="color:#166534;"><strong>Aktifkan Mode Privasi.</strong></span>
+                    </label>
+                </div>
 
-    <!-- 6. PERSETUJUAN -->
-    <div style="padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
-            <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
-            <span>Saya menyetujui Syarat & Ketentuan.</span>
-        </label>
-        <div class="error-text" id="errSK" style="margin-top: 8px;">Harap setujui Syarat & Ketentuan!</div>
-    </div>
+                <!-- 6. PERSETUJUAN -->
+                <div style="padding: 1.2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <label style="display: flex; align-items: start; gap: 10px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0;">
+                        <input type="checkbox" id="chkSyaratKetentuan" style="width: 22px; height: 22px; margin: 0; accent-color: #0ea5e9;" onchange="simpanDraft(); document.getElementById('errSK').style.display = 'none';">
+                        <span>Saya menyetujui Syarat & Ketentuan.</span>
+                    </label>
+                    <div class="error-text" id="errSK" style="margin-top: 8px;">Harap setujui Syarat & Ketentuan!</div>
+                </div>
 
-    <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; gap: 10px;">
-        <button class="btn btn-secondary" onclick="prevStep()" style="flex:1; justify-content:center; margin:0;"><i class="bi bi-arrow-left"></i> Kembali</button>
-        <button class="btn btn-primary" id="btnKirimPesanan" onclick="kirimPesanan()" style="flex:2; justify-content:center; margin:0;"><i class="bi bi-send-check"></i> Kirim Pesanan</button>
-    </div>
-</div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="prevStep()" style="flex:1; justify-content:center; margin:0;"><i class="bi bi-arrow-left"></i> Kembali</button>
+                    <button class="btn btn-primary" id="btnKirimPesanan" onclick="kirimPesanan()" style="flex:2; justify-content:center; margin:0;"><i class="bi bi-send-check"></i> Kirim Pesanan</button>
+                </div>
+            </div>
 
             <!-- STEP 3: JADWAL & KARTU BARCODE -->
             <div class="content-box" id="step-3">
@@ -573,20 +608,19 @@
                     <p class="data-dinamis">Status: Menunggu admin mengatur jadwal kunjungan teknisi.</p>
                 </div>
                 <div class="jadwal-box" id="tampilJadwal" style="display:none;">
-    <p style="display:none;"><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
-    <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
-    <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
-    <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
-    
-    <!-- KARTU DRIVER TEKNISI ALA RIDE-HAILING -->
-    <div id="kartuTeknisiTugas" style="display:none; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; align-items: center; gap: 15px; margin-top: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
-        <!-- Konten dirender oleh JS -->
-    </div>
-    
-    <p style="margin-top: 1rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
-</div>
+                    <p style="display:none;"><strong>Teknisi:</strong> <span id="teknisi" class="data-dinamis">-</span></p>
+                    <p><strong>Tanggal & Waktu:</strong> <span id="jadwal" class="data-dinamis">-</span></p>
+                    <p><strong>Lokasi Perbaikan:</strong> <span id="lokasiServisTampil" class="data-dinamis" style="font-weight: bold; color: #1e40af;">-</span></p>
+                    <p style="margin-top:0.8rem; font-size:1.1rem;"><strong><i class="bi bi-stopwatch"></i> ETA Kedatangan:</strong> <span id="lblETA" class="data-dinamis" style="color:#f59e0b; font-weight:bold;">Menunggu Info</span></p>
+                    
+                    <!-- KARTU DRIVER TEKNISI ALA RIDE-HAILING -->
+                    <div id="kartuTeknisiTugas" style="display:none; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; align-items: center; gap: 15px; margin-top: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+                        <!-- Konten dirender oleh JS -->
+                    </div>
+                    
+                    <p style="margin-top: 1rem; font-size: 0.85rem; color: #475569;">* Note: Pastikan perangkat siap sedia pada waktu yang tertera.</p>
+                </div>
 
-                <!-- TOMBOL PEMBATALAN OLEH USER -->
                 <button id="btnBatalPesananUser" class="btn btn-danger" onclick="batalkanPesananSistem()" style="margin-top: 1.5rem; width: 100%; justify-content: center; display: none;"><i class="bi bi-x-octagon"></i> Batalkan Pesanan Ini</button>
             </div>
 
@@ -866,6 +900,35 @@
 </div>
 
 <script>
+// --- FUNGSI UI HEADER BARU & TAB MENU ---
+function toggleMobileMenu() {
+    const sidebar = document.getElementById("sidebarMenu");
+    sidebar.classList.toggle("active");
+}
+
+function setActiveTab(tabId) {
+    document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+    if(document.getElementById(tabId)) {
+        document.getElementById(tabId).classList.add('active');
+    }
+}
+
+function fokusKeLacak() {
+    klikMenuHome();
+    setActiveTab('tab-home');
+    setTimeout(() => {
+        const kotakLacak = document.getElementById("lacakCepatBox");
+        if(kotakLacak) {
+            kotakLacak.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            kotakLacak.style.transition = "box-shadow 0.3s";
+            kotakLacak.style.boxShadow = "0 0 20px rgba(14, 165, 233, 0.8)";
+            setTimeout(() => { kotakLacak.style.boxShadow = "0 10px 30px rgba(15, 23, 42, 0.1)"; }, 1500);
+            document.getElementById("inputLacakCepat").focus();
+        }
+    }, 200);
+}
+
+// --- FUNGSI BAWAAN SCRIPT ANDA ---
 let petaPelanggan, markerPelanggan;
 
 function inisialisasiPetaLeaflet() {
@@ -1049,7 +1112,7 @@ function klikMenuHome() {
     tampilHalaman('home');
     if (!localStorage.getItem("kodeAktifPelanggan")) {
         currentStep = 1; simpanDraft(); updateProgress(); showContent();
-        document.getElementById("heroLandingPage").style.display = "block";
+        document.getElementById("heroLandingPage").style.display = "flex"; // Note: Changed to flex for desktop layout
         document.getElementById("lacakCepatBox").style.display = "block";
         document.getElementById("publicReviewsSection").style.display = "block";
         muatUlasanPublik();
@@ -1076,7 +1139,6 @@ function kembaliKeAwal() {
 
 let html5QrCode = null;
 function bukaScannerQR() {
-    // Mencegah error jika kamera sedang berjalan (State 2 = SCANNING)
     if (html5QrCode && html5QrCode.getState() === 2) return; 
     
     document.getElementById("scannerModal").style.display = "flex";
@@ -1086,7 +1148,7 @@ function bukaScannerQR() {
             tutupScannerQR();
             let kodeMatch = decodedText;
             if (decodedText.includes("?lacak=")) kodeMatch = new URL(decodedText).searchParams.get("lacak");
-            prosesLacakDenganKode(kodeMatch, false); // Parameter false = Jangan overwrite LocalStorage
+            prosesLacakDenganKode(kodeMatch, false); 
         }, () => {}
     ).catch(() => { Swal.fire('Gagal', 'Izin kamera ditolak browser.', 'error'); tutupScannerQR(); });
 }
@@ -1175,7 +1237,6 @@ function simpanDraft() {
         merek: document.getElementById("merek").value, merekLainnya: document.getElementById("merekLainnya").value,
         tipe: document.getElementById("tipe").value, kerusakan: document.getElementById("kerusakan").value,
         sk: document.getElementById("chkSyaratKetentuan").checked,
-        // SKEMA 1 & 2
         kelengkapan: document.getElementById("kelengkapanBAST").value,
         bast: document.getElementById("chkBAST").checked,
         privasi: document.getElementById("chkPrivasi").checked
@@ -1204,7 +1265,6 @@ function restoreDraft() {
             document.getElementById("kerusakan").value = data.kerusakan || "";
             document.getElementById("chkSyaratKetentuan").checked = data.sk || false;
             
-            // SKEMA 1 & 2
             document.getElementById("kelengkapanBAST").value = data.kelengkapan || "";
             document.getElementById("chkBAST").checked = data.bast || false;
             document.getElementById("chkPrivasi").checked = data.privasi || false;
@@ -1288,13 +1348,20 @@ function muatUlasanPublik() {
     });
 }
 
+// TIMPA FUNGSI toggleDarkMode UNTUK MENCAKUP SIDEBAR
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const icon = document.getElementById('iconDark');
+    const sidebarSwitch = document.getElementById('toggleDarkSidebar');
+    
     if(document.body.classList.contains('dark-mode')) {
-        icon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill'); localStorage.setItem('tema', 'gelap');
+        icon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill'); 
+        localStorage.setItem('tema', 'gelap');
+        if(sidebarSwitch) sidebarSwitch.checked = true;
     } else {
-        icon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill'); localStorage.setItem('tema', 'terang');
+        icon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill'); 
+        localStorage.setItem('tema', 'terang');
+        if(sidebarSwitch) sidebarSwitch.checked = false;
     }
 }
 if(localStorage.getItem('tema') === 'gelap') { toggleDarkMode(); }
@@ -1473,7 +1540,6 @@ function kirimPesanan() {
     formData.append('kerusakan', document.getElementById("kerusakan").value.trim());
     formData.append('layanan', layananTerpilih || "Belum dipilih");
     
-    // ✨ SKEMA 1 & 2 DITAMBAHKAN PADA PAYLOAD
     formData.append('kelengkapan', document.getElementById("kelengkapanBAST").value.trim());
     formData.append('statusBAST', document.getElementById("chkBAST").checked ? "disetujui" : "menunggu");
     formData.append('privasi', document.getElementById("chkPrivasi").checked);
@@ -1548,11 +1614,7 @@ function prosesLacakDenganKode(kode, simpanLokal = true) {
     .then(res => { if(!res.ok) throw new Error(); return res.json(); })
     .then(data => {
         kodeSaya = data.kode; 
-        
-        // Hanya simpan sesi ke browser utama jika parameter simpanLokal == true
-        if (simpanLokal) {
-            localStorage.setItem("kodeAktifPelanggan", kodeSaya);
-        }
+        if (simpanLokal) { localStorage.setItem("kodeAktifPelanggan", kodeSaya); }
         
         document.getElementById("heroLandingPage").style.display = "none";
         document.getElementById("lacakCepatBox").style.display = "none"; 
@@ -1644,7 +1706,6 @@ function cekStatus() {
             }
         }
 
-        // ✨ SKEMA 3: Tampilkan Media Transparansi Workshop jika tersedia
         const boxTransparansi = document.getElementById("boxTransparansi");
         const btnVid = document.getElementById("btnVideoUnboxing");
         const btnFoto = document.getElementById("btnFotoPart");
@@ -1657,7 +1718,6 @@ function cekStatus() {
             if(boxTransparansi) boxTransparansi.style.display = "none";
         }
 
-        // ✨ SKEMA 4: Tampilkan QC Checklist jika tersedia
         const boxQC = document.getElementById("boxQCChecklist");
         if(data.qcChecklist && Object.keys(data.qcChecklist).length > 0) {
             if(boxQC) boxQC.style.display = "block";
@@ -1701,7 +1761,7 @@ function cekStatus() {
         }
         else if (data.status === "dijadwalkan") {
             targetStep = 3; document.getElementById("teknisi").textContent = data.teknisi;
-            tampilkanProfilTeknisi(data.teknisi); // BARIS BARU UNTUK MEMANGGIL KARTU TEKNISI
+            tampilkanProfilTeknisi(data.teknisi); 
             let jadwalTeks = "-";
             if (data.jadwal) {
                 try {
@@ -1757,13 +1817,9 @@ function cekStatus() {
     }).catch(() => console.warn("Sinkronisasi tertunda."));
 }
 
-// 1. UPDATE FUNGSI SINKRONISASI BIAYA
 function sinkronBiayaTampil(data) {
-    let biayaCek = data.finansial.biayaPengecekan || 50000;
-    let suku = data.finansial.biayaSukuCadang || 0, 
-        jasa = data.finansial.biayaJasa || 0, 
-        tamb = (data.pengerjaan.statusPersetujuanTambahan === 'disetujui') ? (data.finansial.biayaSukuTambahan || 0) : 0;
-    
+    let biayaCek = 50000;
+    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
     let totalTagihan = biayaCek + suku + jasa + tamb;
     
     document.getElementById("lblBiayaCek").textContent = biayaCek.toLocaleString("id-ID");
@@ -1774,31 +1830,26 @@ function sinkronBiayaTampil(data) {
     document.getElementById("bayarTotal").textContent = totalTagihan.toLocaleString("id-ID");
 }
 
-// 2. UPDATE FUNGSI PENGISIAN FAKTUR
 function isiDataFaktur(data) {
     document.getElementById("fakturKode").textContent = data.kode;
-    document.getElementById("fakturNama").textContent = data.pelanggan.nama; // Update ke struktur baru
-    document.getElementById("fakturMerekTipe").textContent = `${data.perangkat.merek.toUpperCase()} ${data.perangkat.tipe}`;
-    document.getElementById("fakturKerusakan").textContent = data.perangkat.keluhan;
-    document.getElementById("fakturLayanan").textContent = data.perangkat.layanan;
-    document.getElementById("fakturTeknisi").textContent = data.pengerjaan.teknisi || "Belum ada teknisi";
+    document.getElementById("fakturNama").textContent = data.nama;
+    document.getElementById("fakturMerekTipe").textContent = `${data.merek.toUpperCase()} ${data.tipe}`;
+    document.getElementById("fakturKerusakan").textContent = data.kerusakan;
+    document.getElementById("fakturLayanan").textContent = data.layanan;
+    document.getElementById("fakturTeknisi").textContent = data.teknisi || "Belum ada teknisi";
     document.getElementById("noFaktur").textContent = "INV-" + data.kode.replace("HS-", "");
-    
     let tanggalFaktur = new Date().toLocaleString("id-ID");
-    if(data.pengerjaan.jadwal) {
-        const df = new Date(data.pengerjaan.jadwal);
+    if(data.jadwal) {
+        const df = new Date(data.jadwal);
         if (!isNaN(df.getTime())) {
             tanggalFaktur = df.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + " " + df.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         }
     }
     document.getElementById("fakturTanggal").textContent = tanggalFaktur;
-    document.getElementById("fakturMetode").textContent = data.finansial.metodePembayaran || "Tunai";
+    document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
 
-    let biayaCek = data.finansial.biayaPengecekan || 50000;
-    let suku = data.finansial.biayaSukuCadang || 0, 
-        jasa = data.finansial.biayaJasa || 0, 
-        tamb = (data.pengerjaan.statusPersetujuanTambahan === 'disetujui') ? (data.finansial.biayaSukuTambahan || 0) : 0;
-        
+    let biayaCek = 50000;
+    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
     let biayaPokok = suku + jasa;
     let totalKeseluruhan = biayaCek + biayaPokok + tamb;
 
@@ -1857,9 +1908,9 @@ function muatLogPesan() {
         }
 
         chatData.forEach(msg => {
-           // Ganti baris ini di dalam fungsi muatLogPesan() di index.html:
-let kelasBubble = (msg.pengirim === 'admin' || msg.pengirim === 'teknisi') ? 'msg-admin' : 'msg-user';
-let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Admin' : (msg.pengirim === 'teknisi' ? `👨‍🔧 Teknisi (${msg.namaTeknisi || ''})` : '📱 Anda');            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
+            let kelasBubble = msg.pengirim === 'admin' ? 'msg-admin' : 'msg-user';
+            let labelNama = msg.pengirim === 'admin' ? '👨‍💻 Admin' : '📱 Anda';
+            htmlStr += `<div class="msg-bubble ${kelasBubble}"><strong>${labelNama}:</strong><br>${msg.teks}<span style="font-size:0.65rem; opacity:0.6; display:block; text-align:right;">${msg.waktu}</span></div>`;
         });
         
         if(box.innerHTML !== htmlStr) { box.innerHTML = htmlStr; box.scrollTop = box.scrollHeight; }
@@ -2012,16 +2063,14 @@ document.addEventListener('mouseup', onDragEnd);
 headerChat.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('touchmove', onDragMove, {passive: false});
 document.addEventListener('touchend', onDragEnd);
-// --- FUNGSI UI UX LANGKAH 2 ---
-// --- FUNGSI UI UX LANGKAH 2 ---
+
 function toggleTipeLayanan() {
     const tipe = document.querySelector('input[name="tipeLayanan"]:checked').value;
     const areaLokasi = document.getElementById("areaLokasiForm");
     const lblHome = document.getElementById("lblHomeService");
-    const lblCod = document.getElementById("lblCOD"); // Menggantikan lblWorkshop
-    const judulLokasi = document.getElementById("judulLokasi"); // Mengambil ID label teks
+    const lblCod = document.getElementById("lblCOD");
+    const judulLokasi = document.getElementById("judulLokasi"); 
 
-    // Area alamat/peta harus selalu tampil untuk Home Service maupun COD
     areaLokasi.style.display = "block";
     if(petaPelanggan) setTimeout(() => petaPelanggan.invalidateSize(), 300);
 
@@ -2050,7 +2099,6 @@ function toggleOpsiLanjutan() {
     }
 }
 
-// --- FUNGSI AUTO-DETECT AI (COMPUTER VISION) ---
 function prosesScanAI(inputElement) {
     if (!inputElement.files || inputElement.files.length === 0) return;
     
@@ -2061,11 +2109,9 @@ function prosesScanAI(inputElement) {
     const btn = document.getElementById('btnUploadAI');
     const loading = document.getElementById('aiLoadingIndicator');
     
-    // Ubah tampilan tombol menjadi status loading
     btn.style.display = 'none';
     loading.style.display = 'block';
     
-    // Kirim gambar ke server backend Node.js
   fetch(`${API_URL}/ai/scan-device`, {
     method: 'POST',
     body: formData
@@ -2074,7 +2120,6 @@ function prosesScanAI(inputElement) {
     .then(data => {
         if (data.error) throw new Error(data.error);
         
-        // 1. Pengisian Merek Otomatis
         const selectMerek = document.getElementById("merek");
         let merekDitemukan = false;
         
@@ -2090,7 +2135,6 @@ function prosesScanAI(inputElement) {
                     break;
                 }
             }
-            // Jika merek tidak ada di opsi utama, masukkan ke opsi "Lainnya"
             if (!merekDitemukan && merekDeteksi) {
                 selectMerek.value = "Lainnya";
                 document.getElementById("merekLainnya").value = data.merek;
@@ -2099,14 +2143,12 @@ function prosesScanAI(inputElement) {
             validasiInputRealTime(selectMerek, 'errMerek');
         }
         
-        // 2. Pengisian Tipe Perangkat
         if (data.tipe && data.tipe !== "null") {
             const elTipe = document.getElementById("tipe");
             elTipe.value = data.tipe;
             validasiInputRealTime(elTipe, 'errTipe');
         }
         
-        // 3. Pengisian IMEI / SN
         if (data.imeiSerial && data.imeiSerial !== "null") {
             const elImei = document.getElementById("imeiSerial");
             if(elImei) elImei.value = data.imeiSerial;
@@ -2126,13 +2168,12 @@ function prosesScanAI(inputElement) {
         console.error("AI Error:", err);
     })
     .finally(() => {
-        // Kembalikan tampilan tombol seperti semula
         btn.style.display = 'inline-flex';
         loading.style.display = 'none';
         inputElement.value = ""; 
     });
 }
-    // --- KARTU TEKNISI (DRIVER CARD) DENGAN DROPDOWN QUEUE IN ORDER ---
+    
 async function tampilkanProfilTeknisi(namaTeknisi) {
     const boxProfil = document.getElementById("kartuTeknisiTugas");
     if(!namaTeknisi || namaTeknisi === "-" || namaTeknisi === "Belum ada teknisi") {
@@ -2149,16 +2190,13 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
             let noWa = tek.wa.replace(/\D/g, '');
             if(noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
             
-            // Mengambil angka antrean dari server.js
             const jumlahAntrian = tek.antrianAktif || 0; 
             const warnaStatus = jumlahAntrian > 3 ? '#ef4444' : (jumlahAntrian > 0 ? '#f59e0b' : '#10b981');
             const teksStatus = jumlahAntrian > 0 ? 'Sedang Aktif Mengerjakan' : 'Tersedia (Free)';
             
-            // MERENDER UI DROPDOWN ACCORDION (DIPERBAIKI)
             boxProfil.innerHTML = `
                 <div style="width: 100%; display: flex; flex-direction: column;">
                     
-                    <!-- Header Accordion (Bungkus dalam 1 div Clickable) -->
                     <div onclick="toggleDropdownTeknisi()" style="cursor: pointer; display: flex; flex-direction: column;">
                         <div style="display: flex; align-items: center; gap: 15px;">
                             <img src="${(tek.foto && tek.foto.startsWith('http')) ? tek.foto : window.location.origin + (tek.foto || '/default.jpg')}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0ea5e9;">
@@ -2172,10 +2210,8 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
                         </div>
                     </div>
 
-                    <!-- Isi Dropdown (Sembunyi Default) -->
                     <div id="isiDropdownTeknisi" style="display: none; width: 100%; margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
                         
-                        <!-- Proteksi Privasi: Hanya Menampilkan Angka Antrean -->
                         <div style="margin-bottom: 15px; padding: 12px; background: var(--bg-utama); border-radius: 8px; border: 1px solid var(--border-line);">
                             <p style="margin: 0 0 5px 0; font-size: 0.85rem; font-weight: 600; color: var(--teks-utama); display: flex; align-items: center; gap: 6px;">
                                 <span style="width: 10px; height: 10px; background: ${warnaStatus}; border-radius: 50%; display: inline-block;"></span> 
@@ -2189,7 +2225,6 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
                             </p>
                         </div>
                         
-                        <!-- Smart Contact Action -->
                         <a href="https://wa.me/${noWa}?text=Halo%20Mas%20${tek.nama},%20saya%20pelanggan%20dengan%20kode%20pesanan%20${kodeSaya}.%20Bisa%20info%20estimasi%20waktunya?" target="_blank" class="btn btn-success" style="width: 100%; justify-content: center; margin: 0; padding: 10px; border-radius: 8px;">
                             <i class="bi bi-whatsapp"></i> Hubungi Teknisi
                         </a>
@@ -2212,7 +2247,7 @@ async function tampilkanProfilTeknisi(namaTeknisi) {
         console.error("Gagal memuat profil teknisi", e); 
     }
 }
-// Tambahkan Fungsi Trigger Dropdown di luar fungsi di atas
+
 window.toggleDropdownTeknisi = function() {
     const isi = document.getElementById("isiDropdownTeknisi");
     const ikon = document.getElementById("ikonDropdownTeknisi");
