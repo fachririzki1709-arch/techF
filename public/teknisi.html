@@ -534,11 +534,14 @@
                     
                     <div class="card-box" style="margin-top:1rem;">
                         <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-ui-checks"></i> QC Checklist (Akhir)</h4>
-                        <div style="display:flex; flex-direction:column; gap:8px;">
-                            <label><input type="checkbox" id="qc_layar"> Layar & Sentuhan</label>
-                            <label><input type="checkbox" id="qc_baterai"> Baterai & Charging</label>
-                            <label><input type="checkbox" id="qc_kamera"> Kamera / Sinyal</label>
-                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+    <label><input type="checkbox" id="qc_layar"> Layar & Sentuh</label>
+    <label><input type="checkbox" id="qc_baterai"> Baterai & Charger</label>
+    <label><input type="checkbox" id="qc_kamera"> Kamera D/B</label>
+    <label><input type="checkbox" id="qc_sinyal"> Sinyal & Wi-Fi</label>
+    <label><input type="checkbox" id="qc_speaker"> Speaker & Mic</label>
+    <label><input type="checkbox" id="qc_segel"> Segel Rapat</label>
+</div>
                     </div>
 
                     <div class="card-box" style="margin-top:1rem;">
@@ -563,15 +566,18 @@
                 icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const payload = {
-                        status: 'selesai_servis',
-                        biayaSuku: biayaPart,
-                        qcChecklist: {
-                            layar: document.getElementById('qc_layar').checked,
-                            baterai: document.getElementById('qc_baterai').checked,
-                            kamera: document.getElementById('qc_kamera').checked
-                        }
-                    };
+                   const payload = {
+    "pengerjaan.status": 'selesai_servis',
+    "finansial.biayaSukuCadang": biayaPart,
+    "pengerjaan.qcChecklist": {
+        layar: document.getElementById('qc_layar').checked,
+        baterai: document.getElementById('qc_baterai').checked,
+        kamera: document.getElementById('qc_kamera').checked,
+        sinyal: document.getElementById('qc_sinyal').checked,
+        speaker: document.getElementById('qc_speaker').checked,
+        segel: document.getElementById('qc_segel').checked
+    }
+};
 
                     fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
                         method: "PUT", headers: getAuthHeaderTeknisi(), body: JSON.stringify(payload)
