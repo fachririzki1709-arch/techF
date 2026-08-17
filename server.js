@@ -603,38 +603,62 @@ app.get('/api/orders', verifyAdmin, async (req, res) => {
 // Endpoint Membuat Pesanan Baru (Pelanggan)
 app.post('/api/orders', upload.any(), async (req, res) => {
     try {
-        const dataOrder = req.body;
-
-        // Menangkap koordinat langsung dari berbagai format input Form
-        const latInput = req.body.lat || req.body['koordinat[lat]'] || (req.body.koordinat && req.body.koordinat.lat);
-        const lngInput = req.body.lng || req.body['koordinat[lng]'] || (req.body.koordinat && req.body.koordinat.lng);
+        // 1. Menangkap koordinat langsung dari form
+        const latInput = req.body.lat || req.body['koordinat[lat]'] || (req.body.koordinat && req.body.koordinat.lat) || "";
+        const lngInput = req.body.lng || req.body['koordinat[lng]'] || (req.body.koordinat && req.body.koordinat.lng) || "";
         
-        dataOrder.lat = latInput || "";
-        dataOrder.lng = lngInput || "";
-        
-        // Memastikan field tambahan tertangkap dari Form
-        dataOrder.imeiSerial = req.body.imeiSerial || ""; 
-        dataOrder.lokasiServis = req.body.lokasiServis || "home_service";
-        
+        // 2. Menangkap file gambar kondisi HP
+        let kondisiHPFile = "";
         if (req.files && req.files.length > 0) {
             const fileKondisi = req.files.find(f => f.fieldname === 'kondisiHPFile');
             if (fileKondisi) {
-                dataOrder.kondisiHP = `/uploads/${fileKondisi.filename}`;
+                kondisiHPFile = `/uploads/${fileKondisi.filename}`;
             }
         }
 
-        dataOrder.biayaPengecekan = 50000;
-        dataOrder.waktuPesan = new Date(); 
-        dataOrder.riwayatStatus = [{ status: "pending", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }];
+        // 3. Mapping data dari Frontend ke struktur JSON yang sesuai dengan OrderSchema
+        const dataBaru = new Order({
+            kode: req.body.kode,
+            pelanggan: {
+                nama: req.body.nama,
+                wa: req.body.wa,
+                privasi: req.body.privasi === 'true',
+                lokasi: {
+                    tipeServis: req.body.lokasiServis || "home_service",
+                    lat: latInput,
+                    lng: lngInput,
+                    shareloc: req.body.shareloc || ""
+                }
+            },
+            perangkat: {
+                layanan: req.body.layanan || "Belum dipilih",
+                merek: req.body.merek,
+                tipe: req.body.tipe,
+                imeiSerial: req.body.imeiSerial || "",
+                kondisiHP: kondisiHPFile,
+                keluhan: req.body.kerusakan || "",
+                kelengkapan: req.body.kelengkapan || "",
+                statusBAST: req.body.statusBAST || "menunggu"
+            },
+            pengerjaan: {
+                riwayatStatus: [{ status: "pending", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }]
+            },
+            finansial: {
+                biayaPengecekan: 50000
+            }
+        });
 
-        const dataBaru = new Order(dataOrder);
+        // Simpan Data Ke DB
         await dataBaru.save(); 
         
-        const pesanWA = `Halo ${dataBaru.nama},\n\nTerima kasih telah memesan servis di SF Tech.\nKode Resi Anda: *${dataBaru.kode}*\n\nSilakan lacak status perbaikan Anda melalui website kami.`;
-        kirimNotifikasiWA(dataBaru.wa, pesanWA);
+        // Notifikasi WA
+        const pesanWA = `Halo ${dataBaru.pelanggan.nama},\n\nTerima kasih telah memesan servis di SF Tech.\nKode Resi Anda: *${dataBaru.kode}*\n\nSilakan lacak status perbaikan Anda melalui website kami.`;
+        kirimNotifikasiWA(dataBaru.pelanggan.wa, pesanWA);
 
-        await tambahNotifikasiDB(`Pesanan Baru: ${dataBaru.kode} oleh ${dataBaru.nama}`);
+        // Notifikasi Admin
+        await tambahNotifikasiDB(`Pesanan Baru: ${dataBaru.kode} oleh ${dataBaru.pelanggan.nama}`);
         io.emit("updateDashboardAdmin");
+        
         try {
             const semuaTeknisi = await Teknisi.find();
             const daftarNamaTeknisi = semuaTeknisi.map(t => t.nama);
@@ -643,12 +667,13 @@ app.post('/api/orders', upload.any(), async (req, res) => {
                 targetTeknisi: daftarNamaTeknisi
             });
         } catch(e) { console.error("Gagal broadcast ke teknisi", e); }
+        
         res.status(201).json({ message: "Data pesanan berhasil disimpan", kode: dataBaru.kode });
     } catch (error) {
+        console.error(error); // Untuk merekam masalah tambahan di terminal log
         res.status(500).json({ error: "Gagal menyimpan pesanan: " + error.message }); 
     }
 });
-
 // Endpoint Detail Pesanan Berdasarkan Kode Resi
 app.get('/api/orders/:kode', async (req, res) => {
     try {
