@@ -1077,42 +1077,58 @@ function muatData() {
 
         window.dataTampilFilter = []; 
         let baru = 0, jadwal = 0, proses = 0, validasi = 0;
-        let pendapatanMurni = 0, piutangBerjalan = 0;
+         let pendapatanMurni = 0, piutangBerjalan = 0;
         const tipeUrutan = document.getElementById("urutTanggal").value;
         let urutanData = [...semua].sort((a, b) => new Date(b.waktuPesan || 0) - new Date(a.waktuPesan || 0));
 
         if(tipeUrutan === "terlama") urutanData.reverse();
 
-        urutanData.forEach(d => {
-            if (filterCari && !d.kode.toLowerCase().includes(filterCari) && !d.nama.toLowerCase().includes(filterCari)) return;
-            const tg = d.waktuPesan ? d.waktuPesan.split('T')[0] : '';
-            if (tglMulai && tg && tg < tglMulai) return;
-            if (tglAkhir && tg && tg > tglAkhir) return;
-            
-            if (filterStatusOpt !== "semua") {
-                let actualStatus = d.status;
-                if(d.pembayaranValid || d.status === "selesai") actualStatus = "selesai";
-                if (actualStatus !== filterStatusOpt) return;
-            }
+       urutanData.forEach(d => {
+                // Fallback untuk kompabilitas data lama & baru
+                const pNama = d.pelanggan?.nama || d.nama || "Tanpa Nama";
+                const pMerek = d.perangkat?.merek || d.merek || "";
+                const pStatus = d.pengerjaan?.status || d.status || "pending";
+                const pLunas = d.finansial?.pembayaranValid || d.pembayaranValid || false;
+                const bSuku = d.finansial?.biayaSukuCadang || d.biayaSuku || 0;
+                const bJasa = d.finansial?.biayaJasa || d.biayaJasa || 0;
+                const setujuTamb = d.pengerjaan?.statusPersetujuanTambahan || d.statusPersetujuanTambahan;
+                const bTambahan = d.finansial?.biayaSukuTambahan || d.biayaSukuTambahan || 0;
+                const isIndenLunas = d.finansial?.inden?.indenTerbayar || d.indenTerbayar || false;
+                const isDikonfirmasi = d.finansial?.pembayaranDikonfirmasi || d.pembayaranDikonfirmasi || false;
 
-            window.dataTampilFilter.push(d); 
+                if (filterCari && !d.kode.toLowerCase().includes(filterCari) && !pNama.toLowerCase().includes(filterCari)) return;
+                const tg = d.waktuPesan ? d.waktuPesan.split('T')[0] : (d.createdAt ? d.createdAt.split('T')[0] : '');
+                if (tglMulai && tg && tg < tglMulai) return;
+                if (tglAkhir && tg && tg > tglAkhir) return;
+                
+                if (filterStatusOpt !== "semua") {
+                    let actualStatus = pStatus;
+                    if(pLunas || pStatus === "selesai") actualStatus = "selesai";
+                    if (actualStatus !== filterStatusOpt) return;
+                }
 
-            let totalSub = (d.biayaSuku || 0) + (d.biayaJasa || 0);
-            let totalTamb = (d.statusPersetujuanTambahan === 'disetujui') ? (d.biayaSukuTambahan || 0) : 0;
-            let grandTotal = 50000 + totalSub + totalTamb; 
+                // Menyimpan variabel rapih kembali ke objek d untuk dipakai di renderTabelDariServer
+                d._pNama = pNama; d._pMerek = pMerek; d._pStatus = pStatus; d._pLunas = pLunas;
+                d._isDikonfirmasi = isDikonfirmasi; d._isIndenLunas = isIndenLunas;
+                
+                window.dataTampilFilter.push(d); 
 
-            if (d.pembayaranValid || d.status === 'selesai') {
-                pendapatanMurni += grandTotal;
-            } else if (d.status !== 'batal' && d.status !== 'ditolak_pelanggan') {
-                let sisaTagihan = d.indenTerbayar ? (grandTotal - (d.biayaSuku || 0)) : grandTotal;
-                if(sisaTagihan > 0) piutangBerjalan += sisaTagihan;
-            }
+                let totalSub = bSuku + bJasa;
+                let totalTamb = (setujuTamb === 'disetujui') ? bTambahan : 0;
+                let grandTotal = 50000 + totalSub + totalTamb; 
 
-            if(d.status === "pending" || d.status === "baru") baru++;
-            else if(d.status === "dijadwalkan") jadwal++;
-            else if(d.status === "diproses" || d.status === "selesai_servis") proses++;
-            if(d.pembayaranDikonfirmasi && !d.pembayaranValid) validasi++;
-        });
+                if (pLunas || pStatus === 'selesai') {
+                    pendapatanMurni += grandTotal;
+                } else if (pStatus !== 'batal' && pStatus !== 'ditolak_pelanggan') {
+                    let sisaTagihan = isIndenLunas ? (grandTotal - bSuku) : grandTotal;
+                    if(sisaTagihan > 0) piutangBerjalan += sisaTagihan;
+                }
+
+                if(pStatus === "pending" || pStatus === "baru") baru++;
+                else if(pStatus === "dijadwalkan") jadwal++;
+                else if(pStatus === "diproses" || pStatus === "selesai_servis") proses++;
+                if(isDikonfirmasi && !pLunas) validasi++;
+            });
 
         document.getElementById("jmlBaru").textContent = baru;
         document.getElementById("jmlJadwal").textContent = jadwal;
@@ -1144,34 +1160,35 @@ function renderTabelDariServer(dataHalaman, meta) {
         return;
     }
 
-    dataHalaman.forEach(d => {
-        let labelStatus = getStatusText(d);
-        let badgeClass = getBadgeClass(d);
+   dataHalaman.forEach(d => {
+        // Menggunakan variabel yang sudah kita rapikan di muatData
+        let labelStatus = getStatusText({ status: d._pStatus, pembayaranValid: d._pLunas });
+        let badgeClass = getBadgeClass({ status: d._pStatus, pembayaranValid: d._pLunas });
         
-        if(d.pembayaranDikonfirmasi && !d.pembayaranValid) {
+        if(d._isDikonfirmasi && !d._pLunas) {
             labelStatus = "VALIDASI PELUNASAN";
             badgeClass = "menunggu_validasi";
         }
 
         let opsiStatusSelect = `
-            <select class="quick-status" onchange="ubahStatusCepat('${d.kode}', this.value)" ${d.pembayaranValid ? 'disabled' : ''}>
-                <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Pending</option>
-                <option value="dijadwalkan" ${d.status === 'dijadwalkan' ? 'selected' : ''}>Dijadwalkan</option>
-                <option value="diproses" ${d.status === 'diproses' ? 'selected' : ''}>Proses</option>
-                <option value="selesai_servis" ${d.status === 'selesai_servis' ? 'selected' : ''}>Selesai (Menunggu Lunas)</option>
-                ${d.pembayaranValid ? '<option value="selesai" selected>Lunas & Selesai</option>' : ''}
-                <option value="ditolak_pelanggan" ${d.status === 'ditolak_pelanggan' ? 'selected' : ''}>Dibatalkan User</option>
+            <select class="quick-status" onchange="ubahStatusCepat('${d.kode}', this.value)" ${d._pLunas ? 'disabled' : ''}>
+                <option value="pending" ${d._pStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                <option value="dijadwalkan" ${d._pStatus === 'dijadwalkan' ? 'selected' : ''}>Dijadwalkan</option>
+                <option value="diproses" ${d._pStatus === 'diproses' ? 'selected' : ''}>Proses</option>
+                <option value="selesai_servis" ${d._pStatus === 'selesai_servis' ? 'selected' : ''}>Selesai (Menunggu Lunas)</option>
+                ${d._pLunas ? '<option value="selesai" selected>Lunas & Selesai</option>' : ''}
+                <option value="ditolak_pelanggan" ${d._pStatus === 'ditolak_pelanggan' ? 'selected' : ''}>Dibatalkan User</option>
             </select>
         `;
 
-        let statusBayarBadge = d.pembayaranValid ? '<span style="color:#10b981; font-weight:bold;"><i class="bi bi-check-circle"></i> LUNAS</span>' : 
-                                (d.indenTerbayar ? '<span style="color:#f59e0b; font-weight:bold;"><i class="bi bi-hourglass-split"></i> Inden Masuk</span>' : '<span style="color:#ef4444;"><i class="bi bi-x-circle"></i> Belum Lunas</span>');
+        let statusBayarBadge = d._pLunas ? '<span style="color:#10b981; font-weight:bold;"><i class="bi bi-check-circle"></i> LUNAS</span>' : 
+                                (d._isIndenLunas ? '<span style="color:#f59e0b; font-weight:bold;"><i class="bi bi-hourglass-split"></i> Inden Masuk</span>' : '<span style="color:#ef4444;"><i class="bi bi-x-circle"></i> Belum Lunas</span>');
 
         tbody.innerHTML += `
             <tr id="baris-${d.kode}">
                 <td style="text-align:center;"><input type="checkbox" class="chk-tabel row-check" value="${d.kode}" onchange="cekPilihanBulk()"></td>
-                <td><strong style="color:#0ea5e9;">${d.kode}</strong><br><span style="font-size:0.75rem; color:#64748b;">${new Date(d.waktuPesan).toLocaleDateString("id-ID")}</span></td>
-                <td><strong>${d.nama}</strong><br><span style="font-size:0.8rem; color:#64748b;">${d.merek} ${d.tipe}</span></td>
+                <td><strong style="color:#0ea5e9;">${d.kode}</strong><br><span style="font-size:0.75rem; color:#64748b;">${new Date(d.waktuPesan || d.createdAt).toLocaleDateString("id-ID")}</span></td>
+                <td><strong>${d._pNama}</strong><br><span style="font-size:0.8rem; color:#64748b;">${d._pMerek} ${d.perangkat?.tipe || d.tipe || ''}</span></td>
                 <td>${statusBayarBadge}</td>
                 <td>
                     <div style="margin-bottom: 5px;"><span class="status ${badgeClass}" id="badge-${d.kode}">${labelStatus}</span></div>
@@ -1288,13 +1305,12 @@ function eksekusiBulk() {
 function ubahStatusCepat(kode, statusBaru) {
     fetch(`${API_URL}/orders/${kode}`, {
         method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
-        body: JSON.stringify({ status: statusBaru })
+        body: JSON.stringify({ "pengerjaan.status": statusBaru }) // Diubah ke format nested
     }).then(handleApiError).then(() => {
         Toast.fire({ icon: 'success', title: 'Status diupdate cepat!' });
         muatData();
     });
 }
-
 function renderGrafikAdmin(baru, jadwal, proses, validasi) {
     const ctx = document.getElementById('grafikAdmin').getContext('2d');
     if (chartInstance) chartInstance.destroy();
@@ -1401,10 +1417,6 @@ function bukaModalKelola(kode) {
         document.getElementById("qc_speaker").checked = qc.speaker || false;
         document.getElementById("qc_segel").checked = qc.segel || false;
 
-        // Info Kiri (Langkah 1)
-        document.getElementById("infoNama").textContent = data.nama;
-        document.getElementById("infoWa").textContent = data.wa;
-        document.getElementById("infoImei").textContent = data.imeiSerial || "Tidak ada data";
 
 const lblTipeLayanan = document.getElementById("infoTipeLayanan");
 if (data.lokasiServis === "cod") {
@@ -1544,13 +1556,13 @@ function validasiInden() {
     const kode = document.getElementById("kodePesanan").value;
     fetch(`${API_URL}/orders/${kode}`, {
         method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
-        body: JSON.stringify({ indenTerbayar: true })
+        body: JSON.stringify({ "finansial.inden.indenTerbayar": true }) // Diubah ke format nested
     }).then(handleApiError).then(() => {
         Swal.fire('Berhasil', 'Pembayaran Suku Cadang Inden Tervalidasi', 'success');
         bukaModalKelola(kode); muatData();
     });
 }
-
+    
 function toggleFormTambahan() {
     const chk = document.getElementById("chkAdaTambahan");
     const subForm = document.getElementById("subFormTambahan");
@@ -1701,7 +1713,8 @@ function validasiPembayaranPelunasan() {
         if (result.isConfirmed) {
             fetch(`${API_URL}/orders/${kode}`, {
                 method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeader() },
-                body: JSON.stringify({ pembayaranValid: true, status: "selesai" })
+                // Diubah ke format nested
+                body: JSON.stringify({ "finansial.pembayaranValid": true, "pengerjaan.status": "selesai" }) 
             }).then(handleApiError).then(() => {
                 Swal.fire('Tervalidasi!', 'Nota telah dikunci permanen.', 'success');
                 bukaModalKelola(kode); muatData();
@@ -1709,7 +1722,6 @@ function validasiPembayaranPelunasan() {
         }
     });
 }
-
 function muatLogPesanAdmin() {
     const kode = document.getElementById("kodePesanan").value;
     if(!kode) return;
