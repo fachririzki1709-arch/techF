@@ -1637,9 +1637,9 @@ function prosesLacakDenganKode(kode, simpanLokal = true) {
 
 function responsTambahan(aksi) {
     let payload = {}; let pesan = ''; let tipeIcon = 'success';
-    if (aksi === 'disetujui') { payload = { statusPersetujuanTambahan: "disetujui" }; pesan = 'Biaya tambahan disetujui. Servis akan dilanjutkan sesuai estimasi baru.'; } 
-    else if (aksi === 'ditolak_lanjut') { payload = { statusPersetujuanTambahan: "ditolak_lanjut" }; pesan = 'Kerusakan tambahan ditolak. Teknisi akan melanjutkan servis awal saja.'; } 
-    else if (aksi === 'ditolak_batal') { payload = { statusPersetujuanTambahan: "ditolak_batal", status: "ditolak_pelanggan" }; pesan = 'Servis dibatalkan sepenuhnya.'; tipeIcon = 'error'; }
+   if (aksi === 'disetujui') { payload = { "pengerjaan.statusPersetujuanTambahan": "disetujui" }; pesan = 'Biaya tambahan disetujui. Servis akan dilanjutkan sesuai estimasi baru.'; } 
+else if (aksi === 'ditolak_lanjut') { payload = { "pengerjaan.statusPersetujuanTambahan": "ditolak_lanjut" }; pesan = 'Kerusakan tambahan ditolak. Teknisi akan melanjutkan servis awal saja.'; } 
+else if (aksi === 'ditolak_batal') { payload = { "pengerjaan.statusPersetujuanTambahan": "ditolak_batal", "pengerjaan.status": "ditolak_pelanggan" }; pesan = 'Servis dibatalkan sepenuhnya.'; tipeIcon = 'error'; }
 
     fetch(`${API_URL}/orders/${kodeSaya}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
     .then(() => { Swal.fire('Berhasil Dikonfirmasi!', pesan, tipeIcon); cekStatus(); });
@@ -1664,7 +1664,8 @@ function konfirmasiBayar() {
     if(metodeBayar !== "Tunai" && fileInputLunas.files.length === 0) return Swal.fire('Oops', 'Silakan upload bukti transfer pelunasan akhir.', 'warning');
 
     const formDataLunas = new FormData();
-    formDataLunas.append('metodePembayaran', metodeBayar); formDataLunas.append('pembayaranDikonfirmasi', 'true');
+    formDataLunas.append('finansial.metodePembayaran', metodeBayar); 
+    formDataLunas.append('finansial.pembayaranDikonfirmasi', 'true');
     if(fileInputLunas.files.length > 0) formDataLunas.append('buktiPelunasan', fileInputLunas.files[0]);
 
     fetch(`${API_URL}/orders/${kodeSaya}`, { method: "PUT", body: formDataLunas })
