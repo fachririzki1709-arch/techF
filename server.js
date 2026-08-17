@@ -229,14 +229,13 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
+// GANTI BLOK OrderSchema LAMA DENGAN INI:
 const OrderSchema = new mongoose.Schema({
-    // 1. IDENTIFIKASI UTAMA
     kode: { type: String, required: true, unique: true, index: true }, 
-    
-    // 2. DATA PELANGGAN
     pelanggan: {
         nama: { type: String, required: true },
         wa: { type: String, required: true },
+        privasi: { type: Boolean, default: false }, // Fitur Jaminan Privasi Data
         lokasi: {
             tipeServis: { type: String, enum: ['home_service', 'cod', 'workshop'], default: 'home_service' },
             lat: { type: String, default: "" },
@@ -244,62 +243,60 @@ const OrderSchema = new mongoose.Schema({
             shareloc: { type: String, default: "" }
         }
     },
-
-    // 3. DATA PERANGKAT & KERUSAKAN
     perangkat: {
         layanan: { type: String, default: "Smartphone" }, 
         merek: { type: String, required: true },
         tipe: { type: String, required: true },
         imeiSerial: { type: String, default: "" },
-        kondisiHP: { type: String, default: "" }, // Path foto
-        keluhan: { type: String, default: "" }
+        kondisiHP: { type: String, default: "" },
+        keluhan: { type: String, default: "" },
+        kelengkapan: { type: String, default: "" }, // Fitur BAST Kelengkapan
+        statusBAST: { type: String, default: "menunggu" },
+        adaKerusakanTambahan: { type: Boolean, default: false }, // Fitur Kerusakan Ekstra
+        infoKerusakanTambahan: { type: String, default: "" }
     },
-
-    // 4. STATUS & PENGERJAAN
     pengerjaan: {
         teknisi: { type: String, default: "", index: true }, 
         status: { 
             type: String, 
-            enum: ['pending', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis', 'selesai', 'batal'], 
+            enum: ['pending', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis', 'selesai', 'batal', 'ditolak_pelanggan'], 
             default: 'pending',
             index: true
         },
         jadwal: { type: String, default: "" },
+        etaTeknisi: { type: String, default: "" },
         estimasiSelesai: { type: String, default: "" },
-        qcChecklist: { type: Map, of: Boolean, default: {} }, // Menggunakan Map agar lebih aman dari Object biasa
+        statusPersetujuanTambahan: { type: String, default: "pending" },
+        videoUnboxingFile: { type: String, default: "" }, // Media Transparansi
+        fotoPartFile: { type: String, default: "" },
+        qcChecklist: { type: Map, of: Boolean, default: {} }, 
         riwayatStatus: [{
             status: String,
             detail: String,
             waktu: { type: Date, default: Date.now }
         }]
     },
-
-    // 5. FINANSIAL & SPAREPART
     finansial: {
         biayaPengecekan: { type: Number, default: 50000 },
         biayaJasa: { type: Number, default: 0 },
         biayaSukuCadang: { type: Number, default: 0 },
+        biayaSukuTambahan: { type: Number, default: 0 }, // Biaya Kerusakan Ekstra
         statusPembayaran: { type: String, enum: ['belum_lunas', 'menunggu_konfirmasi', 'lunas'], default: 'belum_lunas' },
         metodePembayaran: { type: String, default: "" },
         buktiPelunasan: { type: String, default: "" },
-        
-        // Fitur Inden Part
+        pembayaranDikonfirmasi: { type: Boolean, default: false },
+        pembayaranValid: { type: Boolean, default: false },
         inden: {
             statusPart: { type: String, default: "tersedia" },
             buktiBayarInden: { type: String, default: "" },
             indenTerbayar: { type: Boolean, default: false }
         }
     },
-
-    // 6. ULASAN
     ulasan: {
         rating: { type: Number, min: 0, max: 5, default: 0 },
         teks: { type: String, default: "" }
     }
-}, { 
-    timestamps: true // Otomatis membuat 'createdAt' dan 'updatedAt'
-});
-
+}, { timestamps: true });
 const Order = mongoose.model('Order', OrderSchema, 'orders');
 
 const ChatSchema = new mongoose.Schema({
@@ -748,6 +745,30 @@ app.put('/api/orders/:kode/inden', upload.single('buktiInden'), async (req, res)
         res.json({ message: "Bukti inden berhasil diunggah", updated });
     } catch (error) {
         res.status(500).json({ error: "Gagal mengunggah bukti inden" });
+    }
+});
+// Endpoint Unggah Media Transparansi (Video Unboxing & Foto Part)
+app.put('/api/orders/:kode/transparansi', verifyAdmin, upload.any(), async (req, res) => {
+    try {
+        let updateFields = {};
+        if (req.files && req.files.length > 0) {
+            const fVideo = req.files.find(f => f.fieldname === 'videoUnboxing');
+            if (fVideo) updateFields.videoUnboxingFile = `/uploads/${fVideo.filename}`;
+
+            const fFoto = req.files.find(f => f.fieldname === 'fotoPart');
+            if (fFoto) updateFields.fotoPartFile = `/uploads/${fFoto.filename}`;
+        }
+
+        const updated = await Order.findOneAndUpdate(
+            { kode: req.params.kode },
+            { $set: updateFields },
+            { new: true }
+        );
+
+        io.emit("updateDataPelanggan", req.params.kode);
+        res.json({ message: "Media transparansi berhasil diunggah", updated });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal mengunggah media transparansi" });
     }
 });
 
