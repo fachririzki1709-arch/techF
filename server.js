@@ -731,10 +731,10 @@ app.put('/api/orders/:kode', upload.any(), async (req, res) => {
 // Endpoint Unggah Bukti Transfer Suku Cadang Inden
 app.put('/api/orders/:kode/inden', upload.single('buktiInden'), async (req, res) => {
     try {
-        let updateFields = {};
-        if (req.file) {
-            updateFields.buktiBayarInden = `/uploads/${req.file.filename}`;
-        }
+       let updateFields = {};
+if (req.file) {
+    updateFields['finansial.inden.buktiBayarInden'] = `/uploads/${req.file.filename}`;
+}       
         const updated = await Order.findOneAndUpdate(
             { kode: req.params.kode },
             { $set: updateFields },
@@ -780,12 +780,12 @@ app.put('/api/orders/:kode/cancel', async (req, res) => {
         
         if (existing && (existing.status === 'baru' || existing.status === 'pending')) {
             await Order.updateOne(
-                { kode: req.params.kode }, 
-                { 
-                    $set: { status: status || 'ditolak_pelanggan' },
-                    $push: { riwayatStatus: { status: status || 'ditolak_pelanggan', detail: "Dibatalkan oleh Pelanggan via Website", waktu: new Date().toISOString() } } 
-                }
-            );
+    { kode: req.params.kode }, 
+    { 
+        $set: { "pengerjaan.status": status || 'ditolak_pelanggan' },
+        $push: { "pengerjaan.riwayatStatus": { status: status || 'ditolak_pelanggan', detail: "Dibatalkan oleh Pelanggan via Website", waktu: new Date().toISOString() } } 
+    }
+)
             
             await tambahNotifikasiDB(`Pesanan Dibatalkan User: ${req.params.kode}`);
             io.emit("updateDashboardAdmin");
