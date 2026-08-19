@@ -375,9 +375,9 @@ app.get('/api/teknisi/orders/available', verifyTeknisi, async (req, res) => {
     try {
         // Cari order yang belum ada teknisinya dan berstatus pending/baru
         const availableOrders = await Order.find({
-            $or: [{ teknisi: "" }, { teknisi: null }],
-            status: { $in: ['pending', 'baru'] }
-        }).sort({ waktuPesan: -1 });
+    $or: [{ "pengerjaan.teknisi": "" }, { "pengerjaan.teknisi": null }],
+    "pengerjaan.status": { $in: ['pending', 'baru'] }
+}).sort({ waktuPesan: -1 });
         
         res.json(availableOrders);
     } catch (error) {
