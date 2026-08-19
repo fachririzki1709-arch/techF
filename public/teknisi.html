@@ -438,6 +438,23 @@
                 cekStatsUpdate();
             });
         }
+        // Letakkan tepat di bawah blok fungsi muatOrderTersedia()
+
+socket.on('orderBaruTersedia', (data) => {
+    // Hanya muat ulang jika teknisi sedang berstatus 'On Duty'
+    if (isAktif) {
+        muatOrderTersedia();
+        // Opsional: Memunculkan notifikasi kecil
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: 'Ada Order Baru Masuk!',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
+});
 
         socket.on('orderSudahDiambil', (data) => {
             const k = document.getElementById(`ordBaru-${data.kodeOrder}`);
@@ -447,21 +464,22 @@
         function tampilkanKartuOrder(order) {
             if (document.getElementById(`ordBaru-${order.kode}`)) return; 
             
-            const layoutHTML = `
-                <div class="list-item" id="ordBaru-${order.kode}">
-                    <div class="list-info">
-                        <h4>${order.kode} <span class="badge-status status-baru" style="margin-left:5px;">Baru</span></h4>
-                        <p>${order.nama} - ${order.merek} ${order.tipe}</p>
-                        <span><i class="bi bi-geo-alt"></i> ${order.lokasiServis === 'home_service' ? 'Kunjungan (On-Site)' : 'Titik COD'}</span>
-                        <div style="font-size:0.8rem; background:#fffbeb; padding:5px 8px; border-radius:6px; margin-top:5px; border-left:3px solid #f59e0b;">
-                            Keluhan: ${order.kerusakan}
-                        </div>
-                    </div>
-                    <div class="list-action">
-                        <button class="btn btn-take" onclick="tarikOrder('${order.kode}', '${order.nama}', '${order.merek} ${order.tipe}')">Ambil</button>
-                    </div>
-                </div>
-            `;
+           // KODE BARU
+const layoutHTML = `
+    <div class="list-item" id="ordBaru-${order.kode}">
+        <div class="list-info">
+            <h4>${order.kode} <span class="badge-status status-baru" style="margin-left:5px;">Baru</span></h4>
+            <p>${order.pelanggan.nama} - ${order.perangkat.merek} ${order.perangkat.tipe}</p>
+            <span><i class="bi bi-geo-alt"></i> ${order.pelanggan.lokasi.tipeServis === 'home_service' ? 'Kunjungan (On-Site)' : 'Titik COD'}</span>
+            <div style="font-size:0.8rem; background:#fffbeb; padding:5px 8px; border-radius:6px; margin-top:5px; border-left:3px solid #f59e0b;">
+                Keluhan: ${order.perangkat.keluhan}
+            </div>
+        </div>
+        <div class="list-action">
+            <button class="btn btn-take" onclick="tarikOrder('${order.kode}', '${order.pelanggan.nama}', '${order.perangkat.merek} ${order.perangkat.tipe}')">Ambil</button>
+        </div>
+    </div>
+`;
             document.getElementById('listOrderMasukFull').innerHTML += layoutHTML;
             cekStatsUpdate();
         }
@@ -525,12 +543,12 @@
                 document.getElementById('wsKodeOrder').innerText = "Ruang Kerja - " + kodeOrder;
                 
                 document.getElementById('wsKonten').innerHTML = `
-                    <div class="card-box">
-                        <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-person-lines-fill"></i> Data Pelanggan</h4>
-                        <p><strong>Nama:</strong> ${order.nama}</p>
-                        <p><strong>Unit:</strong> ${order.merek} ${order.tipe}</p>
-                        <p><strong>Keluhan:</strong> ${order.kerusakan}</p>
-                    </div>
+                   <div class="card-box">
+    <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-person-lines-fill"></i> Data Pelanggan</h4>
+    <p><strong>Nama:</strong> ${order.pelanggan.nama}</p>
+    <p><strong>Unit:</strong> ${order.perangkat.merek} ${order.perangkat.tipe}</p>
+    <p><strong>Keluhan:</strong> ${order.perangkat.keluhan}</p>
+</div>
                     
                     <div class="card-box" style="margin-top:1rem;">
                         <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-ui-checks"></i> QC Checklist (Akhir)</h4>
@@ -546,8 +564,8 @@
 
                     <div class="card-box" style="margin-top:1rem;">
                         <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-receipt"></i> Pelaporan</h4>
-                        <label style="font-size:0.85rem; font-weight:bold;">Biaya Sparepart / Jasa (Rp):</label>
-                        <input type="number" id="biayaPart-${kodeOrder}" value="${order.biayaSuku || 0}" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border);">
+                       <label style="font-size:0.85rem; font-weight:bold;">Biaya Sparepart / Jasa (Rp):</label>
+    <input type="number" id="biayaPart-${kodeOrder}" value="${order.finansial.biayaSukuCadang || 0}" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border);">
                     </div>
                 `;
 
