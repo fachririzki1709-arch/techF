@@ -1372,19 +1372,22 @@ function bukaModalKelola(kode) {
         document.getElementById("txtKodeHeader").textContent = kode;
         document.getElementById("kodePesanan").value = kode;
         document.querySelectorAll(".tab-btn-modal")[0].click();
-        const statusValid = data.finansial.statusPembayaran === 'lunas' || data.pengerjaan.status === 'selesai';
+        
+        // --- 1. DATA PELANGGAN & PERANGKAT (Nested Object) ---
         document.getElementById("infoNama").textContent = data.pelanggan.nama;
         document.getElementById("infoWa").textContent = data.pelanggan.wa;
         document.getElementById("infoImei").textContent = data.perangkat.imeiSerial || "Tidak ada data";
         document.getElementById("infoKeluhan").textContent = data.perangkat.keluhan || "-";
         
+        // --- 2. PENJADWALAN & KEUANGAN (Nested Object) ---
         document.getElementById("statusPesanan").value = data.pengerjaan.status || "pending";
         document.getElementById("teknisi").value = data.pengerjaan.teknisi || "";
         document.getElementById("biayaSuku").value = data.finansial.biayaSukuCadang || "";
         document.getElementById("biayaJasa").value = data.finansial.biayaJasa || "";
         document.getElementById("statusSparepart").value = data.finansial.inden.statusPart || "tersedia";
 
-        const isLocked = data.pembayaranValid || data.status === "selesai";
+        // Kunci Invoice Jika Lunas
+        const isLocked = data.finansial.pembayaranValid || data.pengerjaan.status === "selesai";
         document.getElementById("bannerTerkunci").style.display = isLocked ? "block" : "none";
         
         const kunciElements = document.querySelectorAll(".kunci-target");
@@ -1403,13 +1406,12 @@ function bukaModalKelola(kode) {
             document.getElementById("btnUploadTransparansi").disabled = false;
         }
 
-        // ✨ SKEMA 1 & 2: BAST & Jaminan Data Privasi
-        document.getElementById("infoPrivasiData").style.display = data.privasi ? "block" : "none";
-        document.getElementById("lblBASTKelengkapan").textContent = data.kelengkapan || "Belum ada catatan";
-        document.getElementById("lblBASTStatus").innerHTML = data.statusBAST === "disetujui" ? "<span style='color:#10b981;'><i class='bi bi-check-circle-fill'></i> Disetujui Pelanggan (Segel Terpasang)</span>" : "<span style='color:#f59e0b;'>Menunggu / Belum Diserahkan</span>";
+        document.getElementById("infoPrivasiData").style.display = data.pelanggan.privasi ? "block" : "none";
+        document.getElementById("lblBASTKelengkapan").textContent = data.perangkat.kelengkapan || "Belum ada catatan";
+        document.getElementById("lblBASTStatus").innerHTML = data.perangkat.statusBAST === "disetujui" ? "<span style='color:#10b981;'><i class='bi bi-check-circle-fill'></i> Disetujui Pelanggan (Segel Terpasang)</span>" : "<span style='color:#f59e0b;'>Menunggu / Belum Diserahkan</span>";
         
-        // ✨ SKEMA 4: QC Checklist Data Load
-        const qc = data.qcChecklist || {};
+        // --- 3. QUALITY CONTROL CHECKLIST ---
+        const qc = data.pengerjaan.qcChecklist || {};
         document.getElementById("qc_layar").checked = qc.layar || false;
         document.getElementById("qc_baterai").checked = qc.baterai || false;
         document.getElementById("qc_kamera").checked = qc.kamera || false;
@@ -1417,25 +1419,24 @@ function bukaModalKelola(kode) {
         document.getElementById("qc_speaker").checked = qc.speaker || false;
         document.getElementById("qc_segel").checked = qc.segel || false;
 
+        const lblTipeLayanan = document.getElementById("infoTipeLayanan");
+        const tipeServis = data.pelanggan.lokasi.tipeServis;
+        if (tipeServis === "cod") {
+            lblTipeLayanan.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Sistem COD / Titik Temu';
+            lblTipeLayanan.style.background = "#f0f9ff"; lblTipeLayanan.style.color = "#0ea5e9";
+        } else if (tipeServis === "workshop") {
+            lblTipeLayanan.innerHTML = '<i class="bi bi-shop"></i> Datang ke Workshop';
+            lblTipeLayanan.style.background = "#f1f5f9"; lblTipeLayanan.style.color = "#475569";
+        } else {
+            lblTipeLayanan.innerHTML = '<i class="bi bi-house-gear-fill"></i> Panggil Teknisi (On-Site)';
+            lblTipeLayanan.style.background = "#e0f2fe"; lblTipeLayanan.style.color = "#0369a1";
+        }
 
-const lblTipeLayanan = document.getElementById("infoTipeLayanan");
-if (data.lokasiServis === "cod") {
-    lblTipeLayanan.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Sistem COD / Titik Temu';
-    lblTipeLayanan.style.background = "#f0f9ff"; lblTipeLayanan.style.color = "#0ea5e9";
-} else if (data.lokasiServis === "workshop") { // Dipertahankan untuk histori data lama
-    lblTipeLayanan.innerHTML = '<i class="bi bi-shop"></i> Datang ke Workshop';
-    lblTipeLayanan.style.background = "#f1f5f9"; lblTipeLayanan.style.color = "#475569";
-} else {
-    lblTipeLayanan.innerHTML = '<i class="bi bi-house-gear-fill"></i> Panggil Teknisi (On-Site)';
-    lblTipeLayanan.style.background = "#e0f2fe"; lblTipeLayanan.style.color = "#0369a1";
-}
-        document.getElementById("infoKeluhan").textContent = data.kerusakan || "-";
-
-        // Map Leaflet Admin
+        // --- 4. MAP LEAFLET GPS (Nested) ---
         const mapContainer = document.getElementById("adminMapContainer");
-        if(data.lat && data.lng) {
+        if(data.pelanggan.lokasi.lat && data.pelanggan.lokasi.lng) {
             setTimeout(() => {
-                const mapCenter = [parseFloat(data.lat), parseFloat(data.lng)];
+                const mapCenter = [parseFloat(data.pelanggan.lokasi.lat), parseFloat(data.pelanggan.lokasi.lng)];
                 if(!adminLeafletMap) {
                     adminLeafletMap = L.map('adminMapContainer').setView(mapCenter, 15);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminLeafletMap);
@@ -1443,42 +1444,38 @@ if (data.lokasiServis === "cod") {
                 } else {
                     adminLeafletMap.setView(mapCenter, 15);
                     adminMapMarker.setLatLng(mapCenter).bindPopup("Lokasi Pelanggan").openPopup();
-                    
-                    // Memastikan ukuran peta disegarkan agar tidak abu-abu
                     adminLeafletMap.invalidateSize(); 
                 }
             }, 300);
-            document.getElementById("infoAlamat").innerHTML = `Titik GPS <a href="https://www.google.com/maps?q=${data.lat},${data.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
+            document.getElementById("infoAlamat").innerHTML = `Titik GPS <a href="https://www.google.com/maps?q=${data.pelanggan.lokasi.lat},${data.pelanggan.lokasi.lng}" target="_blank" style="color:#0ea5e9; text-decoration:none;"><i class="bi bi-geo-alt"></i> Buka Google Maps</a>`;
         } else {
             document.getElementById("infoAlamat").textContent = "Lokasi: GPS Tidak Diberikan";
         }
         
-        // ISIAN FORM (Langkah 2)
-        document.getElementById("statusPesanan").value = data.status || "pending";
-        document.getElementById("teknisi").value = data.teknisi || "";
-       let jadwalFormated = "";
-        if (data.jadwal) {
+        // --- 5. TANGGAL JADWAL (Nested) ---
+        let jadwalFormated = "";
+        if (data.pengerjaan.jadwal) {
             try {
-                const d = new Date(data.jadwal);
+                const d = new Date(data.pengerjaan.jadwal);
                 if (!isNaN(d.getTime())) {
                     jadwalFormated = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
                 } else {
-                    jadwalFormated = data.jadwal;
+                    jadwalFormated = data.pengerjaan.jadwal;
                 }
             } catch(e) { 
-                jadwalFormated = data.jadwal; 
+                jadwalFormated = data.pengerjaan.jadwal; 
             }
         }
         document.getElementById("jadwal").value = jadwalFormated;
-        document.getElementById("etaUpdate").value = data.etaTeknisi || "";
+        document.getElementById("etaUpdate").value = data.pengerjaan.etaTeknisi || "";
         
-        // INDEN SPAREPART
-        document.getElementById("statusSparepart").value = data.statusSparepart || "tersedia";
-        if (data.statusSparepart === 'inden') {
+        // --- 6. INDEN SPAREPART & FILE BINDING FIX ---
+        if (data.finansial.inden.statusPart === 'inden') {
             document.getElementById("boxValidasiInden").style.display = "block";
-            if(data.buktiIndenFile) {
-                document.getElementById("displayBuktiInden").innerHTML = `<a href="${window.location.origin}${data.buktiIndenFile}" target="_blank"><img src="${window.location.origin}${data.buktiIndenFile}" style="max-height:100px; border-radius:4px;"></a>`;
-                if(!data.indenTerbayar && !isLocked) document.getElementById("btnAccInden").style.display = "inline-flex";
+            // Memanggil path bukti dari nested finansial.inden
+            if(data.finansial.inden.buktiBayarInden) {
+                document.getElementById("displayBuktiInden").innerHTML = `<a href="${window.location.origin}${data.finansial.inden.buktiBayarInden}" target="_blank"><img src="${window.location.origin}${data.finansial.inden.buktiBayarInden}" style="max-height:100px; border-radius:4px;"></a>`;
+                if(!data.finansial.inden.indenTerbayar && !isLocked) document.getElementById("btnAccInden").style.display = "inline-flex";
                 else document.getElementById("btnAccInden").style.display = "none";
             } else {
                 document.getElementById("displayBuktiInden").innerHTML = "Menunggu pelanggan upload bukti...";
@@ -1486,22 +1483,19 @@ if (data.lokasiServis === "cod") {
             }
         } else { document.getElementById("boxValidasiInden").style.display = "none"; }
         
-        document.getElementById("biayaSuku").value = data.biayaSuku || "";
-        document.getElementById("biayaJasa").value = data.biayaJasa || "";
-        
-        // TAMBAHAN KERUSAKAN ADMIN SIDE
+        // --- 7. BIAYA TAMBAHAN KERUSAKAN (Nested) ---
         const chkTambahan = document.getElementById("chkAdaTambahan");
         const subForm = document.getElementById("subFormTambahan");
-        if (data.adaKerusakanTambahan) {
+        if (data.perangkat.adaKerusakanTambahan) {
             chkTambahan.checked = true; subForm.style.display = "block";
-            document.getElementById("infoTambahan").value = data.infoKerusakanTambahan || "";
-            document.getElementById("biayaTambahan").value = data.biayaSukuTambahan || "";
+            document.getElementById("infoTambahan").value = data.perangkat.infoKerusakanTambahan || "";
+            document.getElementById("biayaTambahan").value = data.finansial.biayaSukuTambahan || "";
             
             const txtRespon = document.getElementById("txtResponPelanggan");
             const alertPending = document.getElementById("peringatanTambahanPending");
-            if (data.statusPersetujuanTambahan === 'pending') {
+            if (data.pengerjaan.statusPersetujuanTambahan === 'pending') {
                 txtRespon.innerHTML = "<span style='color:#f59e0b;'>PENDING (Menunggu Keputusan User)</span>"; alertPending.style.display = "block";
-            } else if (data.statusPersetujuanTambahan === 'disetujui') {
+            } else if (data.pengerjaan.statusPersetujuanTambahan === 'disetujui') {
                 txtRespon.innerHTML = "<span style='color:#10b981;'>DISETUJUI</span>"; alertPending.style.display = "none";
                 if(isLocked) document.getElementById("biayaTambahan").disabled = true;
             } else {
@@ -1512,27 +1506,25 @@ if (data.lokasiServis === "cod") {
             document.getElementById("infoTambahan").value = ""; document.getElementById("biayaTambahan").value = "";
         }
 
-        // RIWAYAT AUDIT TRAIL
-        renderRiwayatStatus(data.riwayatStatus);
+        renderRiwayatStatus(data.pengerjaan.riwayatStatus);
+        hitungTotal(data.finansial.inden.indenTerbayar);
         
-        // TAMPILAN PELUNASAN (Langkah 3)
-        hitungTotal(data.indenTerbayar);
-        
-        document.getElementById("metodeBayarTampil").textContent = data.metodePembayaran || "Belum Lunas";
-        if (data.buktiPelunasanFile) {
-            document.getElementById("displayBuktiPelunasan").innerHTML = `<a href="${window.location.origin}${data.buktiPelunasanFile}" target="_blank"><img src="${window.location.origin}${data.buktiPelunasanFile}"></a>`;
+        // --- 8. PELUNASAN KEUANGAN (Nested & File Fix) ---
+        document.getElementById("metodeBayarTampil").textContent = data.finansial.metodePembayaran || "Belum Lunas";
+        if (data.finansial.buktiPelunasan) {
+            document.getElementById("displayBuktiPelunasan").innerHTML = `<a href="${window.location.origin}${data.finansial.buktiPelunasan}" target="_blank"><img src="${window.location.origin}${data.finansial.buktiPelunasan}"></a>`;
         } else { document.getElementById("displayBuktiPelunasan").innerHTML = "Belum ada bukti / Belum Lunas"; }
 
-        if (data.pembayaranDikonfirmasi && !data.pembayaranValid && !isLocked) { document.getElementById("btnValidasi").style.display = "flex"; } 
+        if (data.finansial.pembayaranDikonfirmasi && !data.finansial.pembayaranValid && !isLocked) { document.getElementById("btnValidasi").style.display = "flex"; } 
         else { document.getElementById("btnValidasi").style.display = "none"; }
 
-        // KANAN: MEDIA & CHAT
-        const imgKondisi = data.kondisiHPFile ? (data.kondisiHPFile.endsWith('.mp4') || data.kondisiHPFile.endsWith('.webm') ? `<video src="${window.location.origin}${data.kondisiHPFile}" controls></video>` : `<a href="${window.location.origin}${data.kondisiHPFile}" target="_blank"><img src="${window.location.origin}${data.kondisiHPFile}"></a>`) : 'Tidak Ada File';
+        // --- 9. MEDIA & CHAT (Kondisi HP & Video Workshop File Binding Fix) ---
+        const fileKondisi = data.perangkat.kondisiHP;
+        const imgKondisi = fileKondisi ? (fileKondisi.endsWith('.mp4') || fileKondisi.endsWith('.webm') ? `<video src="${window.location.origin}${fileKondisi}" controls></video>` : `<a href="${window.location.origin}${fileKondisi}" target="_blank"><img src="${window.location.origin}${fileKondisi}"></a>`) : 'Tidak Ada File';
         document.getElementById("tampilKondisiAdmin").innerHTML = imgKondisi;
         
-        // ✨ SKEMA 3: Media Transparansi Workshop (Load Links)
-        document.getElementById("linkVideoUnboxing").innerHTML = data.videoUnboxingFile ? `<a href="${window.location.origin}${data.videoUnboxingFile}" target="_blank" style="color:#0ea5e9;">Lihat Video Unboxing Terunggah</a>` : '<span style="color:#64748b;">Belum ada video.</span>';
-        document.getElementById("linkFotoPart").innerHTML = data.fotoPartFile ? `<a href="${window.location.origin}${data.fotoPartFile}" target="_blank" style="color:#0ea5e9;">Lihat Foto Suku Cadang Terunggah</a>` : '<span style="color:#64748b;">Belum ada foto part.</span>';
+        document.getElementById("linkVideoUnboxing").innerHTML = data.pengerjaan.videoUnboxingFile ? `<a href="${window.location.origin}${data.pengerjaan.videoUnboxingFile}" target="_blank" style="color:#0ea5e9;">Lihat Video Unboxing Terunggah</a>` : '<span style="color:#64748b;">Belum ada video.</span>';
+        document.getElementById("linkFotoPart").innerHTML = data.pengerjaan.fotoPartFile ? `<a href="${window.location.origin}${data.pengerjaan.fotoPartFile}" target="_blank" style="color:#0ea5e9;">Lihat Foto Suku Cadang Terunggah</a>` : '<span style="color:#64748b;">Belum ada foto part.</span>';
         
         muatLogPesanAdmin();
     });
