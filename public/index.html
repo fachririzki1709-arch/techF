@@ -1690,43 +1690,46 @@ function cekStatus() {
         if(!data) { kembaliKeAwal(); return; }
         hilangkanSkeleton();
 
+        // 1. Alert Kerusakan Tambahan (Nested Object)
         if(document.getElementById("boxKerusakanTambahan")) {
-            if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "pending" && data.status !== "ditolak_pelanggan") {
+            if (data.perangkat.adaKerusakanTambahan && data.pengerjaan.statusPersetujuanTambahan === "pending" && data.pengerjaan.status !== "ditolak_pelanggan") {
                 document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
+                document.getElementById("txtKerusakanTambahan").textContent = data.perangkat.infoKerusakanTambahan;
+                document.getElementById("txtBiayaTambahan").textContent = data.finansial.biayaSukuTambahan.toLocaleString("id-ID");
                 document.getElementById("aksiTambahan").style.display = "flex";
-            } else if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "disetujui") {
+            } else if (data.perangkat.adaKerusakanTambahan && data.pengerjaan.statusPersetujuanTambahan === "disetujui") {
                 document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
+                document.getElementById("txtKerusakanTambahan").textContent = data.perangkat.infoKerusakanTambahan;
+                document.getElementById("txtBiayaTambahan").textContent = data.finansial.biayaSukuTambahan.toLocaleString("id-ID");
                 document.getElementById("aksiTambahan").innerHTML = "<p style='color:#16a34a; font-weight:bold;'><i class='bi bi-check-circle-fill'></i> Penambahan Biaya Disetujui.</p>";
-            } else if (data.adaKerusakanTambahan && data.statusPersetujuanTambahan === "ditolak_lanjut") {
+            } else if (data.perangkat.adaKerusakanTambahan && data.pengerjaan.statusPersetujuanTambahan === "ditolak_lanjut") {
                 document.getElementById("boxKerusakanTambahan").style.display = "block";
-                document.getElementById("txtKerusakanTambahan").textContent = data.infoKerusakanTambahan;
-                document.getElementById("txtBiayaTambahan").textContent = data.biayaSukuTambahan.toLocaleString("id-ID");
+                document.getElementById("txtKerusakanTambahan").textContent = data.perangkat.infoKerusakanTambahan;
+                document.getElementById("txtBiayaTambahan").textContent = data.finansial.biayaSukuTambahan.toLocaleString("id-ID");
                 document.getElementById("aksiTambahan").innerHTML = "<p style='color:#f59e0b; font-weight:bold;'><i class='bi bi-tools'></i> Tambahan Ditolak. (Melanjutkan Servis Awal Saja)</p>";
             } else {
                 document.getElementById("boxKerusakanTambahan").style.display = "none";
             }
         }
 
+        // 2. Media Transparansi Video & Foto (Nested Object)
         const boxTransparansi = document.getElementById("boxTransparansi");
         const btnVid = document.getElementById("btnVideoUnboxing");
         const btnFoto = document.getElementById("btnFotoPart");
         
-        if (data.videoUnboxingFile || data.fotoPartFile) {
+        if (data.pengerjaan.videoUnboxingFile || data.pengerjaan.fotoPartFile) {
             if(boxTransparansi) boxTransparansi.style.display = "block";
-            if (data.videoUnboxingFile) { btnVid.style.display = "inline-flex"; btnVid.href = window.location.origin + data.videoUnboxingFile; } else { btnVid.style.display = "none"; }
-            if (data.fotoPartFile) { btnFoto.style.display = "inline-flex"; btnFoto.href = window.location.origin + data.fotoPartFile; } else { btnFoto.style.display = "none"; }
+            if (data.pengerjaan.videoUnboxingFile) { btnVid.style.display = "inline-flex"; btnVid.href = window.location.origin + data.pengerjaan.videoUnboxingFile; } else { btnVid.style.display = "none"; }
+            if (data.pengerjaan.fotoPartFile) { btnFoto.style.display = "inline-flex"; btnFoto.href = window.location.origin + data.pengerjaan.fotoPartFile; } else { btnFoto.style.display = "none"; }
         } else {
             if(boxTransparansi) boxTransparansi.style.display = "none";
         }
 
+        // 3. UI QC Checklist
         const boxQC = document.getElementById("boxQCChecklist");
-        if(data.qcChecklist && Object.keys(data.qcChecklist).length > 0) {
+        if(data.pengerjaan.qcChecklist && Object.keys(data.pengerjaan.qcChecklist).length > 0) {
             if(boxQC) boxQC.style.display = "block";
-            const qc = data.qcChecklist;
+            const qc = data.pengerjaan.qcChecklist;
             const qcContainer = document.getElementById("qcListItems");
             if (qcContainer) {
                 qcContainer.innerHTML = `
@@ -1742,65 +1745,66 @@ function cekStatus() {
             if(boxQC) boxQC.style.display = "none";
         }
 
-        if(document.getElementById("tampilKondisiHP") && data.kondisiHP) {
-            document.getElementById("tampilKondisiHP").innerHTML = (data.kondisiHP.endsWith('.mp4') || data.tipeKondisi.startsWith("video/")) 
-                ? `<video src="${data.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>` 
-                : `<img src="${data.kondisiHP}" style="max-width:100%; border-radius:8px;">`;
+        if(document.getElementById("tampilKondisiHP") && data.perangkat.kondisiHP) {
+            document.getElementById("tampilKondisiHP").innerHTML = (data.perangkat.kondisiHP.endsWith('.mp4') || (data.tipeKondisi && data.tipeKondisi.startsWith("video/"))) 
+                ? `<video src="${data.perangkat.kondisiHP}" controls style="max-width:100%; border-radius:8px;"></video>` 
+                : `<img src="${data.perangkat.kondisiHP}" style="max-width:100%; border-radius:8px;">`;
         }
-        if(data.rating > 0) document.getElementById("boxBeriRating").style.display = "none";
+        if(data.ulasan.rating > 0) document.getElementById("boxBeriRating").style.display = "none";
 
+        // 4. Update Target Progress Langkah-Langkah (Nested Status)
         let targetStep = currentStep;
         if (currentStep === 6) { isiDataFaktur(data); return; }
-        if (data.status === "ditolak_pelanggan") { currentStep = 6; updateProgress(); showContent(); isiDataFaktur(data); return; }
+        if (data.pengerjaan.status === "ditolak_pelanggan") { currentStep = 6; updateProgress(); showContent(); isiDataFaktur(data); return; }
 
         const btnBatal = document.getElementById("btnBatalPesananUser");
         if(btnBatal) {
-            if (data.status === "baru" || data.status === "pending") btnBatal.style.display = "flex";
+            if (data.pengerjaan.status === "baru" || data.pengerjaan.status === "pending") btnBatal.style.display = "flex";
             else btnBatal.style.display = "none";
         }
 
-        if (data.status === "baru" || data.status === "pending") {
+        if (data.pengerjaan.status === "baru" || data.pengerjaan.status === "pending") {
             targetStep = 3;
             document.getElementById("infoJadwal").innerHTML = "<p style='color:#15803d; font-weight:bold;'><i class='bi bi-patch-check'></i> Pesanan diterima! Menunggu penjadwalan...</p>";
             document.getElementById("tampilJadwal").style.display = "none";
         }
-        else if (data.status === "dijadwalkan") {
-            targetStep = 3; document.getElementById("teknisi").textContent = data.teknisi;
-            tampilkanProfilTeknisi(data.teknisi); 
+        else if (data.pengerjaan.status === "dijadwalkan") {
+            targetStep = 3; document.getElementById("teknisi").textContent = data.pengerjaan.teknisi;
+            tampilkanProfilTeknisi(data.pengerjaan.teknisi); 
             let jadwalTeks = "-";
-            if (data.jadwal) {
+            if (data.pengerjaan.jadwal) {
                 try {
-                    const d = new Date(data.jadwal);
+                    const d = new Date(data.pengerjaan.jadwal);
                     if (!isNaN(d.getTime())) {
                         jadwalTeks = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + 
                                      " | Pukul " + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + " WIB";
                     } else {
-                        jadwalTeks = data.jadwal; 
+                        jadwalTeks = data.pengerjaan.jadwal; 
                     }
-                } catch(e) { jadwalTeks = data.jadwal; }
+                } catch(e) { jadwalTeks = data.pengerjaan.jadwal; }
             }
             document.getElementById("jadwal").textContent = jadwalTeks;
-            document.getElementById("lokasiServisTampil").textContent = data.lokasiServis === "home_service" ? "On-Site" : "Titik COD";
-            document.getElementById("lblETA").textContent = data.etaTeknisi || "Belum diupdate admin";
+            document.getElementById("lokasiServisTampil").textContent = data.pelanggan.lokasi.tipeServis === "home_service" ? "On-Site" : "Titik COD";
+            document.getElementById("lblETA").textContent = data.pengerjaan.etaTeknisi || "Belum diupdate admin";
             document.getElementById("tampilJadwal").style.display = "block"; document.getElementById("infoJadwal").style.display = "none";
         }
-        else if (data.status === "diproses") {
+        else if (data.pengerjaan.status === "diproses") {
             targetStep = 4; document.getElementById("statusSaatIni").textContent = "Sedang Dikerjakan";
             document.getElementById("s2").className = "status-dot selesai"; document.getElementById("s3").className = "status-dot aktif";
             
             const boxEstimasi = document.getElementById("boxInfoEstimasi");
-            if(data.estimasiSelesai) {
+            if(data.pengerjaan.estimasiSelesai) {
                 boxEstimasi.style.display = "block";
-                document.getElementById("lblEstimasiSelesai").textContent = new Date(data.estimasiSelesai).toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                if(data.statusSparepart === "inden") document.getElementById("boxUploadInden").style.display = "block";
+                document.getElementById("lblEstimasiSelesai").textContent = new Date(data.pengerjaan.estimasiSelesai).toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                if(data.finansial.inden.statusPart === "inden") document.getElementById("boxUploadInden").style.display = "block";
                 else document.getElementById("boxUploadInden").style.display = "none";
             } else { boxEstimasi.style.display = "none"; }
 
             const boxWorkshop = document.getElementById("boxTrackingWorkshop");
-            if(data.lokasiServis === "cod") {
+            if(data.pelanggan.lokasi.tipeServis === "cod") {
                 boxWorkshop.style.display = "block";
                 const urutan = ["antrean", "pengecekan", "tunggu_part", "perbaikan", "qc_akhir", "siap"];
-                const indexSaatIni = urutan.indexOf(data.subStatusWorkshop || "antrean");
+                const indexSaatIni = urutan.indexOf(data.pengerjaan.status || "antrean"); 
                 
                 urutan.forEach((step, idx) => {
                     const el = document.getElementById("ws-" + step);
@@ -1810,8 +1814,8 @@ function cekStatus() {
             } else { boxWorkshop.style.display = "none"; }
             sinkronBiayaTampil(data);
         }
-        else if (data.status === "selesai_servis") { targetStep = 5; sinkronBiayaTampil(data); }
-        else if (data.status === "selesai" || data.pembayaranValid === true) {
+        else if (data.pengerjaan.status === "selesai_servis") { targetStep = 5; sinkronBiayaTampil(data); }
+        else if (data.pengerjaan.status === "selesai" || data.finansial.pembayaranValid === true) {
             targetStep = 5; document.getElementById("infoValidasi").style.display = "block";
             document.getElementById("infoValidasi").innerHTML = `<strong>🎉 Pelunasan Penuh Valid!</strong><br><button class="btn btn-success" style="margin-top:10px" onclick="bukaHalamanFaktur()"><i class="bi bi-file-text"></i> Lihat Nota</button>`;
             document.getElementById("btnKonfirmasi").disabled = true; sinkronBiayaTampil(data);
@@ -1823,8 +1827,10 @@ function cekStatus() {
 }
 
 function sinkronBiayaTampil(data) {
+    // Membaca Kalkulasi Harga dari Field Nested
     let biayaCek = 50000;
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+    let suku = data.finansial.biayaSukuCadang || 0, jasa = data.finansial.biayaJasa || 0;
+    let tamb = (data.pengerjaan.statusPersetujuanTambahan === 'disetujui') ? (data.finansial.biayaSukuTambahan || 0) : 0;
     let totalTagihan = biayaCek + suku + jasa + tamb;
     
     document.getElementById("lblBiayaCek").textContent = biayaCek.toLocaleString("id-ID");
@@ -1836,25 +1842,28 @@ function sinkronBiayaTampil(data) {
 }
 
 function isiDataFaktur(data) {
+    // Update Cetakan PDF dan Nota (Nested Variables)
     document.getElementById("fakturKode").textContent = data.kode;
-    document.getElementById("fakturNama").textContent = data.nama;
-    document.getElementById("fakturMerekTipe").textContent = `${data.merek.toUpperCase()} ${data.tipe}`;
-    document.getElementById("fakturKerusakan").textContent = data.kerusakan;
-    document.getElementById("fakturLayanan").textContent = data.layanan;
-    document.getElementById("fakturTeknisi").textContent = data.teknisi || "Belum ada teknisi";
+    document.getElementById("fakturNama").textContent = data.pelanggan.nama;
+    document.getElementById("fakturMerekTipe").textContent = `${data.perangkat.merek.toUpperCase()} ${data.perangkat.tipe}`;
+    document.getElementById("fakturKerusakan").textContent = data.perangkat.keluhan;
+    document.getElementById("fakturLayanan").textContent = data.perangkat.layanan;
+    document.getElementById("fakturTeknisi").textContent = data.pengerjaan.teknisi || "Belum ada teknisi";
     document.getElementById("noFaktur").textContent = "INV-" + data.kode.replace("HS-", "");
+    
     let tanggalFaktur = new Date().toLocaleString("id-ID");
-    if(data.jadwal) {
-        const df = new Date(data.jadwal);
+    if(data.pengerjaan.jadwal) {
+        const df = new Date(data.pengerjaan.jadwal);
         if (!isNaN(df.getTime())) {
             tanggalFaktur = df.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + " " + df.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         }
     }
     document.getElementById("fakturTanggal").textContent = tanggalFaktur;
-    document.getElementById("fakturMetode").textContent = data.metodePembayaran || "Tunai";
+    document.getElementById("fakturMetode").textContent = data.finansial.metodePembayaran || "Tunai";
 
     let biayaCek = 50000;
-    let suku = data.biayaSuku || 0, jasa = data.biayaJasa || 0, tamb = (data.statusPersetujuanTambahan === 'disetujui') ? (data.biayaSukuTambahan || 0) : 0;
+    let suku = data.finansial.biayaSukuCadang || 0, jasa = data.finansial.biayaJasa || 0;
+    let tamb = (data.pengerjaan.statusPersetujuanTambahan === 'disetujui') ? (data.finansial.biayaSukuTambahan || 0) : 0;
     let biayaPokok = suku + jasa;
     let totalKeseluruhan = biayaCek + biayaPokok + tamb;
 
