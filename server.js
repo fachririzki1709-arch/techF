@@ -662,12 +662,13 @@ app.put('/api/orders/:kode', upload.any(), async (req, res) => {
     try {
         const dataUpdate = req.body;
         
-        if (req.files && req.files.length > 0) {
+      if (req.files && req.files.length > 0) {
+            // Memastikan data mengarah ke skema nested (finansial)
             const fInden = req.files.find(f => f.fieldname === 'buktiInden');
-            if (fInden) dataUpdate.buktiBayarInden = `/uploads/${fInden.filename}`;
+            if (fInden) dataUpdate['finansial.inden.buktiBayarInden'] = `/uploads/${fInden.filename}`;
             
             const fLunas = req.files.find(f => f.fieldname === 'buktiPelunasan');
-            if (fLunas) dataUpdate.buktiPelunasan = `/uploads/${fLunas.filename}`;
+            if (fLunas) dataUpdate['finansial.buktiPelunasan'] = `/uploads/${fLunas.filename}`;
         }
 
         const existing = await Order.findOne({ kode: req.params.kode });
