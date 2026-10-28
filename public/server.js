@@ -257,8 +257,8 @@ app.get('/api/teknisi/orders/aktif', async (req, res) => {
     try {
         const namaTeknisi = req.query.teknisi;
         const tugasAktif = await Order.find({ 
-            teknisi: namaTeknisi,
-            status: { $in: ['diproses', 'diagnosa'] } 
+            teknisi: { $regex: new RegExp("^" + namaTeknisi.trim() + "$", "i") },
+            status: { $nin: ['baru', 'selesai_servis', 'batal', 'selesai'] } 
         }).sort({ _id: -1 });
         
         res.json(tugasAktif);
