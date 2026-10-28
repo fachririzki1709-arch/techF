@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- JS Libraries (SweetAlert, Leaflet, Socket.io) -->
+    <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -34,14 +34,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background-color: var(--bg-body); color: var(--text-main); display: flex; overflow-x: hidden; }
 
-        /* ================= SIDEBAR ================= */
         .sidebar {
             width: 260px; background-color: var(--bg-sidebar); color: white;
             height: 100vh; position: fixed; left: 0; top: 0;
             display: flex; flex-direction: column; transition: 0.3s ease; z-index: 1000;
         }
         .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
-        .sidebar-header img { height: 24px; }
         .sidebar-header h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: 1px;}
         
         .sidebar-menu { list-style: none; padding: 1.5rem 1rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
@@ -54,17 +52,13 @@
         
         .badge { background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: auto; font-weight: 700;}
         .badge.warning { background: var(--warning); }
-        .badge.success { background: var(--success); }
-        .badge.dark { background: #1e293b; }
 
         .sidebar-footer { padding: 1.5rem 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
         .sidebar-footer a { color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; font-weight: 500; transition: 0.2s; cursor: pointer; }
         .sidebar-footer a:hover { color: white; }
 
-        /* ================= MAIN CONTENT ================= */
         .main-wrapper { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; transition: 0.3s ease; }
         
-        /* HEADER TOPBAR */
         .topbar {
             background: var(--bg-card); height: 70px; padding: 0 2rem;
             display: flex; justify-content: space-between; align-items: center;
@@ -86,12 +80,10 @@
         .status-duty::before { content: ''; width: 6px; height: 6px; background: #10b981; border-radius: 50%; }
         .status-duty.offline::before { background: #94a3b8; }
 
-        /* DASHBOARD CONTENT */
         .content { padding: 2rem; display: none; }
         .content.active { display: block; animation: fadeIn 0.4s ease-out;}
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Grid Stat Cards */
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
         .stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border); }
         .stat-info h3 { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; margin-bottom: 5px; }
@@ -99,14 +91,12 @@
         .stat-info p { font-size: 0.8rem; color: var(--text-muted); }
         .stat-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
         
-        /* Grid Layout Bawah */
         .bawah-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
         .card-box { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02); padding: 1.5rem; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
         .card-header h3 { font-size: 1.1rem; font-weight: 700; }
         .btn-link { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
         
-        /* List Item Styling (Order List) */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px dashed var(--border); transition: 0.2s;}
         .list-item:last-child { border-bottom: none; padding-bottom: 0; }
         .list-item:hover { background: #f8fafc; border-radius: 8px; padding: 1rem; }
@@ -117,30 +107,21 @@
         
         .badge-status { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
         .status-diagnosa { background: #fef3c7; color: #d97706; }
-        .status-perbaikan { background: #e0f2fe; color: #0284c7; }
         .status-baru { background: #dcfce7; color: #166534; }
         
-        /* Tombol Ambil Order & Selesai */
         .btn { padding: 0.6rem 1rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.85rem;}
         .btn-take { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
         .btn-take:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
         .btn-workspace { background: var(--warning); color: white; }
 
-        /* Donut Chart Placeholder */
         .donut-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px;}
         .donut-chart { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(var(--success) 0% 29%, var(--primary) 29% 47%, var(--warning) 47% 58%, #3b82f6 58% 100%); display: flex; align-items: center; justify-content: center; }
         .donut-inner { width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .donut-inner h2 { font-size: 2rem; font-weight: 800; color: var(--text-main); }
-        
-        .chart-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 10px;}
-        .legend-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 500; }
-        .legend-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; display: inline-block; }
 
-        /* Empty State */
         .empty-state { text-align: center; padding: 2rem; color: #94a3b8; }
         .empty-state i { font-size: 3rem; margin-bottom: 10px; display: block; color: #cbd5e1; }
 
-        /* ================= RESPONSIVE MOBILE ================= */
         @media (max-width: 992px) {
             .sidebar { left: -260px; }
             .sidebar.active { left: 0; box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
@@ -155,16 +136,12 @@
             .mobile-profile-info img { width: 45px; height: 45px; border-radius: 50%; }
         }
 
-        /* Overlay Login & Workspace (Full Screen Style) */
         .login-overlay, .full-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 10000; overflow-y: auto;}
         .login-overlay { display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 3rem; border-radius: 16px; width: 90%; max-width: 420px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; }
         
         .full-overlay { display: none; background: var(--bg-body); flex-direction: column;}
         .overlay-header { background: var(--bg-card); padding: 15px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
-        
-        /* Swifty Animations */
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -187,9 +164,9 @@
             <h2>SF SERVICE</h2>
         </div>
         <ul class="sidebar-menu">
-            <li class="active" onclick="bukaTab('dashboard', this)"><a ><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
-            <li onclick="bukaTab('orderMasuk', this)"><a ><i class="bi bi-box-seam"></i> Order Masuk <span class="badge" id="badgeOrderMasuk">0</span></a></li>
-            <li onclick="bukaTab('tugasAktif', this)"><a ><i class="bi bi-tools"></i> Tugas Aktif <span class="badge warning" id="badgeTugasAktif">0</span></a></li>
+            <li class="active" onclick="bukaTab('dashboard', this)"><a><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+            <li onclick="bukaTab('orderMasuk', this)"><a><i class="bi bi-box-seam"></i> Order Masuk <span class="badge" id="badgeOrderMasuk">0</span></a></li>
+            <li onclick="bukaTab('tugasAktif', this)"><a><i class="bi bi-tools"></i> Tugas Aktif <span class="badge warning" id="badgeTugasAktif">0</span></a></li>
         </ul>
         <div class="sidebar-footer">
             <a onclick="logoutTeknisi()"><i class="bi bi-box-arrow-right"></i> Keluar</a>
@@ -198,8 +175,6 @@
 
     <!-- MAIN WRAPPER -->
     <div class="main-wrapper">
-        
-        <!-- TOPBAR -->
         <header class="topbar">
             <div class="topbar-left">
                 <button class="menu-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
@@ -218,7 +193,7 @@
             </div>
         </header>
 
-        <!-- KONTEN 1: DASHBOARD (Utama) -->
+        <!-- KONTEN 1: DASHBOARD -->
         <main class="content active" id="tab-dashboard">
             <div class="mobile-profile-card" style="display: none;" id="mobileProfile">
                 <div class="mobile-profile-info">
@@ -255,9 +230,7 @@
                         <h3>Tugas Aktif Terkini</h3>
                         <a onclick="bukaTab('tugasAktif', document.querySelectorAll('.sidebar-menu li')[2])" class="btn-link">Lihat Semua</a>
                     </div>
-                    <div class="list-container" id="listTugasAktifDashboard">
-                        <!-- Data disuntikkan oleh JS -->
-                    </div>
+                    <div class="list-container" id="listTugasAktifDashboard"></div>
                 </div>
 
                 <div class="card-box">
@@ -303,15 +276,13 @@
         </main>
     </div>
 
-    <!-- OVERLAY WORKSPACE (RUANG KERJA & QC) -->
+    <!-- OVERLAY WORKSPACE -->
     <div id="serviceWorkspaceOverlay" class="full-overlay">
         <div class="overlay-header">
             <button onclick="tutupWorkspace()" style="background:none; border:none; font-size:1.5rem; color:var(--text-main); cursor:pointer;"><i class="bi bi-arrow-left"></i></button>
             <h3 style="margin:0; flex:1;" id="wsKodeOrder">Ruang Kerja - </h3>
         </div>
-        <div style="padding: 1.5rem; flex: 1; overflow-y: auto;" id="wsKonten">
-            <!-- Disuntikkan JS -->
-        </div>
+        <div style="padding: 1.5rem; flex: 1; overflow-y: auto;" id="wsKonten"></div>
         <div style="background:var(--bg-card); padding:15px; border-top:1px solid var(--border); display:flex; gap:10px; position: sticky; bottom: 0;">
             <button class="btn" style="flex:1; background:#f8fafc; border:1px solid var(--primary); color:var(--primary);" id="btnWsChat"><i class="bi bi-chat-dots-fill"></i> Chat User</button>
             <button class="btn btn-take" style="flex:2;" id="btnWsSelesai"><i class="bi bi-check-circle-fill"></i> Selesaikan Servis</button>
@@ -331,7 +302,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT FUNGSI (PENGGABUNGAN JS LAMA KE UI BARU) -->
+    <!-- SCRIPT FUNGSI -->
     <script>
         const socket = io(window.location.origin);
         let profilTeknisi = { nama: "Teknisi" };
@@ -339,7 +310,6 @@
         let daftarTugasAktif = []; 
         let aktifChatKode = "";
 
-        // 1. Inisialisasi Auth & UI
         function getAuthHeaderTeknisi() {
             const token = sessionStorage.getItem("teknisiToken");
             return token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -360,7 +330,7 @@
         function updateNamaUI(nama) {
             document.getElementById("namaHeader").textContent = nama;
             document.getElementById("namaMobile").textContent = nama;
-            const urlAvatar = `https://ui-avatars.com/api/?name=${nama}&background=0D8ABC&color=fff`;
+            const urlAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(nama)}&background=0D8ABC&color=fff`;
             document.getElementById("imgAvatar").src = urlAvatar;
             document.getElementById("imgAvatarMobile").src = urlAvatar;
         }
@@ -378,12 +348,11 @@
             document.getElementById('tab-' + tabId).classList.add('active');
             
             document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
-            elLi.classList.add('active');
+            if(elLi) elLi.classList.add('active');
 
-            if(window.innerWidth <= 992) toggleSidebar(); // Tutup sidebar otomatis di mobile
+            if(window.innerWidth <= 992) toggleSidebar();
         }
 
-        // 2. Fungsi Login/Logout
         function prosesLoginTeknisi() {
             const username = document.getElementById("teknisiUsername").value.trim();
             const password = document.getElementById("teknisiPassword").value;
@@ -401,8 +370,9 @@
                 return data;
             }).then(data => {
                 sessionStorage.setItem("teknisiToken", data.token);
-                sessionStorage.setItem("teknisiNama", data.nama);
-                profilTeknisi.nama = data.nama; updateNamaUI(data.nama);
+                sessionStorage.setItem("teknisiNama", data.nama || username);
+                profilTeknisi.nama = data.nama || username; 
+                updateNamaUI(profilTeknisi.nama);
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
                 muatOrderTersedia(); 
                 muatTugasAktif(); 
@@ -412,7 +382,6 @@
 
         function logoutTeknisi() { sessionStorage.clear(); location.reload(); }
 
-        // 3. Sistem Status & Order Masuk
         function toggleStatus() {
             isAktif = !isAktif;
             const statusBtns = [document.getElementById('btnStatusKerja'), document.getElementById('btnStatusKerjaMobile')];
@@ -434,44 +403,40 @@
             fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
             .then(res => res.json()).then(data => {
                 document.getElementById('listOrderMasukFull').innerHTML = "";
-                if(data && data.length > 0) {
+                if(Array.isArray(data) && data.length > 0) {
                     data.forEach(order => tampilkanKartuOrder(order));
                 }
                 cekStatsUpdate();
-            });
+            }).catch(err => console.error("Gagal muat order tersedia", err));
         }
-        // Letakkan tepat di bawah blok fungsi muatOrderTersedia()
 
-socket.on('orderBaruTersedia', (data) => {
-    // Hanya muat ulang jika teknisi sedang berstatus 'On Duty'
-    if (isAktif) {
-        muatOrderTersedia();
-        // Opsional: Memunculkan notifikasi kecil
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'info',
-            title: 'Ada Order Baru Masuk!',
-            showConfirmButton: false,
-            timer: 3000
+        socket.on('orderBaruTersedia', (data) => {
+            if (isAktif) {
+                muatOrderTersedia();
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: 'Ada Order Baru Masuk!',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
         });
-    }
-});
 
         socket.on('orderSudahDiambil', (data) => {
             const k = document.getElementById(`ordBaru-${data.kodeOrder}`);
             if (k && data.oleh !== profilTeknisi.nama) { k.remove(); cekStatsUpdate(); }
         });
 
-       function tampilkanKartuOrder(order) {
+        function tampilkanKartuOrder(order) {
             if (document.getElementById(`ordBaru-${order.kode}`)) return; 
             
-            // Fallback aman untuk menghindari JS Error "Cannot read properties of undefined"
             const namaPelanggan = order.nama || (order.pelanggan ? order.pelanggan.nama : 'Pelanggan');
             const merekTipe = (order.merek ? `${order.merek} ${order.tipe}` : '') || (order.perangkat ? `${order.perangkat.merek} ${order.perangkat.tipe}` : 'Unit');
             const keluhan = order.kerusakan || (order.perangkat ? order.perangkat.keluhan : '-');
             const layanan = order.layanan || (order.pelanggan && order.pelanggan.lokasi ? order.pelanggan.lokasi.tipeServis : 'Servis');
-            const labelLayanan = layanan.includes('home') ? 'Kunjungan (On-Site)' : 'Bawa ke Toko / COD';
+            const labelLayanan = (layanan && layanan.includes('home')) ? 'Kunjungan (On-Site)' : 'Bawa ke Toko / COD';
 
             const layoutHTML = `
                 <div class="list-item" id="ordBaru-${order.kode}">
@@ -484,8 +449,7 @@ socket.on('orderBaruTersedia', (data) => {
                         </div>
                     </div>
                     <div class="list-action">
-                        <!-- Variabel dikirim dengan aman ke tarikOrder -->
-                        <button class="btn btn-take" onclick="tarikOrder('${order.kode}', '${namaPelanggan}', '${merekTipe}')">Ambil</button>
+                        <button class="btn btn-take" onclick="tarikOrder('${order.kode}', '${namaPelanggan.replace(/'/g, "\\'")}', '${merekTipe.replace(/'/g, "\\'")}')">Ambil</button>
                     </div>
                 </div>
             `;
@@ -494,18 +458,19 @@ socket.on('orderBaruTersedia', (data) => {
         }
 
         function tarikOrder(kodeOrder, nama, unit) {
+            const namaClean = profilTeknisi.nama.trim();
             fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
                 method: 'PUT',
                 headers: getAuthHeaderTeknisi(),
                 body: JSON.stringify({ 
                     status: "diproses", 
-                    teknisi: profilTeknisi.nama.trim(), // Pastikan nama tersimpan bersih tanpa spasi
+                    teknisi: namaClean,
                     "pengerjaan.status": "diproses",
-                    "pengerjaan.teknisi": profilTeknisi.nama.trim()
+                    "pengerjaan.teknisi": namaClean
                 })
             }).then(res => {
                 if(res.ok) {
-                    socket.emit('teknisiAmbilOrder', { kodeOrder: kodeOrder, namaTeknisi: profilTeknisi.nama });
+                    socket.emit('teknisiAmbilOrder', { kodeOrder: kodeOrder, namaTeknisi: namaClean });
                     Swal.fire({ title: 'Tugas Diterima!', icon: 'success', timer: 1500, showConfirmButton: false });
                     
                     const k = document.getElementById(`ordBaru-${kodeOrder}`);
@@ -519,30 +484,38 @@ socket.on('orderBaruTersedia', (data) => {
                 }
             });
         }
-    function muatTugasAktif() {
-    document.getElementById('listTugasAktifFull').innerHTML = "";
-    document.getElementById('listTugasAktifDashboard').innerHTML = "";
-    daftarTugasAktif = [];
 
-    fetch(`${window.location.origin}/api/teknisi/orders/aktif?teknisi=${encodeURIComponent(profilTeknisi.nama)}`, { 
-        headers: getAuthHeaderTeknisi() 
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data && data.length > 0) {
-            data.forEach(order => {
-                const namaPelanggan = order.nama || (order.pelanggan ? order.pelanggan.nama : 'Pelanggan');
-                const detailUnit = (order.merek ? `${order.merek} ${order.tipe}` : null) || (order.perangkat ? `${order.perangkat.merek} ${order.perangkat.tipe}` : 'Unit');
-                
-                daftarTugasAktif.push(order.kode);
-                renderTugasAktif(order.kode, namaPelanggan, detailUnit);
-            });
+        function muatTugasAktif() {
+            document.getElementById('listTugasAktifFull').innerHTML = "";
+            document.getElementById('listTugasAktifDashboard').innerHTML = "";
+            daftarTugasAktif = [];
+
+            const namaClean = (profilTeknisi.nama || "Teknisi").trim();
+
+            fetch(`${window.location.origin}/api/teknisi/orders/aktif?teknisi=${encodeURIComponent(namaClean)}`, { 
+                headers: getAuthHeaderTeknisi() 
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(Array.isArray(data) && data.length > 0) {
+                    data.forEach(order => {
+                        const namaPelanggan = order.nama || (order.pelanggan ? order.pelanggan.nama : 'Pelanggan');
+                        const detailUnit = (order.merek ? `${order.merek} ${order.tipe}` : null) || (order.perangkat ? `${order.perangkat.merek} ${order.perangkat.tipe}` : 'Unit');
+                        
+                        if (!daftarTugasAktif.includes(order.kode)) {
+                            daftarTugasAktif.push(order.kode);
+                        }
+                        renderTugasAktif(order.kode, namaPelanggan, detailUnit);
+                    });
+                }
+                cekStatsUpdate();
+            })
+            .catch(err => console.error("Gagal memuat tugas aktif", err));
         }
-        cekStatsUpdate();
-    })
-    .catch(err => console.error("Gagal memuat tugas aktif", err));
-}
+
         function renderTugasAktif(kodeOrder, nama, unit) {
+            if (document.getElementById(`ordAktif-${kodeOrder}`)) return;
+
             const html = `
                 <div class="list-item" id="ordAktif-${kodeOrder}">
                     <div class="list-info">
@@ -556,7 +529,6 @@ socket.on('orderBaruTersedia', (data) => {
                     </div>
                 </div>
             `;
-            // Pasang di Tab Full & Dashboard Mini
             document.getElementById('listTugasAktifFull').innerHTML += html;
             document.getElementById('listTugasAktifDashboard').innerHTML += html;
         }
@@ -568,7 +540,6 @@ socket.on('orderBaruTersedia', (data) => {
             document.getElementById('radarKosong').style.display = countMasuk === 0 ? 'block' : 'none';
             document.getElementById('aktifKosong').style.display = countAktif === 0 ? 'block' : 'none';
             
-            // Update Angka di UI
             document.getElementById('badgeOrderMasuk').innerText = countMasuk;
             document.getElementById('statOrderMasuk').innerText = countMasuk;
             
@@ -578,14 +549,12 @@ socket.on('orderBaruTersedia', (data) => {
             document.getElementById('chartTotalOrder').innerText = countMasuk + countAktif;
         }
 
-        // 5. Sistem Workspace & Penyelesaian Tugas
-       function bukaWorkspace(kodeOrder) {
+        function bukaWorkspace(kodeOrder) {
             fetch(`${window.location.origin}/api/orders/${kodeOrder}`, { headers: getAuthHeaderTeknisi() })
             .then(res => res.json()).then(order => {
                 document.getElementById('serviceWorkspaceOverlay').style.display = 'flex';
                 document.getElementById('wsKodeOrder').innerText = "Ruang Kerja - " + kodeOrder;
                 
-                // Fallback aman untuk Workspace
                 const namaPelanggan = order.nama || (order.pelanggan ? order.pelanggan.nama : 'Pelanggan');
                 const merekTipe = (order.merek ? `${order.merek} ${order.tipe}` : '') || (order.perangkat ? `${order.perangkat.merek} ${order.perangkat.tipe}` : 'Unit');
                 const keluhan = order.kerusakan || (order.perangkat ? order.perangkat.keluhan : '-');
@@ -633,28 +602,27 @@ socket.on('orderBaruTersedia', (data) => {
                 icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya'
             }).then((result) => {
                 if (result.isConfirmed) {
-                   const payload = {
-    "pengerjaan.status": 'selesai_servis',
-    "finansial.biayaSukuCadang": biayaPart,
-    "pengerjaan.qcChecklist": {
-        layar: document.getElementById('qc_layar').checked,
-        baterai: document.getElementById('qc_baterai').checked,
-        kamera: document.getElementById('qc_kamera').checked,
-        sinyal: document.getElementById('qc_sinyal').checked,
-        speaker: document.getElementById('qc_speaker').checked,
-        segel: document.getElementById('qc_segel').checked
-    }
-};
+                    const payload = {
+                        status: 'selesai_servis',
+                        biayaSuku: biayaPart,
+                        "pengerjaan.status": 'selesai_servis',
+                        "finansial.biayaSukuCadang": biayaPart,
+                        "pengerjaan.qcChecklist": {
+                            layar: document.getElementById('qc_layar').checked,
+                            baterai: document.getElementById('qc_baterai').checked,
+                            kamera: document.getElementById('qc_kamera').checked,
+                            sinyal: document.getElementById('qc_sinyal').checked,
+                            speaker: document.getElementById('qc_speaker').checked,
+                            segel: document.getElementById('qc_segel').checked
+                        }
+                    };
 
                     fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
                         method: "PUT", headers: getAuthHeaderTeknisi(), body: JSON.stringify(payload)
                     }).then(res => {
                         if(res.ok) {
                             Swal.fire('Sukses', 'Servis selesai dilaporkan!', 'success');
-                            
-                            // Hapus Element List dari Tab & Dashboard
                             document.querySelectorAll(`#ordAktif-${kodeOrder}`).forEach(e => e.remove());
-                            
                             daftarTugasAktif = daftarTugasAktif.filter(item => item !== kodeOrder);
                             cekStatsUpdate(); tutupWorkspace();
                         }
@@ -663,7 +631,6 @@ socket.on('orderBaruTersedia', (data) => {
             });
         }
 
-        // 6. Sistem Chat
         function bukaChatTeknisi(kodeOrder) {
             aktifChatKode = kodeOrder;
             document.getElementById('chatTeknisiOverlay').style.display = 'flex';
@@ -682,16 +649,18 @@ socket.on('orderBaruTersedia', (data) => {
             fetch(`${window.location.origin}/api/chats/${aktifChatKode}`, { headers: getAuthHeaderTeknisi() })
             .then(res => res.json()).then(data => {
                 let html = "";
-                data.forEach(msg => {
-                    let isSelf = (msg.pengirim === 'teknisi' || msg.pengirim === 'admin');
-                    let align = isSelf ? 'align-self: flex-end; background:var(--primary); color:white;' : 'align-self: flex-start; background:white; color:black; border:1px solid var(--border);';
-                    let label = msg.pengirim === 'user' ? '👤 Pelanggan' : '👨‍🔧 Saya';
-                    
-                    html += `<div style="max-width:80%; padding:10px 14px; border-radius:12px; font-size:0.9rem; ${align}">
-                        <strong style="font-size:0.8rem; opacity:0.9;">${label}:</strong><br>${msg.teks}
-                        <span style="font-size:0.65rem; display:block; text-align:right; margin-top:5px; opacity:0.8;">${msg.waktu}</span>
-                    </div>`;
-                });
+                if(Array.isArray(data)) {
+                    data.forEach(msg => {
+                        let isSelf = (msg.pengirim === 'teknisi' || msg.pengirim === 'admin');
+                        let align = isSelf ? 'align-self: flex-end; background:var(--primary); color:white;' : 'align-self: flex-start; background:white; color:black; border:1px solid var(--border);';
+                        let label = msg.pengirim === 'user' ? 'Pelanggan' : 'Saya';
+                        
+                        html += `<div style="max-width:80%; padding:10px 14px; border-radius:12px; font-size:0.9rem; ${align}">
+                            <strong style="font-size:0.8rem; opacity:0.9;">${label}:</strong><br>${msg.teks}
+                            <span style="font-size:0.65rem; display:block; text-align:right; margin-top:5px; opacity:0.8;">${msg.waktu}</span>
+                        </div>`;
+                    });
+                }
                 box.innerHTML = html || `<div style="text-align:center; color:gray; margin-top:20px;">Mulai percakapan dengan pelanggan...</div>`;
                 box.scrollTop = box.scrollHeight;
             });
