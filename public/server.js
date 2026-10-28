@@ -18,7 +18,7 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
 
-// Middleware Anti-Cache
+// Middleware Anti-Cache agar data selalu fresh saat di-refresh
 app.use('/api', (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -67,7 +67,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// --- SCHEMA & MODEL (strict: false agar mendukung struktur data fleksibel) ---
+// --- SCHEMA & MODEL ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
     shareloc: { type: String, default: "" }, 
@@ -154,6 +154,7 @@ app.get('/api/teknisi/orders/available', async (req, res) => {
     }
 });
 
+// FIX PERBAIKAN PENCARIAN TUGAS AKTIF
 app.get('/api/teknisi/orders/aktif', async (req, res) => {
     try {
         const rawTeknisi = req.query.teknisi || "";
@@ -166,21 +167,13 @@ app.get('/api/teknisi/orders/aktif', async (req, res) => {
         const escapedNama = namaTeknisi.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regexNama = new RegExp("^" + escapedNama + "$", "i");
 
+        // Semua order milik teknisi ini yang belum selesai/batal
         const tugasAktif = await Order.find({ 
-            $and: [
-                {
-                    $or: [
-                        { teknisi: regexNama },
-                        { "pengerjaan.teknisi": regexNama }
-                    ]
-                },
-                {
-                    $or: [
-                        { status: { $nin: ['baru', 'selesai_servis', 'batal', 'selesai', 'dibatalkan'] } },
-                        { "pengerjaan.status": { $nin: ['baru', 'selesai_servis', 'batal', 'selesai', 'dibatalkan'] } }
-                    ]
-                }
-            ]
+            $or: [
+                { teknisi: regexNama },
+                { "pengerjaan.teknisi": regexNama }
+            ],
+            status: { $nin: ['selesai_servis', 'batal', 'selesai', 'dibatalkan'] }
         }).sort({ _id: -1 });
         
         res.json(tugasAktif);
@@ -231,33 +224,54 @@ app.post('/api/orders', async (req, res) => {
 
 app.get('/api/orders/:kode', async (req, res) => {
     try {
-        const pesanan = await Order.findOne({ kode: req.params.kode });
+        const kodeParam = req.params.kode.trim();
+        const regexKode = new RegExp("^" + kodeParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i");
+        const pesanan = await Order.findOne({ $or: [{ kode: kodeParam }, { kode: regexKode }] });
         if(!pesanan) return res.status(404).json({ error: "Pesanan tidak ditemukan" });
         res.json(pesanan);
     } catch (error) { res.status(500).json({ error: "Gagal memuat pesanan" }); }
 });
 
+// FIX PERBAIKAN UPDATE ORDER (PREVENT FALSE 200 OK)
 app.put('/api/orders/:kode', async (req, res) => {
     try {
         const dataUpdate = req.body;
+        const kodeParam = req.params.kode.trim();
 
         if (dataUpdate.buktiDP && dataUpdate.buktiDP.startsWith('data:')) {
-            dataUpdate.buktiDP = simpanBase64KeFile(dataUpdate.buktiDP, 'DP_' + req.params.kode);
+            dataUpdate.buktiDP = simpanBase64KeFile(dataUpdate.buktiDP, 'DP_' + kodeParam);
         }
         if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) {
-            dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
+            dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + kodeParam);
         }
 
-        const updateData = await Order.findOneAndUpdate(
-            { kode: req.params.kode }, 
+        let updateData = await Order.findOneAndUpdate(
+            { kode: kodeParam }, 
             { $set: dataUpdate }, 
             { new: true }
         );
+
+        // Fallback case-insensitive jika kode order memiliki variasi huruf kapital
+        if (!updateData) {
+            const regexKode = new RegExp("^" + kodeParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i");
+            updateData = await Order.findOneAndUpdate(
+                { kode: regexKode }, 
+                { $set: dataUpdate }, 
+                { new: true }
+            );
+        }
+
+        if (!updateData) {
+            return res.status(404).json({ error: "Order tidak ditemukan di database" });
+        }
         
-        io.emit("updateDataPelanggan", updateData ? updateData.kode : req.params.kode);
+        io.emit("updateDataPelanggan", updateData.kode);
         io.emit("updateDashboardAdmin");
-        res.json({ message: "Update berhasil" });
-    } catch (error) { res.status(500).json({ error: "Gagal update" }); }
+        res.json({ message: "Update berhasil", order: updateData });
+    } catch (error) { 
+        console.error("Error PUT /api/orders/:kode:", error);
+        res.status(500).json({ error: "Gagal update" }); 
+    }
 });
 
 app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
