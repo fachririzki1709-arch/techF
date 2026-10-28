@@ -154,7 +154,6 @@ app.get('/api/teknisi/orders/available', async (req, res) => {
     }
 });
 
-// FIX PERBAIKAN PENCARIAN TUGAS AKTIF
 app.get('/api/teknisi/orders/aktif', async (req, res) => {
     try {
         const rawTeknisi = req.query.teknisi || "";
@@ -164,15 +163,12 @@ app.get('/api/teknisi/orders/aktif', async (req, res) => {
             return res.json([]);
         }
         
+        // Regex case-insensitive dan mengabaikan spasi berlebih di awal/akhir
         const escapedNama = namaTeknisi.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regexNama = new RegExp("^" + escapedNama + "$", "i");
+        const regexNama = new RegExp(escapedNama, "i");
 
-        // Semua order milik teknisi ini yang belum selesai/batal
         const tugasAktif = await Order.find({ 
-            $or: [
-                { teknisi: regexNama },
-                { "pengerjaan.teknisi": regexNama }
-            ],
+            teknisi: regexNama,
             status: { $nin: ['selesai_servis', 'batal', 'selesai', 'dibatalkan'] }
         }).sort({ _id: -1 });
         
@@ -232,7 +228,6 @@ app.get('/api/orders/:kode', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal memuat pesanan" }); }
 });
 
-// FIX PERBAIKAN UPDATE ORDER (PREVENT FALSE 200 OK)
 app.put('/api/orders/:kode', async (req, res) => {
     try {
         const dataUpdate = req.body;
@@ -245,21 +240,16 @@ app.put('/api/orders/:kode', async (req, res) => {
             dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + kodeParam);
         }
 
+        // Paksa simpan teknisi ke level root jika ada
+        if (dataUpdate["pengerjaan.teknisi"]) {
+            dataUpdate.teknisi = dataUpdate["pengerjaan.teknisi"];
+        }
+
         let updateData = await Order.findOneAndUpdate(
-            { kode: kodeParam }, 
+            { kode: new RegExp("^" + kodeParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i") }, 
             { $set: dataUpdate }, 
             { new: true }
         );
-
-        // Fallback case-insensitive jika kode order memiliki variasi huruf kapital
-        if (!updateData) {
-            const regexKode = new RegExp("^" + kodeParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i");
-            updateData = await Order.findOneAndUpdate(
-                { kode: regexKode }, 
-                { $set: dataUpdate }, 
-                { new: true }
-            );
-        }
 
         if (!updateData) {
             return res.status(404).json({ error: "Order tidak ditemukan di database" });
@@ -273,7 +263,6 @@ app.put('/api/orders/:kode', async (req, res) => {
         res.status(500).json({ error: "Gagal update" }); 
     }
 });
-
 app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
     try {
         await Order.findOneAndDelete({ kode: req.params.kode });
