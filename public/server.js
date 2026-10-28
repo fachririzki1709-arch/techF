@@ -15,11 +15,10 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // --- MIDDLEWARE ---
-// Limit tetap 50mb untuk menerima payload base64 dari client sebelum di-convert
 app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
 
-// Tambahan Fitur: Middleware Anti-Cache untuk semua route API agar tidak ada delay/bug di beda perangkat (mobile)
+// Middleware Anti-Cache
 app.use('/api', (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -37,7 +36,6 @@ const publicPath = path.join(__dirname, 'public');
 const uploadPath = path.join(publicPath, 'uploads');
 app.use(express.static(publicPath));
 
-// Otomatis buat folder uploads jika belum ada
 if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
 }
@@ -56,7 +54,7 @@ function simpanBase64KeFile(base64String, prefix) {
         const filepath = path.join(uploadPath, filename);
         
         fs.writeFileSync(filepath, buffer);
-        return `/uploads/${filename}`; // Kembalikan URL lokal untuk disimpan di DB
+        return `/uploads/${filename}`;
     } catch (err) {
         console.error("Gagal simpan file:", err);
         return "";
@@ -69,7 +67,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// --- SCHEMA & MODEL ---
+// --- SCHEMA & MODEL (strict: false agar mendukung struktur data fleksibel) ---
 const OrderSchema = new mongoose.Schema({
     kode: String, nama: String, wa: String, merek: String, tipe: String, kerusakan: String, layanan: String,
     shareloc: { type: String, default: "" }, 
@@ -90,10 +88,11 @@ const OrderSchema = new mongoose.Schema({
     adaKerusakanTambahan: { type: Boolean, default: false },
     infoKerusakanTambahan: String,
     biayaSukuTambahan: { type: Number, default: 0 },
-    statusPersetujuanTambahan: { type: String, default: "pending" }, // pending, disetujui, ditolak
+    statusPersetujuanTambahan: { type: String, default: "pending" },
     kondisiHP: String,
     tipeKondisi: { type: String, default: "" }
-});
+}, { strict: false });
+
 const Order = mongoose.model('Order', OrderSchema, 'orders');
 
 const ChatSchema = new mongoose.Schema({
@@ -101,10 +100,8 @@ const ChatSchema = new mongoose.Schema({
 });
 const Chat = mongoose.model('Chat', ChatSchema, 'chats');
 
-// --- ROUTE API ---
+// --- ROUTE API ADMIN & AUTH ---
 const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
-
-// Hash Password Default Admin (Lebih aman dari hardcode teks biasa)
 const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
 
 function verifyAdmin(req, res, next) {
@@ -119,7 +116,6 @@ function verifyAdmin(req, res, next) {
 
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
-    // Pengecekan bcrypt
     if (username === "admin" && bcrypt.compareSync(password, ADMIN_HASH)) {
         const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ token, message: "Login Berhasil" });
@@ -128,9 +124,75 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
+// --- ROUTE API TEKNISI ---
+app.post('/api/teknisi/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username && password) {
+        const token = jwt.sign({ role: "teknisi", nama: username }, JWT_SECRET, { expiresIn: '12h' });
+        res.json({ token, nama: username, message: "Login Berhasil" });
+    } else {
+        res.status(400).json({ message: "Username dan Password wajib diisi" });
+    }
+});
+
+app.put('/api/teknisi/status', (req, res) => {
+    res.json({ message: "Status teknisi diperbarui" });
+});
+
+app.get('/api/teknisi/orders/available', async (req, res) => {
+    try {
+        const availableOrders = await Order.find({ 
+            $or: [
+                { status: "baru" },
+                { status: { $exists: false } },
+                { teknisi: { $in: [null, ""] } }
+            ]
+        }).sort({ _id: -1 });
+        res.json(availableOrders);
+    } catch (error) {
+        res.status(500).json({ error: "Gagal memuat order tersedia" });
+    }
+});
+
+app.get('/api/teknisi/orders/aktif', async (req, res) => {
+    try {
+        const rawTeknisi = req.query.teknisi || "";
+        const namaTeknisi = rawTeknisi.toString().trim();
+        
+        if (!namaTeknisi) {
+            return res.json([]);
+        }
+        
+        const escapedNama = namaTeknisi.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regexNama = new RegExp("^" + escapedNama + "$", "i");
+
+        const tugasAktif = await Order.find({ 
+            $and: [
+                {
+                    $or: [
+                        { teknisi: regexNama },
+                        { "pengerjaan.teknisi": regexNama }
+                    ]
+                },
+                {
+                    $or: [
+                        { status: { $nin: ['baru', 'selesai_servis', 'batal', 'selesai', 'dibatalkan'] } },
+                        { "pengerjaan.status": { $nin: ['baru', 'selesai_servis', 'batal', 'selesai', 'dibatalkan'] } }
+                    ]
+                }
+            ]
+        }).sort({ _id: -1 });
+        
+        res.json(tugasAktif);
+    } catch (error) { 
+        console.error("Error /api/teknisi/orders/aktif:", error);
+        res.status(500).json({ error: "Gagal memuat tugas aktif" }); 
+    }
+});
+
+// --- ROUTE ORDERS (UMUM & ADMIN) ---
 app.get('/api/orders', verifyAdmin, async (req, res) => {
     try {
-        // Implementasi limit opsional untuk efisiensi jika data sudah ribuan
         const limit = parseInt(req.query.limit) || 2000; 
         const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
         const ordersObject = {};
@@ -141,14 +203,12 @@ app.get('/api/orders', verifyAdmin, async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
     try {
-        // Validasi Sederhana
         if (!req.body.nama || !req.body.wa || !req.body.merek) {
             return res.status(400).json({ error: "Data wajib tidak lengkap" });
         }
 
         const dataOrder = req.body;
         
-        // Konversi file kondisi perangkat dari base64 ke file fisik
         if (dataOrder.kondisiHP && dataOrder.kondisiHP.startsWith('data:')) {
             dataOrder.kondisiHP = simpanBase64KeFile(dataOrder.kondisiHP, 'KONDISI_' + dataOrder.kode);
         }
@@ -164,6 +224,7 @@ app.post('/api/orders', async (req, res) => {
         }
 
         io.emit("updateDashboardAdmin");
+        io.emit("orderBaruTersedia", dataBaru);
         res.status(201).json({ message: "Data tersimpan" });
     } catch (error) { res.status(500).json({ error: "Gagal simpan" }); }
 });
@@ -180,11 +241,9 @@ app.put('/api/orders/:kode', async (req, res) => {
     try {
         const dataUpdate = req.body;
 
-        // Konversi Bukti DP jika ada payload base64
         if (dataUpdate.buktiDP && dataUpdate.buktiDP.startsWith('data:')) {
             dataUpdate.buktiDP = simpanBase64KeFile(dataUpdate.buktiDP, 'DP_' + req.params.kode);
         }
-        // Konversi Bukti Pelunasan jika ada payload base64
         if (dataUpdate.buktiPelunasan && dataUpdate.buktiPelunasan.startsWith('data:')) {
             dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + req.params.kode);
         }
@@ -195,7 +254,7 @@ app.put('/api/orders/:kode', async (req, res) => {
             { new: true }
         );
         
-        io.emit("updateDataPelanggan", updateData.kode);
+        io.emit("updateDataPelanggan", updateData ? updateData.kode : req.params.kode);
         io.emit("updateDashboardAdmin");
         res.json({ message: "Update berhasil" });
     } catch (error) { res.status(500).json({ error: "Gagal update" }); }
@@ -203,7 +262,6 @@ app.put('/api/orders/:kode', async (req, res) => {
 
 app.delete('/api/orders/:kode', verifyAdmin, async (req, res) => {
     try {
-        // Opsional: Hapus file fisik juga jika diperlukan (fs.unlinkSync)
         await Order.findOneAndDelete({ kode: req.params.kode });
         io.emit("updateDashboardAdmin");
         res.json({ message: "Hapus berhasil" });
@@ -226,7 +284,6 @@ app.post('/api/chats', async (req, res) => {
     try {
         const chatBaru = new Chat(req.body);
         await chatBaru.save();
-        // MODIFIKASI: Mengirim data pengirim agar frontend bisa membedakan pop-up alert
         io.emit("chatBaruDiterima", { kode: chatBaru.kode, pengirim: chatBaru.pengirim });
         res.status(201).json({ message: "Chat terkirim" });
     } catch (error) { res.status(500).json({ error: "Gagal kirim chat" }); }
@@ -253,19 +310,7 @@ app.get('/api/reviews', async (req, res) => {
         res.json(reviews);
     } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
 });
-app.get('/api/teknisi/orders/aktif', async (req, res) => {
-    try {
-        const namaTeknisi = req.query.teknisi;
-        const tugasAktif = await Order.find({ 
-            teknisi: { $regex: new RegExp("^" + namaTeknisi.trim() + "$", "i") },
-            status: { $nin: ['baru', 'selesai_servis', 'batal', 'selesai'] } 
-        }).sort({ _id: -1 });
-        
-        res.json(tugasAktif);
-    } catch (error) { 
-        res.status(500).json({ error: "Gagal memuat tugas aktif" }); 
-    }
-});
+
 // --- ROUTE FRONTEND (FALLBACK) ---
 app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
