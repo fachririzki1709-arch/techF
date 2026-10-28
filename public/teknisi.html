@@ -463,57 +463,63 @@ socket.on('orderBaruTersedia', (data) => {
             if (k && data.oleh !== profilTeknisi.nama) { k.remove(); cekStatsUpdate(); }
         });
 
-        function tampilkanKartuOrder(order) {
+       function tampilkanKartuOrder(order) {
             if (document.getElementById(`ordBaru-${order.kode}`)) return; 
             
-           // KODE BARU
-const layoutHTML = `
-    <div class="list-item" id="ordBaru-${order.kode}">
-        <div class="list-info">
-            <h4>${order.kode} <span class="badge-status status-baru" style="margin-left:5px;">Baru</span></h4>
-            <p>${order.pelanggan.nama} - ${order.perangkat.merek} ${order.perangkat.tipe}</p>
-            <span><i class="bi bi-geo-alt"></i> ${order.pelanggan.lokasi.tipeServis === 'home_service' ? 'Kunjungan (On-Site)' : 'Titik COD'}</span>
-            <div style="font-size:0.8rem; background:#fffbeb; padding:5px 8px; border-radius:6px; margin-top:5px; border-left:3px solid #f59e0b;">
-                Keluhan: ${order.perangkat.keluhan}
-            </div>
-        </div>
-        <div class="list-action">
-            <button class="btn btn-take" onclick="tarikOrder('${order.kode}', '${order.pelanggan.nama}', '${order.perangkat.merek} ${order.perangkat.tipe}')">Ambil</button>
-        </div>
-    </div>
-`;
+            // Fallback aman untuk menghindari JS Error "Cannot read properties of undefined"
+            const namaPelanggan = order.nama || (order.pelanggan ? order.pelanggan.nama : 'Pelanggan');
+            const merekTipe = (order.merek ? `${order.merek} ${order.tipe}` : '') || (order.perangkat ? `${order.perangkat.merek} ${order.perangkat.tipe}` : 'Unit');
+            const keluhan = order.kerusakan || (order.perangkat ? order.perangkat.keluhan : '-');
+            const layanan = order.layanan || (order.pelanggan && order.pelanggan.lokasi ? order.pelanggan.lokasi.tipeServis : 'Servis');
+            const labelLayanan = layanan.includes('home') ? 'Kunjungan (On-Site)' : 'Bawa ke Toko / COD';
+
+            const layoutHTML = `
+                <div class="list-item" id="ordBaru-${order.kode}">
+                    <div class="list-info">
+                        <h4>${order.kode} <span class="badge-status status-baru" style="margin-left:5px;">Baru</span></h4>
+                        <p>${namaPelanggan} - ${merekTipe}</p>
+                        <span><i class="bi bi-geo-alt"></i> ${labelLayanan}</span>
+                        <div style="font-size:0.8rem; background:#fffbeb; padding:5px 8px; border-radius:6px; margin-top:5px; border-left:3px solid #f59e0b;">
+                            Keluhan: ${keluhan}
+                        </div>
+                    </div>
+                    <div class="list-action">
+                        <!-- Variabel dikirim dengan aman ke tarikOrder -->
+                        <button class="btn btn-take" onclick="tarikOrder('${order.kode}', '${namaPelanggan}', '${merekTipe}')">Ambil</button>
+                    </div>
+                </div>
+            `;
             document.getElementById('listOrderMasukFull').innerHTML += layoutHTML;
             cekStatsUpdate();
         }
 
-       function tarikOrder(kodeOrder, nama, unit) {
-    // Simpan status ke database agar tidak hilang saat refresh
-    fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
-        method: 'PUT',
-        headers: getAuthHeaderTeknisi(),
-        body: JSON.stringify({ 
-            status: "diproses", 
-            teknisi: profilTeknisi.nama,
-            "pengerjaan.status": "diproses",
-            "pengerjaan.teknisi": profilTeknisi.nama
-        })
-    }).then(res => {
-        if(res.ok) {
-            socket.emit('teknisiAmbilOrder', { kodeOrder: kodeOrder, namaTeknisi: profilTeknisi.nama });
-            Swal.fire({ title: 'Tugas Diterima!', icon: 'success', timer: 1500, showConfirmButton: false });
-            
-            const k = document.getElementById(`ordBaru-${kodeOrder}`);
-            if(k) k.remove();
+        function tarikOrder(kodeOrder, nama, unit) {
+            fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
+                method: 'PUT',
+                headers: getAuthHeaderTeknisi(),
+                body: JSON.stringify({ 
+                    status: "diproses", 
+                    teknisi: profilTeknisi.nama.trim(), // Pastikan nama tersimpan bersih tanpa spasi
+                    "pengerjaan.status": "diproses",
+                    "pengerjaan.teknisi": profilTeknisi.nama.trim()
+                })
+            }).then(res => {
+                if(res.ok) {
+                    socket.emit('teknisiAmbilOrder', { kodeOrder: kodeOrder, namaTeknisi: profilTeknisi.nama });
+                    Swal.fire({ title: 'Tugas Diterima!', icon: 'success', timer: 1500, showConfirmButton: false });
+                    
+                    const k = document.getElementById(`ordBaru-${kodeOrder}`);
+                    if(k) k.remove();
 
-            if (!daftarTugasAktif.includes(kodeOrder)) daftarTugasAktif.push(kodeOrder);
-            renderTugasAktif(kodeOrder, nama, unit);
-            cekStatsUpdate();
-        } else {
-            Swal.fire('Error', 'Gagal mengambil order', 'error');
+                    if (!daftarTugasAktif.includes(kodeOrder)) daftarTugasAktif.push(kodeOrder);
+                    renderTugasAktif(kodeOrder, nama, unit);
+                    cekStatsUpdate();
+                } else {
+                    Swal.fire('Error', 'Gagal mengambil order', 'error');
+                }
+            });
         }
-    });
-}
-     function muatTugasAktif() {
+    function muatTugasAktif() {
     document.getElementById('listTugasAktifFull').innerHTML = "";
     document.getElementById('listTugasAktifDashboard').innerHTML = "";
     daftarTugasAktif = [];
@@ -573,36 +579,42 @@ const layoutHTML = `
         }
 
         // 5. Sistem Workspace & Penyelesaian Tugas
-        function bukaWorkspace(kodeOrder) {
+       function bukaWorkspace(kodeOrder) {
             fetch(`${window.location.origin}/api/orders/${kodeOrder}`, { headers: getAuthHeaderTeknisi() })
             .then(res => res.json()).then(order => {
                 document.getElementById('serviceWorkspaceOverlay').style.display = 'flex';
                 document.getElementById('wsKodeOrder').innerText = "Ruang Kerja - " + kodeOrder;
                 
+                // Fallback aman untuk Workspace
+                const namaPelanggan = order.nama || (order.pelanggan ? order.pelanggan.nama : 'Pelanggan');
+                const merekTipe = (order.merek ? `${order.merek} ${order.tipe}` : '') || (order.perangkat ? `${order.perangkat.merek} ${order.perangkat.tipe}` : 'Unit');
+                const keluhan = order.kerusakan || (order.perangkat ? order.perangkat.keluhan : '-');
+                const biayaPart = order.biayaSuku || (order.finansial ? order.finansial.biayaSukuCadang : 0);
+
                 document.getElementById('wsKonten').innerHTML = `
                    <div class="card-box">
-    <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-person-lines-fill"></i> Data Pelanggan</h4>
-    <p><strong>Nama:</strong> ${order.pelanggan.nama}</p>
-    <p><strong>Unit:</strong> ${order.perangkat.merek} ${order.perangkat.tipe}</p>
-    <p><strong>Keluhan:</strong> ${order.perangkat.keluhan}</p>
-</div>
+                        <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-person-lines-fill"></i> Data Pelanggan</h4>
+                        <p><strong>Nama:</strong> ${namaPelanggan}</p>
+                        <p><strong>Unit:</strong> ${merekTipe}</p>
+                        <p><strong>Keluhan:</strong> ${keluhan}</p>
+                    </div>
                     
                     <div class="card-box" style="margin-top:1rem;">
                         <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-ui-checks"></i> QC Checklist (Akhir)</h4>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-    <label><input type="checkbox" id="qc_layar"> Layar & Sentuh</label>
-    <label><input type="checkbox" id="qc_baterai"> Baterai & Charger</label>
-    <label><input type="checkbox" id="qc_kamera"> Kamera D/B</label>
-    <label><input type="checkbox" id="qc_sinyal"> Sinyal & Wi-Fi</label>
-    <label><input type="checkbox" id="qc_speaker"> Speaker & Mic</label>
-    <label><input type="checkbox" id="qc_segel"> Segel Rapat</label>
-</div>
+                            <label><input type="checkbox" id="qc_layar"> Layar & Sentuh</label>
+                            <label><input type="checkbox" id="qc_baterai"> Baterai & Charger</label>
+                            <label><input type="checkbox" id="qc_kamera"> Kamera D/B</label>
+                            <label><input type="checkbox" id="qc_sinyal"> Sinyal & Wi-Fi</label>
+                            <label><input type="checkbox" id="qc_speaker"> Speaker & Mic</label>
+                            <label><input type="checkbox" id="qc_segel"> Segel Rapat</label>
+                        </div>
                     </div>
 
                     <div class="card-box" style="margin-top:1rem;">
                         <h4 style="margin-bottom:10px; color:var(--primary);"><i class="bi bi-receipt"></i> Pelaporan</h4>
                        <label style="font-size:0.85rem; font-weight:bold;">Biaya Sparepart / Jasa (Rp):</label>
-    <input type="number" id="biayaPart-${kodeOrder}" value="${order.finansial.biayaSukuCadang || 0}" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border);">
+                        <input type="number" id="biayaPart-${kodeOrder}" value="${biayaPart}" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid var(--border);">
                     </div>
                 `;
 
