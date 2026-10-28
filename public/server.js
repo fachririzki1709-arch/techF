@@ -253,7 +253,19 @@ app.get('/api/reviews', async (req, res) => {
         res.json(reviews);
     } catch (error) { res.status(500).json({ error: "Gagal memuat review" }); }
 });
-
+app.get('/api/teknisi/orders/aktif', async (req, res) => {
+    try {
+        const namaTeknisi = req.query.teknisi;
+        const tugasAktif = await Order.find({ 
+            teknisi: namaTeknisi,
+            status: { $in: ['diproses', 'diagnosa'] } 
+        }).sort({ _id: -1 });
+        
+        res.json(tugasAktif);
+    } catch (error) { 
+        res.status(500).json({ error: "Gagal memuat tugas aktif" }); 
+    }
+});
 // --- ROUTE FRONTEND (FALLBACK) ---
 app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
