@@ -311,15 +311,17 @@
         let aktifChatKode = "";
 
         function getAuthHeaderTeknisi() {
-            const token = sessionStorage.getItem("teknisiToken");
+            const token = localStorage.getItem("teknisiToken") || sessionStorage.getItem("teknisiToken");
             return token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            const token = sessionStorage.getItem("teknisiToken");
-            if(token) {
+            const token = localStorage.getItem("teknisiToken") || sessionStorage.getItem("teknisiToken");
+            const namaSaved = localStorage.getItem("teknisiNama") || sessionStorage.getItem("teknisiNama");
+            
+            if(token && namaSaved) {
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
-                profilTeknisi.nama = sessionStorage.getItem("teknisiNama") || "Teknisi";
+                profilTeknisi.nama = namaSaved.trim();
                 updateNamaUI(profilTeknisi.nama);
                 muatOrderTersedia(); 
                 muatTugasAktif();
@@ -369,9 +371,13 @@
                 if(!res.ok) throw new Error(data.message || "Login gagal");
                 return data;
             }).then(data => {
+                const namaTeknisi = (data.nama || username).trim();
                 sessionStorage.setItem("teknisiToken", data.token);
-                sessionStorage.setItem("teknisiNama", data.nama || username);
-                profilTeknisi.nama = data.nama || username; 
+                sessionStorage.setItem("teknisiNama", namaTeknisi);
+                localStorage.setItem("teknisiToken", data.token);
+                localStorage.setItem("teknisiNama", namaTeknisi);
+                
+                profilTeknisi.nama = namaTeknisi; 
                 updateNamaUI(profilTeknisi.nama);
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
                 muatOrderTersedia(); 
@@ -380,7 +386,12 @@
             .finally(() => { btn.innerHTML = 'Masuk Panel'; btn.disabled = false; });
         }
 
-        function logoutTeknisi() { sessionStorage.clear(); location.reload(); }
+        function logoutTeknisi() { 
+            sessionStorage.clear(); 
+            localStorage.removeItem("teknisiToken");
+            localStorage.removeItem("teknisiNama");
+            location.reload(); 
+        }
 
         function toggleStatus() {
             isAktif = !isAktif;
@@ -468,7 +479,8 @@
                     "pengerjaan.status": "diproses",
                     "pengerjaan.teknisi": namaClean
                 })
-            }).then(res => {
+            }).then(async res => {
+                const dataRes = await res.json();
                 if(res.ok) {
                     socket.emit('teknisiAmbilOrder', { kodeOrder: kodeOrder, namaTeknisi: namaClean });
                     Swal.fire({ title: 'Tugas Diterima!', icon: 'success', timer: 1500, showConfirmButton: false });
@@ -480,9 +492,9 @@
                     renderTugasAktif(kodeOrder, nama, unit);
                     cekStatsUpdate();
                 } else {
-                    Swal.fire('Error', 'Gagal mengambil order', 'error');
+                    Swal.fire('Error', dataRes.error || 'Gagal mengambil order', 'error');
                 }
-            });
+            }).catch(err => Swal.fire('Error', 'Gagal koneksi ke server', 'error'));
         }
 
         function muatTugasAktif() {
@@ -490,7 +502,8 @@
             document.getElementById('listTugasAktifDashboard').innerHTML = "";
             daftarTugasAktif = [];
 
-            const namaClean = (profilTeknisi.nama || "Teknisi").trim();
+            const namaClean = (profilTeknisi.nama || "").trim();
+            if (!namaClean) return;
 
             fetch(`${window.location.origin}/api/teknisi/orders/aktif?teknisi=${encodeURIComponent(namaClean)}`, { 
                 headers: getAuthHeaderTeknisi() 
@@ -514,10 +527,13 @@
         }
 
         function renderTugasAktif(kodeOrder, nama, unit) {
-            if (document.getElementById(`ordAktif-${kodeOrder}`)) return;
+            const el1 = document.getElementById(`ordAktifFull-${kodeOrder}`);
+            if(el1) el1.remove();
+            const el2 = document.getElementById(`ordAktifDash-${kodeOrder}`);
+            if(el2) el2.remove();
 
-            const html = `
-                <div class="list-item" id="ordAktif-${kodeOrder}">
+            const htmlFull = `
+                <div class="list-item" id="ordAktifFull-${kodeOrder}">
                     <div class="list-info">
                         <h4>${kodeOrder}</h4>
                         <p>${nama}</p>
@@ -529,8 +545,21 @@
                     </div>
                 </div>
             `;
-            document.getElementById('listTugasAktifFull').innerHTML += html;
-            document.getElementById('listTugasAktifDashboard').innerHTML += html;
+            const htmlDash = `
+                <div class="list-item" id="ordAktifDash-${kodeOrder}">
+                    <div class="list-info">
+                        <h4>${kodeOrder}</h4>
+                        <p>${nama}</p>
+                        <span>${unit}</span>
+                    </div>
+                    <div class="list-action">
+                        <span class="badge-status status-diagnosa">Diproses</span>
+                        <button class="btn btn-workspace" onclick="bukaWorkspace('${kodeOrder}')"><i class="bi bi-tools"></i> Buka</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('listTugasAktifFull').innerHTML += htmlFull;
+            document.getElementById('listTugasAktifDashboard').innerHTML += htmlDash;
         }
 
         function cekStatsUpdate() {
@@ -622,7 +651,7 @@
                     }).then(res => {
                         if(res.ok) {
                             Swal.fire('Sukses', 'Servis selesai dilaporkan!', 'success');
-                            document.querySelectorAll(`#ordAktif-${kodeOrder}`).forEach(e => e.remove());
+                            document.querySelectorAll(`#ordAktifFull-${kodeOrder}, #ordAktifDash-${kodeOrder}`).forEach(e => e.remove());
                             daftarTugasAktif = daftarTugasAktif.filter(item => item !== kodeOrder);
                             cekStatsUpdate(); tutupWorkspace();
                         }
