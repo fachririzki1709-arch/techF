@@ -468,7 +468,7 @@
             cekStatsUpdate();
         }
 
-        function tarikOrder(kodeOrder, nama, unit) {
+      function tarikOrder(kodeOrder, nama, unit) {
             const namaClean = profilTeknisi.nama.trim();
             fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
                 method: 'PUT',
@@ -489,8 +489,8 @@
                     if(k) k.remove();
 
                     if (!daftarTugasAktif.includes(kodeOrder)) daftarTugasAktif.push(kodeOrder);
-                    renderTugasAktif(kodeOrder, nama, unit);
-                    cekStatsUpdate();
+                    // Langsung panggil muatTugasAktif agar data disinkronkan dari server
+                    muatTugasAktif();
                 } else {
                     Swal.fire('Error', dataRes.error || 'Gagal mengambil order', 'error');
                 }
