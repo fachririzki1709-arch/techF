@@ -352,6 +352,7 @@
                 profilTeknisi.nama = sessionStorage.getItem("teknisiNama") || "Teknisi";
                 updateNamaUI(profilTeknisi.nama);
                 muatOrderTersedia(); 
+                muatTugasAktif();
             }
             checkMobile();
         });
@@ -404,6 +405,7 @@
                 profilTeknisi.nama = data.nama; updateNamaUI(data.nama);
                 document.getElementById("loginTeknisiOverlay").style.display = "none";
                 muatOrderTersedia(); 
+                muatTugasAktif(); 
             }).catch(err => Swal.fire('Gagal', err.message, 'error'))
             .finally(() => { btn.innerHTML = 'Masuk Panel'; btn.disabled = false; });
         }
@@ -484,21 +486,56 @@ const layoutHTML = `
             cekStatsUpdate();
         }
 
-        // 4. Sistem Ambil Order -> Tugas Aktif
-        function tarikOrder(kodeOrder, nama, unit) {
+       function tarikOrder(kodeOrder, nama, unit) {
+    // Simpan status ke database agar tidak hilang saat refresh
+    fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
+        method: 'PUT',
+        headers: getAuthHeaderTeknisi(),
+        body: JSON.stringify({ 
+            status: "diproses", 
+            teknisi: profilTeknisi.nama,
+            "pengerjaan.status": "diproses",
+            "pengerjaan.teknisi": profilTeknisi.nama
+        })
+    }).then(res => {
+        if(res.ok) {
             socket.emit('teknisiAmbilOrder', { kodeOrder: kodeOrder, namaTeknisi: profilTeknisi.nama });
-            
             Swal.fire({ title: 'Tugas Diterima!', icon: 'success', timer: 1500, showConfirmButton: false });
             
-            // Pindahkan elemen
             const k = document.getElementById(`ordBaru-${kodeOrder}`);
             if(k) k.remove();
 
             if (!daftarTugasAktif.includes(kodeOrder)) daftarTugasAktif.push(kodeOrder);
             renderTugasAktif(kodeOrder, nama, unit);
             cekStatsUpdate();
+        } else {
+            Swal.fire('Error', 'Gagal mengambil order', 'error');
         }
+    });
+}
+     function muatTugasAktif() {
+    document.getElementById('listTugasAktifFull').innerHTML = "";
+    document.getElementById('listTugasAktifDashboard').innerHTML = "";
+    daftarTugasAktif = [];
 
+    fetch(`${window.location.origin}/api/teknisi/orders/aktif?teknisi=${encodeURIComponent(profilTeknisi.nama)}`, { 
+        headers: getAuthHeaderTeknisi() 
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data && data.length > 0) {
+            data.forEach(order => {
+                const namaPelanggan = order.nama || (order.pelanggan ? order.pelanggan.nama : 'Pelanggan');
+                const detailUnit = (order.merek ? `${order.merek} ${order.tipe}` : null) || (order.perangkat ? `${order.perangkat.merek} ${order.perangkat.tipe}` : 'Unit');
+                
+                daftarTugasAktif.push(order.kode);
+                renderTugasAktif(order.kode, namaPelanggan, detailUnit);
+            });
+        }
+        cekStatsUpdate();
+    })
+    .catch(err => console.error("Gagal memuat tugas aktif", err));
+}
         function renderTugasAktif(kodeOrder, nama, unit) {
             const html = `
                 <div class="list-item" id="ordAktif-${kodeOrder}">
