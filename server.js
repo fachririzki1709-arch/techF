@@ -89,7 +89,6 @@ cloudinary.config({
 // MIDDLEWARE AUTENTIKASI ADMIN
 function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
-    // Ambil token dari header 'Bearer <token>'
     const token = authHeader && authHeader.split(' ')[1]; 
     
     if (!token) return res.status(401).json({ message: "Akses Ditolak: Token admin tidak ditemukan" });
@@ -97,13 +96,31 @@ function verifyAdmin(req, res, next) {
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
         
-        // Memastikan payload token memiliki role admin
         if (decoded.role !== "admin") {
             return res.status(403).json({ message: "Akses Ditolak: Akun ini bukan admin" });
         }
         
         req.admin = decoded;
         next();
+    });
+}
+
+// MIDDLEWARE AUTENTIKASI ADMIN ATAU TEKNISI
+function verifyAdminOrTeknisi(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; 
+    if (!token) return res.status(401).json({ message: "Akses Ditolak: Token tidak ditemukan" });
+    
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
+        if (decoded.role === "admin") {
+            req.admin = decoded;
+            return next();
+        } else if (decoded.role === "teknisi") {
+            req.teknisiUser = decoded;
+            return next();
+        }
+        return res.status(403).json({ message: "Akses Ditolak" });
     });
 }
 
@@ -114,8 +131,6 @@ async function uploadKeCloudinary(filePath) {
         
         const result = await cloudinary.uploader.upload(filePath, { folder: "sftech_teknisi" });
         
-        // Hapus file lokal HANYA jika upload ke cloud berhasil
-        const fs = require('fs');
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath); 
         
         return result.secure_url;
@@ -125,104 +140,10 @@ async function uploadKeCloudinary(filePath) {
     }
 }
 
-// Update Endpoint POST Tambah Teknisi oleh Admin
-app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
-        
-        let fotoUrl = await uploadKeCloudinary(req.file.path);
-        
-        // 🔥 FALLBACK: Gunakan path lokal jika Cloudinary gagal/kosong
-        if (!fotoUrl) {
-            fotoUrl = `/uploads/${req.file.filename}`;
-        }
-
-        const hashedPassword = bcrypt.hashSync(req.body.password || "teknisi123", 8);
-        const arrayKeahlian = req.body.keahlian ? req.body.keahlian.split(',').map(s => s.trim().toLowerCase()) : [];
-
-        const teknisiBaru = new Teknisi({
-            nama: req.body.nama,
-            username: req.body.username,
-            password: hashedPassword,
-            wa: req.body.wa,
-            foto: fotoUrl,
-            keahlian: arrayKeahlian
-        });
-        
-        await teknisiBaru.save();
-        res.status(201).json({ message: "Teknisi berhasil ditambahkan dengan akun login" });
-        
-    } catch (error) { 
-        const fs = require('fs');
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-        
-        if (error.code === 11000) {
-            return res.status(400).json({ error: "Username sudah digunakan oleh teknisi lain. Silakan pilih username berbeda." });
-        }
-        
-        res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); 
-    }
-});
-
-// WebSocket Connection Handler
-io.on('connection', (socket) => {
-    console.log("🟢 Klien terhubung ke WebSocket:", socket.id);
-    
-    socket.on('updateLocation', (data) => { 
-        io.emit('updateLocationAdmin', data); 
-    });
-
-    socket.on('streamLokasiUser', (data) => { 
-        io.emit('updateLocationAdmin', data); 
-    });
-
-    socket.on('typing', (data) => { 
-        io.emit('typing', data); 
-        io.emit('userTyping', data); 
-    });
-
-    socket.on('stopTyping', (data) => { 
-        io.emit('userStopTyping', data); 
-    });
-
-    // 👇 PERBAIKAN 1: Struktur Nested pengerjaan.teknisi
-    socket.on('teknisiAmbilOrder', async (data) => {
-        try {
-            const { kodeOrder, namaTeknisi } = data;
-            const order = await Order.findOne({ kode: kodeOrder });
-            
-            // Menggunakan struktur nested pengerjaan
-            if (order && (order.pengerjaan.teknisi === "" || !order.pengerjaan.teknisi)) {
-                order.pengerjaan.teknisi = namaTeknisi;
-                order.pengerjaan.status = "dijadwalkan"; 
-                order.pengerjaan.riwayatStatus.push({ status: "dijadwalkan", detail: `Diambil oleh Teknisi ${namaTeknisi}`, waktu: new Date().toISOString() });
-                
-                await order.save();
-                
-                io.emit('orderSudahDiambil', { kodeOrder, oleh: namaTeknisi });
-                io.emit("updateDashboardAdmin");
-                io.emit("updateDataPelanggan", kodeOrder);
-            }
-        } catch (err) {
-            console.error("Gagal memproses teknisiAmbilOrder:", err);
-        }
-    });
-    
-    socket.on('disconnect', () => {
-    });
-});
-
-// Koneksi Database MongoDB
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/db_servis_hp"; 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
-  .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
-
 // SKEMA DATABASE ORDER LENGKAP
 const OrderSchema = new mongoose.Schema({
     kode: { type: String, required: true, unique: true, index: true }, 
+    technician_id: { type: String, default: "", index: true },
     pelanggan: {
         nama: { type: String, required: true },
         wa: { type: String, required: true },
@@ -248,9 +169,10 @@ const OrderSchema = new mongoose.Schema({
     },
     pengerjaan: {
         teknisi: { type: String, default: "", index: true }, 
+        teknisiId: { type: String, default: "", index: true },
         status: { 
             type: String, 
-            enum: ['pending', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis', 'selesai', 'batal', 'ditolak_pelanggan', 'baru'], 
+            enum: ['pending', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis', 'selesai', 'batal', 'ditolak_pelanggan', 'baru', 'taken'], 
             default: 'pending',
             index: true
         },
@@ -326,6 +248,117 @@ const TeknisiSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Teknisi = mongoose.model('Teknisi', TeknisiSchema, 'teknisi');
 
+// WebSocket Connection Handler
+io.on('connection', (socket) => {
+    console.log("🟢 Klien terhubung ke WebSocket:", socket.id);
+    
+    socket.on('updateLocation', (data) => { 
+        io.emit('updateLocationAdmin', data); 
+    });
+
+    socket.on('streamLokasiUser', (data) => { 
+        io.emit('updateLocationAdmin', data); 
+    });
+
+    socket.on('typing', (data) => { 
+        io.emit('typing', data); 
+        io.emit('userTyping', data); 
+    });
+
+    socket.on('stopTyping', (data) => { 
+        io.emit('userStopTyping', data); 
+    });
+
+    // Handler Socket Ambil Order dengan persistensi database lengkap
+    socket.on('teknisiAmbilOrder', async (data) => {
+        try {
+            const { kodeOrder, namaTeknisi, technician_id, teknisiId } = data;
+            const tekId = technician_id || teknisiId || "";
+            
+            const order = await Order.findOne({ kode: kodeOrder });
+            if (order && (!order.pengerjaan.teknisi || order.pengerjaan.teknisi === "")) {
+                let nama = namaTeknisi;
+                if (!nama && tekId) {
+                    const tek = await Teknisi.findById(tekId);
+                    if (tek) nama = tek.nama;
+                }
+                nama = nama || "Teknisi";
+
+                order.pengerjaan.teknisi = nama;
+                if (tekId) {
+                    order.pengerjaan.teknisiId = tekId.toString();
+                    order.technician_id = tekId.toString();
+                }
+                const statusBaru = (order.pengerjaan.status === 'pending' || order.pengerjaan.status === 'baru') ? "dijadwalkan" : order.pengerjaan.status;
+                order.pengerjaan.status = statusBaru;
+                
+                if (!order.pengerjaan.riwayatStatus) order.pengerjaan.riwayatStatus = [];
+                order.pengerjaan.riwayatStatus.push({ 
+                    status: statusBaru, 
+                    detail: `Diambil oleh Teknisi ${nama}`, 
+                    waktu: new Date().toISOString() 
+                });
+                
+                await order.save();
+                
+                io.emit('orderSudahDiambil', { kodeOrder, oleh: nama, technician_id: tekId, status: statusBaru });
+                io.emit("updateDashboardAdmin");
+                io.emit("updateDataPelanggan", kodeOrder);
+            }
+        } catch (err) {
+            console.error("Gagal memproses teknisiAmbilOrder via Socket:", err);
+        }
+    });
+    
+    socket.on('disconnect', () => {
+    });
+});
+
+// Koneksi Database MongoDB
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/db_servis_hp"; 
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
+  .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
+
+// Update Endpoint POST Tambah Teknisi oleh Admin
+app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
+        
+        let fotoUrl = await uploadKeCloudinary(req.file.path);
+        
+        if (!fotoUrl) {
+            fotoUrl = `/uploads/${req.file.filename}`;
+        }
+
+        const hashedPassword = bcrypt.hashSync(req.body.password || "teknisi123", 8);
+        const arrayKeahlian = req.body.keahlian ? req.body.keahlian.split(',').map(s => s.trim().toLowerCase()) : [];
+
+        const teknisiBaru = new Teknisi({
+            nama: req.body.nama,
+            username: req.body.username,
+            password: hashedPassword,
+            wa: req.body.wa,
+            foto: fotoUrl,
+            keahlian: arrayKeahlian
+        });
+        
+        await teknisiBaru.save();
+        res.status(201).json({ message: "Teknisi berhasil ditambahkan dengan akun login" });
+        
+    } catch (error) { 
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        
+        if (error.code === 11000) {
+            return res.status(400).json({ error: "Username sudah digunakan oleh teknisi lain. Silakan pilih username berbeda." });
+        }
+        
+        res.status(500).json({ error: "Gagal menyimpan teknisi: " + error.message }); 
+    }
+});
+
 app.post('/api/teknisi/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -336,7 +369,13 @@ app.post('/api/teknisi/login', async (req, res) => {
         }
         
         const token = jwt.sign({ id: teknisi._id, nama: teknisi.nama, role: "teknisi" }, JWT_SECRET, { expiresIn: '12h' });
-        res.json({ token, nama: teknisi.nama, message: "Login Teknisi Berhasil" });
+        res.json({ 
+            token, 
+            id: teknisi._id,
+            technician_id: teknisi._id,
+            nama: teknisi.nama, 
+            message: "Login Teknisi Berhasil" 
+        });
     } catch (error) {
         res.status(500).json({ error: "Gagal login teknisi: " + error.message });
     }
@@ -354,18 +393,162 @@ function verifyTeknisi(req, res, next) {
     });
 }
 
+// GET: Pesanan yang belum diambil dan tersedia untuk diambil oleh teknisi
 app.get('/api/teknisi/orders/available', verifyTeknisi, async (req, res) => {
     try {
         const availableOrders = await Order.find({
-            $or: [{ "pengerjaan.teknisi": "" }, { "pengerjaan.teknisi": null }],
-            "pengerjaan.status": { $in: ['pending', 'baru'] }
-        }).sort({ waktuPesan: -1 });
+            $and: [
+                {
+                    $or: [
+                        { "pengerjaan.teknisi": "" },
+                        { "pengerjaan.teknisi": null },
+                        { "pengerjaan.teknisi": { $exists: false } }
+                    ]
+                },
+                {
+                    $or: [
+                        { "technician_id": "" },
+                        { "technician_id": null },
+                        { "technician_id": { $exists: false } }
+                    ]
+                },
+                {
+                    "pengerjaan.status": { $in: ['pending', 'baru'] }
+                }
+            ]
+        }).sort({ createdAt: -1, _id: -1 });
         
         res.json(availableOrders);
     } catch (error) {
         res.status(500).json({ error: "Gagal memuat daftar pesanan tersedia" });
     }
 });
+
+// GET: Pesanan yang telah diambil oleh teknisi yang login (My Jobs / Active Jobs)
+const getTeknisiJobsHandler = async (req, res) => {
+    try {
+        const tekId = (req.teknisiUser && req.teknisiUser.id) ? req.teknisiUser.id.toString() : (req.query.technician_id || req.query.teknisiId || "");
+        const tekNama = (req.teknisiUser && req.teknisiUser.nama) ? req.teknisiUser.nama : (req.query.nama || req.query.teknisi || "");
+
+        const conditions = [];
+        if (tekId) {
+            conditions.push({ "technician_id": tekId });
+            conditions.push({ "pengerjaan.teknisiId": tekId });
+        }
+        if (tekNama) {
+            conditions.push({ "pengerjaan.teknisi": tekNama });
+        }
+
+        let filter = {};
+        if (conditions.length > 0) {
+            filter = { $or: conditions };
+        } else {
+            filter = {
+                $or: [
+                    { "pengerjaan.teknisi": { $ne: "" } },
+                    { "technician_id": { $ne: "" } },
+                    { "pengerjaan.status": { $in: ['taken', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis'] } }
+                ]
+            };
+        }
+
+        if (req.query.status) {
+            filter["pengerjaan.status"] = req.query.status;
+        }
+
+        const jobs = await Order.find(filter).sort({ updatedAt: -1, createdAt: -1, _id: -1 });
+        res.json(jobs);
+    } catch (error) {
+        res.status(500).json({ error: "Gagal memuat daftar pekerjaan teknisi: " + error.message });
+    }
+};
+
+app.get('/api/teknisi/orders', verifyTeknisi, getTeknisiJobsHandler);
+app.get('/api/teknisi/orders/my-jobs', verifyTeknisi, getTeknisiJobsHandler);
+app.get('/api/teknisi/orders/active', verifyTeknisi, getTeknisiJobsHandler);
+app.get('/api/teknisi/my-jobs', verifyTeknisi, getTeknisiJobsHandler);
+
+// HANDLER PENGAMBILAN JOB (TAKE JOB) - PERSISTEN KE MONGODB
+async function takeJobHandler(req, res) {
+    try {
+        const orderIdentifier = req.params.kode || req.params.id || req.body.kode || req.body.orderId || req.body.kodeOrder || req.body.id;
+        if (!orderIdentifier) {
+            return res.status(400).json({ error: "ID atau Kode Pesanan wajib disertakan" });
+        }
+
+        const technician_id = req.body.technician_id || req.body.teknisiId || (req.teknisiUser ? req.teknisiUser.id : "");
+        let namaTeknisi = req.body.namaTeknisi || req.body.nama || (req.teknisiUser ? req.teknisiUser.nama : "");
+        const statusBaru = req.body.status || "dijadwalkan";
+
+        if (!namaTeknisi && technician_id) {
+            try {
+                const tek = await Teknisi.findById(technician_id);
+                if (tek) namaTeknisi = tek.nama;
+            } catch (e) {}
+        }
+        namaTeknisi = namaTeknisi || "Teknisi";
+
+        let query = {};
+        if (mongoose.Types.ObjectId.isValid(orderIdentifier)) {
+            query = { $or: [{ _id: orderIdentifier }, { kode: orderIdentifier }] };
+        } else {
+            query = { kode: orderIdentifier };
+        }
+
+        const order = await Order.findOne(query);
+        if (!order) {
+            return res.status(404).json({ error: "Pesanan tidak ditemukan" });
+        }
+
+        // Simpan kepemilikan teknisi secara permanen di database
+        order.technician_id = technician_id ? technician_id.toString() : (order.technician_id || "");
+        order.pengerjaan.teknisi = namaTeknisi;
+        if (technician_id) {
+            order.pengerjaan.teknisiId = technician_id.toString();
+        }
+        order.pengerjaan.status = statusBaru;
+
+        if (!order.pengerjaan.riwayatStatus) {
+            order.pengerjaan.riwayatStatus = [];
+        }
+        order.pengerjaan.riwayatStatus.push({
+            status: statusBaru,
+            detail: `Diambil oleh Teknisi ${namaTeknisi}`,
+            waktu: new Date().toISOString()
+        });
+
+        await order.save();
+
+        io.emit('orderSudahDiambil', { 
+            kodeOrder: order.kode, 
+            oleh: namaTeknisi, 
+            technician_id: technician_id,
+            status: statusBaru 
+        });
+        io.emit("updateDashboardAdmin");
+        io.emit("updateDataPelanggan", order.kode);
+
+        res.json({ 
+            message: "Job berhasil diambil dan status diperbarui", 
+            order 
+        });
+    } catch (error) {
+        console.error("Gagal memproses take job:", error);
+        res.status(500).json({ error: "Gagal mengambil job: " + error.message });
+    }
+}
+
+// Endpoint Rute POST & PUT Take Job
+app.post('/api/teknisi/orders/:kode/take', verifyTeknisi, takeJobHandler);
+app.put('/api/teknisi/orders/:kode/take', verifyTeknisi, takeJobHandler);
+app.post('/api/teknisi/orders/:id/take', verifyTeknisi, takeJobHandler);
+app.put('/api/teknisi/orders/:id/take', verifyTeknisi, takeJobHandler);
+app.post('/api/orders/:kode/take', takeJobHandler);
+app.put('/api/orders/:kode/take', takeJobHandler);
+app.post('/api/orders/:id/take', takeJobHandler);
+app.put('/api/orders/:id/take', takeJobHandler);
+app.post('/api/teknisi/take-job', takeJobHandler);
+app.post('/api/orders/take-job', takeJobHandler);
 
 app.put('/api/teknisi/status', verifyTeknisi, async (req, res) => {
     try {
@@ -382,11 +565,14 @@ app.get('/api/teknisi', async (req, res) => {
     try {
         const teknisiList = await Teknisi.find().sort({ createdAt: -1 });
         
-        // 👇 PERBAIKAN 7: Perhitungan antrean bersarang
         const teknisiDenganAntrian = await Promise.all(teknisiList.map(async (tek) => {
             const jumlahAntrian = await Order.countDocuments({
-                "pengerjaan.teknisi": tek.nama,
-                "pengerjaan.status": { $in: ['dijadwalkan', 'diproses'] } 
+                $or: [
+                    { "pengerjaan.teknisi": tek.nama },
+                    { "technician_id": tek._id.toString() },
+                    { "pengerjaan.teknisiId": tek._id.toString() }
+                ],
+                "pengerjaan.status": { $in: ['taken', 'dijadwalkan', 'diproses'] } 
             });
             return { ...tek.toObject(), antrianAktif: jumlahAntrian }; 
         }));
@@ -406,8 +592,6 @@ app.put('/api/teknisi/:id', verifyAdmin, upload.single('fotoTeknisi'), async (re
             updateData.foto = `/uploads/${req.file.filename}`;
             const tekLama = await Teknisi.findById(req.params.id);
             if (tekLama && tekLama.foto) {
-                const fs = require('fs');
-                const path = require('path');
                 const filePath = path.join(__dirname, 'public', tekLama.foto);
                 if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             }
@@ -438,7 +622,6 @@ app.delete('/api/teknisi/:id', verifyAdmin, async (req, res) => {
                 const publicId = "sftech_teknisi/" + urlParts[urlParts.length - 1].split('.')[0]; 
                 await cloudinary.uploader.destroy(publicId);
             } else {
-                const fs = require('fs');
                 const filePath = path.join(__dirname, 'public', tek.foto);
                 if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             }
@@ -506,9 +689,8 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
     try {
         const totalPesanan = await Order.countDocuments();
-        // 👇 PERBAIKAN 5: Struktur Nested pengerjaan.status untuk hitungan
         const pesananPending = await Order.countDocuments({ "pengerjaan.status": { $in: ['pending', 'baru'] } });
-        const pesananDiproses = await Order.countDocuments({ "pengerjaan.status": 'diproses' });
+        const pesananDiproses = await Order.countDocuments({ "pengerjaan.status": { $in: ['diproses', 'dijadwalkan', 'taken'] } });
         const pesananSelesai = await Order.countDocuments({ "pengerjaan.status": 'selesai' });
         
         res.json({
@@ -538,7 +720,6 @@ app.put('/api/admin/notifications/read', verifyAdmin, async (req, res) => {
 
 app.get('/api/reviews', async (req, res) => {
     try {
-        // 👇 PERBAIKAN 8: Pencarian nested pada struktur ulasan dan pengambilan field bersarang
         const reviews = await Order.find({ "ulasan.rating": { $gt: 0 } }).select('pelanggan.nama perangkat.merek perangkat.tipe ulasan createdAt').sort({ _id: -1 }).limit(10);
         res.json(reviews);
     } catch (error) {
@@ -546,10 +727,39 @@ app.get('/api/reviews', async (req, res) => {
     }
 });
 
-app.get('/api/orders', verifyAdmin, async (req, res) => {
+// GET: Tampilkan pesanan (Admin melihat semua, Teknisi melihat miliknya atau difilter berdasarkan teknisi/status)
+app.get('/api/orders', verifyAdminOrTeknisi, async (req, res) => {
     try {
+        let filter = {};
+        
+        if (req.teknisiUser) {
+            const tekId = req.teknisiUser.id ? req.teknisiUser.id.toString() : "";
+            const tekNama = req.teknisiUser.nama || "";
+            filter = {
+                $or: [
+                    { "technician_id": tekId },
+                    { "pengerjaan.teknisiId": tekId },
+                    { "pengerjaan.teknisi": tekNama }
+                ]
+            };
+        } else if (req.query.technician_id || req.query.teknisi) {
+            const val = req.query.technician_id || req.query.teknisi;
+            filter = {
+                $or: [
+                    { "technician_id": val },
+                    { "pengerjaan.teknisiId": val },
+                    { "pengerjaan.teknisi": val }
+                ]
+            };
+        }
+
+        if (req.query.status) {
+            const statusQuery = req.query.status;
+            filter["pengerjaan.status"] = statusQuery;
+        }
+
         const limit = parseInt(req.query.limit) || 2000; 
-        const dataOrders = await Order.find().sort({ _id: -1 }).limit(limit);
+        const dataOrders = await Order.find(filter).sort({ createdAt: -1, _id: -1 }).limit(limit);
         res.json(dataOrders); 
     } catch (error) { 
         res.status(500).json({ error: "Gagal memuat data pesanan" }); 
@@ -639,7 +849,6 @@ app.post('/api/orders/bulk', verifyAdmin, async (req, res) => {
         const { ids, action } = req.body;
         if (!ids || ids.length === 0) return res.status(400).json({ error: "Tidak ada ID yang dipilih" });
 
-        // 👇 PERBAIKAN 4: Struktur Nested untuk Bulk Action
         if (action === 'selesai') {
             await Order.updateMany(
                 { kode: { $in: ids } },
@@ -660,10 +869,9 @@ app.post('/api/orders/bulk', verifyAdmin, async (req, res) => {
 
 app.put('/api/orders/:kode', upload.any(), async (req, res) => {
     try {
-        const dataUpdate = req.body;
+        const dataUpdate = { ...req.body };
         
-      if (req.files && req.files.length > 0) {
-            // Memastikan data mengarah ke skema nested (finansial)
+        if (req.files && req.files.length > 0) {
             const fInden = req.files.find(f => f.fieldname === 'buktiInden');
             if (fInden) dataUpdate['finansial.inden.buktiBayarInden'] = `/uploads/${fInden.filename}`;
             
@@ -671,11 +879,21 @@ app.put('/api/orders/:kode', upload.any(), async (req, res) => {
             if (fLunas) dataUpdate['finansial.buktiPelunasan'] = `/uploads/${fLunas.filename}`;
         }
 
+        // Sinkronisasi data teknisi jika dikirim di body update
+        if (dataUpdate.technician_id || dataUpdate.teknisiId) {
+            const tid = dataUpdate.technician_id || dataUpdate.teknisiId;
+            dataUpdate.technician_id = tid.toString();
+            dataUpdate['pengerjaan.teknisiId'] = tid.toString();
+        }
+        if (dataUpdate.namaTeknisi || dataUpdate.teknisi) {
+            const tnama = dataUpdate.namaTeknisi || dataUpdate.teknisi;
+            dataUpdate['pengerjaan.teknisi'] = tnama;
+        }
+
         const existing = await Order.findOne({ kode: req.params.kode });
         
-        // 👇 PERBAIKAN 2 & 6: Pengecekan riwayat status bersarang dan memanggil pelanggan.wa
         const statusBaru = dataUpdate['pengerjaan.status'] || dataUpdate.status;
-        const statusLama = existing.pengerjaan ? existing.pengerjaan.status : existing.status;
+        const statusLama = existing && existing.pengerjaan ? existing.pengerjaan.status : (existing ? existing.status : null);
 
         if (existing && statusBaru && statusLama !== statusBaru) {
             await Order.updateOne(
@@ -684,12 +902,14 @@ app.put('/api/orders/:kode', upload.any(), async (req, res) => {
             );
 
             let statusTeks = statusBaru;
-            if(statusTeks === 'dijadwalkan') statusTeks = 'DIJADWALKAN - Teknisi akan segera meluncur';
+            if(statusTeks === 'dijadwalkan' || statusTeks === 'taken') statusTeks = 'DIJADWALKAN - Teknisi telah mengambil pesanan';
             if(statusTeks === 'diproses') statusTeks = 'SEDANG DIPROSES';
             if(statusTeks === 'selesai_servis') statusTeks = 'SELESAI DIPERBAIKI - Menunggu Pelunasan';
 
-            const pesanUpdate = `Pembaruan Status Servis SF Tech!\n\nPesanan dengan kode *${req.params.kode}* Anda saat ini berstatus:\n*${statusTeks.toUpperCase()}*\n\nSilakan cek website untuk rincian lebih lanjut.`;
-            kirimNotifikasiWA(existing.pelanggan.wa, pesanUpdate);
+            if (existing.pelanggan && existing.pelanggan.wa) {
+                const pesanUpdate = `Pembaruan Status Servis SF Tech!\n\nPesanan dengan kode *${req.params.kode}* Anda saat ini berstatus:\n*${statusTeks.toUpperCase()}*\n\nSilakan cek website untuk rincian lebih lanjut.`;
+                kirimNotifikasiWA(existing.pelanggan.wa, pesanUpdate);
+            }
         }
 
         const updateData = await Order.findOneAndUpdate(
@@ -754,7 +974,6 @@ app.put('/api/orders/:kode/cancel', async (req, res) => {
         const { status } = req.body;
         const existing = await Order.findOne({ kode: req.params.kode });
         
-        // 👇 PERBAIKAN 3: Mengecek currentStatus yang bersarang
         const currentStatus = existing.pengerjaan ? existing.pengerjaan.status : existing.status;
         
         if (existing && (currentStatus === 'baru' || currentStatus === 'pending')) {
@@ -782,7 +1001,6 @@ app.post('/api/orders/:kode/rating', async (req, res) => {
         const { rating, ulasan } = req.body;
         const updated = await Order.findOneAndUpdate(
             { kode: req.params.kode },
-            // 👇 PERBAIKAN 8: Mengunci penyimpanan ulasan di dalam objek ulasan bersarang
             { $set: { "ulasan.rating": Number(rating), "ulasan.teks": ulasan || "" } },
             { new: true }
         );
