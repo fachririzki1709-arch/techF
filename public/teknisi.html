@@ -468,16 +468,14 @@
             cekStatsUpdate();
         }
 
-      function tarikOrder(kodeOrder, nama, unit) {
+     function tarikOrder(kodeOrder, nama, unit) {
             const namaClean = profilTeknisi.nama.trim();
             fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
                 method: 'PUT',
                 headers: getAuthHeaderTeknisi(),
                 body: JSON.stringify({ 
                     status: "diproses", 
-                    teknisi: namaClean,
-                    "pengerjaan.status": "diproses",
-                    "pengerjaan.teknisi": namaClean
+                    teknisi: namaClean // Cukup gunakan property root 'teknisi'
                 })
             }).then(async res => {
                 const dataRes = await res.json();
@@ -489,14 +487,15 @@
                     if(k) k.remove();
 
                     if (!daftarTugasAktif.includes(kodeOrder)) daftarTugasAktif.push(kodeOrder);
-                    // Langsung panggil muatTugasAktif agar data disinkronkan dari server
-                    muatTugasAktif();
+                    // Beri sedikit jeda agar database benar-benar selesai diupdate sebelum di-fetch ulang
+                    setTimeout(() => {
+                        muatTugasAktif();
+                    }, 500); 
                 } else {
                     Swal.fire('Error', dataRes.error || 'Gagal mengambil order', 'error');
                 }
             }).catch(err => Swal.fire('Error', 'Gagal koneksi ke server', 'error'));
         }
-
         function muatTugasAktif() {
             document.getElementById('listTugasAktifFull').innerHTML = "";
             document.getElementById('listTugasAktifDashboard').innerHTML = "";
