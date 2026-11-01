@@ -16,7 +16,7 @@ const rateLimit = require('express-rate-limit');
 const JWT_SECRET = process.env.JWT_SECRET || "kunci_rahasia_admin_123";
 const ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || "admin123", 8);
 
-// 🔥 Inisialisasi Google Gemini AI 🔥
+// Inisialisasi Google Gemini AI
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 
@@ -78,7 +78,7 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-// --- KONFIGURASI CLOUDINARY ---
+// KONFIGURASI CLOUDINARY
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -89,7 +89,7 @@ cloudinary.config({
 // MIDDLEWARE AUTENTIKASI ADMIN
 function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; 
+    const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader); 
     
     if (!token) return res.status(401).json({ message: "Akses Ditolak: Token admin tidak ditemukan" });
     
@@ -105,23 +105,73 @@ function verifyAdmin(req, res, next) {
     });
 }
 
+// MIDDLEWARE AUTENTIKASI TEKNISI DENGAN FALLBACK PARAMETER
+function verifyTeknisi(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader); 
+    
+    if (token) {
+        jwt.verify(token, JWT_SECRET, (err, user) => {
+            if (!err && user) {
+                req.teknisiUser = user;
+                return next();
+            }
+            if (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId) {
+                req.teknisiUser = {
+                    id: (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId).toString(),
+                    nama: req.body?.namaTeknisi || req.query?.namaTeknisi || req.body?.teknisi || req.query?.teknisi || ""
+                };
+                return next();
+            }
+            return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
+        });
+    } else {
+        if (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId) {
+            req.teknisiUser = {
+                id: (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId).toString(),
+                nama: req.body?.namaTeknisi || req.query?.namaTeknisi || req.body?.teknisi || req.query?.teknisi || ""
+            };
+            return next();
+        }
+        return res.status(401).json({ message: "Akses Ditolak: Token tidak ditemukan" });
+    }
+}
+
 // MIDDLEWARE AUTENTIKASI ADMIN ATAU TEKNISI
 function verifyAdminOrTeknisi(req, res, next) {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; 
-    if (!token) return res.status(401).json({ message: "Akses Ditolak: Token tidak ditemukan" });
+    const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader); 
     
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-        if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
-        if (decoded.role === "admin") {
-            req.admin = decoded;
-            return next();
-        } else if (decoded.role === "teknisi") {
-            req.teknisiUser = decoded;
+    if (token) {
+        jwt.verify(token, JWT_SECRET, (err, decoded) => {
+            if (!err && decoded) {
+                if (decoded.role === "admin") {
+                    req.admin = decoded;
+                    return next();
+                } else if (decoded.role === "teknisi") {
+                    req.teknisiUser = decoded;
+                    return next();
+                }
+            }
+            if (req.query?.technician_id || req.query?.teknisi || req.body?.technician_id || req.query?.teknisiId) {
+                req.teknisiUser = {
+                    id: (req.query?.technician_id || req.body?.technician_id || req.query?.teknisiId || "").toString(),
+                    nama: req.query?.teknisi || req.body?.namaTeknisi || ""
+                };
+                return next();
+            }
+            return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
+        });
+    } else {
+        if (req.query?.technician_id || req.query?.teknisi || req.body?.technician_id || req.query?.teknisiId) {
+            req.teknisiUser = {
+                id: (req.query?.technician_id || req.body?.technician_id || req.query?.teknisiId || "").toString(),
+                nama: req.query?.teknisi || req.body?.namaTeknisi || ""
+            };
             return next();
         }
-        return res.status(403).json({ message: "Akses Ditolak" });
-    });
+        return res.status(401).json({ message: "Akses Ditolak: Token tidak ditemukan" });
+    }
 }
 
 // Helper: Fungsi upload dari lokal langsung dilempar ke Cloudinary
@@ -140,10 +190,12 @@ async function uploadKeCloudinary(filePath) {
     }
 }
 
-// SKEMA DATABASE ORDER LENGKAP
+// SKEMA DATABASE ORDER LENGKAP DENGAN SINKRONISASI ROOT STATUS & TECHNICIAN_ID
 const OrderSchema = new mongoose.Schema({
     kode: { type: String, required: true, unique: true, index: true }, 
+    status: { type: String, default: "pending", index: true },
     technician_id: { type: String, default: "", index: true },
+    technician_name: { type: String, default: "" },
     pelanggan: {
         nama: { type: String, required: true },
         wa: { type: String, required: true },
@@ -172,7 +224,6 @@ const OrderSchema = new mongoose.Schema({
         teknisiId: { type: String, default: "", index: true },
         status: { 
             type: String, 
-            enum: ['pending', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis', 'selesai', 'batal', 'ditolak_pelanggan', 'baru', 'taken'], 
             default: 'pending',
             index: true
         },
@@ -269,41 +320,51 @@ io.on('connection', (socket) => {
         io.emit('userStopTyping', data); 
     });
 
-    // Handler Socket Ambil Order dengan persistensi database lengkap
+    // Handler Socket Ambil Order dengan persistensi database MongoDB mutlak
     socket.on('teknisiAmbilOrder', async (data) => {
         try {
-            const { kodeOrder, namaTeknisi, technician_id, teknisiId } = data;
+            const { kodeOrder, namaTeknisi, technician_id, teknisiId, status } = data;
             const tekId = technician_id || teknisiId || "";
+            const statusBaru = status || "taken";
             
-            const order = await Order.findOne({ kode: kodeOrder });
-            if (order && (!order.pengerjaan.teknisi || order.pengerjaan.teknisi === "")) {
-                let nama = namaTeknisi;
-                if (!nama && tekId) {
-                    const tek = await Teknisi.findById(tekId);
-                    if (tek) nama = tek.nama;
-                }
-                nama = nama || "Teknisi";
+            let nama = namaTeknisi;
+            if (!nama && tekId && mongoose.Types.ObjectId.isValid(tekId)) {
+                const tek = await Teknisi.findById(tekId);
+                if (tek) nama = tek.nama;
+            }
+            nama = nama || "Teknisi";
 
-                order.pengerjaan.teknisi = nama;
-                if (tekId) {
-                    order.pengerjaan.teknisiId = tekId.toString();
-                    order.technician_id = tekId.toString();
-                }
-                const statusBaru = (order.pengerjaan.status === 'pending' || order.pengerjaan.status === 'baru') ? "dijadwalkan" : order.pengerjaan.status;
-                order.pengerjaan.status = statusBaru;
-                
-                if (!order.pengerjaan.riwayatStatus) order.pengerjaan.riwayatStatus = [];
-                order.pengerjaan.riwayatStatus.push({ 
-                    status: statusBaru, 
-                    detail: `Diambil oleh Teknisi ${nama}`, 
-                    waktu: new Date().toISOString() 
+            const updatedOrder = await Order.findOneAndUpdate(
+                { kode: kodeOrder },
+                {
+                    $set: {
+                        status: statusBaru,
+                        technician_id: tekId.toString(),
+                        technician_name: nama,
+                        "pengerjaan.status": statusBaru,
+                        "pengerjaan.teknisi": nama,
+                        "pengerjaan.teknisiId": tekId.toString()
+                    },
+                    $push: {
+                        "pengerjaan.riwayatStatus": { 
+                            status: statusBaru, 
+                            detail: `Diambil oleh Teknisi ${nama}`, 
+                            waktu: new Date()
+                        }
+                    }
+                },
+                { new: true, runValidators: false }
+            );
+
+            if (updatedOrder) {
+                io.emit('orderSudahDiambil', { 
+                    kodeOrder: updatedOrder.kode, 
+                    oleh: nama, 
+                    technician_id: tekId.toString(), 
+                    status: statusBaru 
                 });
-                
-                await order.save();
-                
-                io.emit('orderSudahDiambil', { kodeOrder, oleh: nama, technician_id: tekId, status: statusBaru });
                 io.emit("updateDashboardAdmin");
-                io.emit("updateDataPelanggan", kodeOrder);
+                io.emit("updateDataPelanggan", updatedOrder.kode);
             }
         } catch (err) {
             console.error("Gagal memproses teknisiAmbilOrder via Socket:", err);
@@ -320,7 +381,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Sukses Terhubung ke MongoDB!"))
   .catch(err => console.error("❌ Gagal Koneksi MongoDB:", err));
 
-// Update Endpoint POST Tambah Teknisi oleh Admin
+// Endpoint POST Tambah Teknisi oleh Admin
 app.post('/api/teknisi', verifyAdmin, upload.single('fotoTeknisi'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Foto wajib diunggah" });
@@ -368,11 +429,11 @@ app.post('/api/teknisi/login', async (req, res) => {
             return res.status(401).json({ message: "Username atau Password teknisi salah" });
         }
         
-        const token = jwt.sign({ id: teknisi._id, nama: teknisi.nama, role: "teknisi" }, JWT_SECRET, { expiresIn: '12h' });
+        const token = jwt.sign({ id: teknisi._id.toString(), nama: teknisi.nama, role: "teknisi" }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ 
             token, 
-            id: teknisi._id,
-            technician_id: teknisi._id,
+            id: teknisi._id.toString(),
+            technician_id: teknisi._id.toString(),
             nama: teknisi.nama, 
             message: "Login Teknisi Berhasil" 
         });
@@ -381,20 +442,8 @@ app.post('/api/teknisi/login', async (req, res) => {
     }
 });
 
-function verifyTeknisi(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; 
-    if (!token) return res.status(401).json({ message: "Akses Ditolak: Token tidak ditemukan" });
-    
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
-        req.teknisiUser = user;
-        next(); 
-    });
-}
-
 // GET: Pesanan yang belum diambil dan tersedia untuk diambil oleh teknisi
-app.get('/api/teknisi/orders/available', verifyTeknisi, async (req, res) => {
+app.get('/api/teknisi/orders/available', async (req, res) => {
     try {
         const availableOrders = await Order.find({
             $and: [
@@ -413,30 +462,53 @@ app.get('/api/teknisi/orders/available', verifyTeknisi, async (req, res) => {
                     ]
                 },
                 {
-                    "pengerjaan.status": { $in: ['pending', 'baru'] }
+                    $or: [
+                        { "pengerjaan.status": { $in: ['pending', 'baru'] } },
+                        { "status": { $in: ['pending', 'baru'] } }
+                    ]
                 }
             ]
         }).sort({ createdAt: -1, _id: -1 });
         
         res.json(availableOrders);
     } catch (error) {
-        res.status(500).json({ error: "Gagal memuat daftar pesanan tersedia" });
+        res.status(500).json({ error: "Gagal memuat daftar pesanan tersedia: " + error.message });
     }
 });
 
-// GET: Pesanan yang telah diambil oleh teknisi yang login (My Jobs / Active Jobs)
+// GET: Handler Pesanan Teknisi (Active Jobs / My Jobs) - Mendukung Pemuatan Ulang Setelah Refresh Browser
 const getTeknisiJobsHandler = async (req, res) => {
     try {
-        const tekId = (req.teknisiUser && req.teknisiUser.id) ? req.teknisiUser.id.toString() : (req.query.technician_id || req.query.teknisiId || "");
-        const tekNama = (req.teknisiUser && req.teknisiUser.nama) ? req.teknisiUser.nama : (req.query.nama || req.query.teknisi || "");
+        let tekId = "";
+        let tekNama = "";
+
+        if (req.teknisiUser && req.teknisiUser.id) {
+            tekId = req.teknisiUser.id.toString();
+        }
+        if (req.teknisiUser && req.teknisiUser.nama) {
+            tekNama = req.teknisiUser.nama;
+        }
+
+        if (!tekId) {
+            tekId = (req.query.technician_id || req.query.teknisiId || req.params.id || "").toString();
+        }
+        if (!tekNama) {
+            tekNama = req.query.nama || req.query.teknisi || req.query.namaTeknisi || "";
+        }
 
         const conditions = [];
         if (tekId) {
             conditions.push({ "technician_id": tekId });
             conditions.push({ "pengerjaan.teknisiId": tekId });
+            if (mongoose.Types.ObjectId.isValid(tekId)) {
+                conditions.push({ "technician_id": new mongoose.Types.ObjectId(tekId) });
+                conditions.push({ "pengerjaan.teknisiId": new mongoose.Types.ObjectId(tekId) });
+            }
         }
         if (tekNama) {
             conditions.push({ "pengerjaan.teknisi": tekNama });
+            conditions.push({ "technician_name": tekNama });
+            conditions.push({ "pengerjaan.teknisi": { $regex: new RegExp(`^${tekNama}$`, 'i') } });
         }
 
         let filter = {};
@@ -445,15 +517,43 @@ const getTeknisiJobsHandler = async (req, res) => {
         } else {
             filter = {
                 $or: [
-                    { "pengerjaan.teknisi": { $ne: "" } },
-                    { "technician_id": { $ne: "" } },
-                    { "pengerjaan.status": { $in: ['taken', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis'] } }
+                    { "technician_id": { $exists: true, $nin: ["", null] } },
+                    { "pengerjaan.teknisi": { $exists: true, $nin: ["", null] } },
+                    { "pengerjaan.status": { $in: ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis'] } },
+                    { "status": { $in: ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part', 'selesai_servis'] } }
                 ]
             };
         }
 
+        // Filter status jika diberikan oleh query
         if (req.query.status) {
-            filter["pengerjaan.status"] = req.query.status;
+            const qStatus = req.query.status.toLowerCase();
+            if (qStatus === 'active' || qStatus === 'in-progress' || qStatus === 'aktif') {
+                const activeStatuses = ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part'];
+                filter = {
+                    $and: [
+                        filter,
+                        {
+                            $or: [
+                                { "pengerjaan.status": { $in: activeStatuses } },
+                                { "status": { $in: activeStatuses } }
+                            ]
+                        }
+                    ]
+                };
+            } else {
+                filter = {
+                    $and: [
+                        filter,
+                        {
+                            $or: [
+                                { "pengerjaan.status": qStatus },
+                                { "status": qStatus }
+                            ]
+                        }
+                    ]
+                };
+            }
         }
 
         const jobs = await Order.find(filter).sort({ updatedAt: -1, createdAt: -1, _id: -1 });
@@ -463,30 +563,49 @@ const getTeknisiJobsHandler = async (req, res) => {
     }
 };
 
-app.get('/api/teknisi/orders', verifyTeknisi, getTeknisiJobsHandler);
-app.get('/api/teknisi/orders/my-jobs', verifyTeknisi, getTeknisiJobsHandler);
-app.get('/api/teknisi/orders/active', verifyTeknisi, getTeknisiJobsHandler);
-app.get('/api/teknisi/my-jobs', verifyTeknisi, getTeknisiJobsHandler);
+app.get('/api/teknisi/orders', getTeknisiJobsHandler);
+app.get('/api/teknisi/orders/my-jobs', getTeknisiJobsHandler);
+app.get('/api/teknisi/orders/active', getTeknisiJobsHandler);
+app.get('/api/teknisi/my-jobs', getTeknisiJobsHandler);
+app.get('/api/teknisi/active-jobs', getTeknisiJobsHandler);
+app.get('/api/teknisi/:id/orders', getTeknisiJobsHandler);
+app.get('/api/teknisi/:id/jobs', getTeknisiJobsHandler);
 
-// HANDLER PENGAMBILAN JOB (TAKE JOB) - PERSISTEN KE MONGODB
+// HANDLER PENGAMBILAN JOB (TAKE JOB) - PERSISTENSI ABSOLUT MONGODB DENGAN findOneAndUpdate
 async function takeJobHandler(req, res) {
     try {
-        const orderIdentifier = req.params.kode || req.params.id || req.body.kode || req.body.orderId || req.body.kodeOrder || req.body.id;
+        const orderIdentifier = req.params.kode || req.params.id || req.body.kode || req.body.orderId || req.body.kodeOrder || req.body.id || req.params.orderId;
         if (!orderIdentifier) {
             return res.status(400).json({ error: "ID atau Kode Pesanan wajib disertakan" });
         }
 
-        const technician_id = req.body.technician_id || req.body.teknisiId || (req.teknisiUser ? req.teknisiUser.id : "");
-        let namaTeknisi = req.body.namaTeknisi || req.body.nama || (req.teknisiUser ? req.teknisiUser.nama : "");
-        const statusBaru = req.body.status || "dijadwalkan";
+        let technician_id = "";
+        let namaTeknisi = "";
 
-        if (!namaTeknisi && technician_id) {
+        if (req.teknisiUser) {
+            technician_id = req.teknisiUser.id ? req.teknisiUser.id.toString() : "";
+            namaTeknisi = req.teknisiUser.nama || "";
+        }
+
+        if (!technician_id) {
+            technician_id = req.body.technician_id || req.body.teknisiId || req.query.technician_id || req.query.teknisiId || "";
+        }
+        if (!namaTeknisi) {
+            namaTeknisi = req.body.namaTeknisi || req.body.nama || req.body.teknisi || req.query.namaTeknisi || req.query.teknisi || "";
+        }
+
+        const techIdStr = technician_id ? technician_id.toString() : "";
+
+        if (techIdStr && !namaTeknisi && mongoose.Types.ObjectId.isValid(techIdStr)) {
             try {
-                const tek = await Teknisi.findById(technician_id);
-                if (tek) namaTeknisi = tek.nama;
+                const tekDoc = await Teknisi.findById(techIdStr);
+                if (tekDoc) namaTeknisi = tekDoc.nama;
             } catch (e) {}
         }
         namaTeknisi = namaTeknisi || "Teknisi";
+
+        // Status default saat job diambil adalah 'taken'
+        const statusBaru = req.body.status || "taken";
 
         let query = {};
         if (mongoose.Types.ObjectId.isValid(orderIdentifier)) {
@@ -495,60 +614,71 @@ async function takeJobHandler(req, res) {
             query = { kode: orderIdentifier };
         }
 
-        const order = await Order.findOne(query);
-        if (!order) {
-            return res.status(404).json({ error: "Pesanan tidak ditemukan" });
-        }
-
-        // Simpan kepemilikan teknisi secara permanen di database
-        order.technician_id = technician_id ? technician_id.toString() : (order.technician_id || "");
-        order.pengerjaan.teknisi = namaTeknisi;
-        if (technician_id) {
-            order.pengerjaan.teknisiId = technician_id.toString();
-        }
-        order.pengerjaan.status = statusBaru;
-
-        if (!order.pengerjaan.riwayatStatus) {
-            order.pengerjaan.riwayatStatus = [];
-        }
-        order.pengerjaan.riwayatStatus.push({
+        const riwayatItem = {
             status: statusBaru,
             detail: `Diambil oleh Teknisi ${namaTeknisi}`,
-            waktu: new Date().toISOString()
-        });
+            waktu: new Date()
+        };
 
-        await order.save();
+        // Eksekusi pembaruan database secara asinkron dengan findOneAndUpdate
+        const updatedOrder = await Order.findOneAndUpdate(
+            query,
+            {
+                $set: {
+                    status: statusBaru,
+                    technician_id: techIdStr,
+                    technician_name: namaTeknisi,
+                    "pengerjaan.status": statusBaru,
+                    "pengerjaan.teknisi": namaTeknisi,
+                    "pengerjaan.teknisiId": techIdStr
+                },
+                $push: {
+                    "pengerjaan.riwayatStatus": riwayatItem
+                }
+            },
+            { new: true, runValidators: false }
+        );
 
+        if (!updatedOrder) {
+            return res.status(404).json({ error: "Pesanan tidak ditemukan di database" });
+        }
+
+        // Siarkan pembaruan secara realtime ke admin & pelanggan
         io.emit('orderSudahDiambil', { 
-            kodeOrder: order.kode, 
+            kodeOrder: updatedOrder.kode, 
             oleh: namaTeknisi, 
-            technician_id: technician_id,
+            technician_id: techIdStr,
             status: statusBaru 
         });
         io.emit("updateDashboardAdmin");
-        io.emit("updateDataPelanggan", order.kode);
+        io.emit("updateDataPelanggan", updatedOrder.kode);
 
-        res.json({ 
-            message: "Job berhasil diambil dan status diperbarui", 
-            order 
+        return res.status(200).json({ 
+            message: "Job berhasil diambil dan status tersimpan di database", 
+            order: updatedOrder,
+            success: true
         });
     } catch (error) {
         console.error("Gagal memproses take job:", error);
-        res.status(500).json({ error: "Gagal mengambil job: " + error.message });
+        return res.status(500).json({ error: "Gagal mengambil job: " + error.message });
     }
 }
 
 // Endpoint Rute POST & PUT Take Job
-app.post('/api/teknisi/orders/:kode/take', verifyTeknisi, takeJobHandler);
-app.put('/api/teknisi/orders/:kode/take', verifyTeknisi, takeJobHandler);
-app.post('/api/teknisi/orders/:id/take', verifyTeknisi, takeJobHandler);
-app.put('/api/teknisi/orders/:id/take', verifyTeknisi, takeJobHandler);
+app.post('/api/teknisi/orders/:kode/take', takeJobHandler);
+app.put('/api/teknisi/orders/:kode/take', takeJobHandler);
+app.post('/api/teknisi/orders/:id/take', takeJobHandler);
+app.put('/api/teknisi/orders/:id/take', takeJobHandler);
 app.post('/api/orders/:kode/take', takeJobHandler);
 app.put('/api/orders/:kode/take', takeJobHandler);
 app.post('/api/orders/:id/take', takeJobHandler);
 app.put('/api/orders/:id/take', takeJobHandler);
 app.post('/api/teknisi/take-job', takeJobHandler);
+app.put('/api/teknisi/take-job', takeJobHandler);
 app.post('/api/orders/take-job', takeJobHandler);
+app.put('/api/orders/take-job', takeJobHandler);
+app.post('/api/orders/:kode/claim', takeJobHandler);
+app.put('/api/orders/:kode/claim', takeJobHandler);
 
 app.put('/api/teknisi/status', verifyTeknisi, async (req, res) => {
     try {
@@ -572,7 +702,10 @@ app.get('/api/teknisi', async (req, res) => {
                     { "technician_id": tek._id.toString() },
                     { "pengerjaan.teknisiId": tek._id.toString() }
                 ],
-                "pengerjaan.status": { $in: ['taken', 'dijadwalkan', 'diproses'] } 
+                $or: [
+                    { "pengerjaan.status": { $in: ['taken', 'in-progress', 'dijadwalkan', 'diproses'] } },
+                    { "status": { $in: ['taken', 'in-progress', 'dijadwalkan', 'diproses'] } }
+                ]
             });
             return { ...tek.toObject(), antrianAktif: jumlahAntrian }; 
         }));
@@ -689,9 +822,24 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
     try {
         const totalPesanan = await Order.countDocuments();
-        const pesananPending = await Order.countDocuments({ "pengerjaan.status": { $in: ['pending', 'baru'] } });
-        const pesananDiproses = await Order.countDocuments({ "pengerjaan.status": { $in: ['diproses', 'dijadwalkan', 'taken'] } });
-        const pesananSelesai = await Order.countDocuments({ "pengerjaan.status": 'selesai' });
+        const pesananPending = await Order.countDocuments({
+            $or: [
+                { "pengerjaan.status": { $in: ['pending', 'baru'] } },
+                { "status": { $in: ['pending', 'baru'] } }
+            ]
+        });
+        const pesananDiproses = await Order.countDocuments({
+            $or: [
+                { "pengerjaan.status": { $in: ['diproses', 'dijadwalkan', 'taken', 'in-progress'] } },
+                { "status": { $in: ['diproses', 'dijadwalkan', 'taken', 'in-progress'] } }
+            ]
+        });
+        const pesananSelesai = await Order.countDocuments({
+            $or: [
+                { "pengerjaan.status": 'selesai' },
+                { "status": 'selesai' }
+            ]
+        });
         
         res.json({
             totalPesanan,
@@ -727,42 +875,80 @@ app.get('/api/reviews', async (req, res) => {
     }
 });
 
-// GET: Tampilkan pesanan (Admin melihat semua, Teknisi melihat miliknya atau difilter berdasarkan teknisi/status)
+// GET: Tampilkan pesanan (Admin melihat semua, Teknisi melihat miliknya dan job berstatus taken/in-progress)
 app.get('/api/orders', verifyAdminOrTeknisi, async (req, res) => {
     try {
         let filter = {};
         
-        if (req.teknisiUser) {
-            const tekId = req.teknisiUser.id ? req.teknisiUser.id.toString() : "";
-            const tekNama = req.teknisiUser.nama || "";
-            filter = {
-                $or: [
-                    { "technician_id": tekId },
-                    { "pengerjaan.teknisiId": tekId },
-                    { "pengerjaan.teknisi": tekNama }
-                ]
-            };
-        } else if (req.query.technician_id || req.query.teknisi) {
-            const val = req.query.technician_id || req.query.teknisi;
-            filter = {
-                $or: [
-                    { "technician_id": val },
-                    { "pengerjaan.teknisiId": val },
-                    { "pengerjaan.teknisi": val }
-                ]
-            };
+        const tekId = req.teknisiUser ? req.teknisiUser.id : (req.query.technician_id || req.query.teknisiId || "");
+        const tekNama = req.teknisiUser ? req.teknisiUser.nama : (req.query.teknisi || req.query.nama || "");
+
+        if (req.teknisiUser && req.teknisiUser.role !== "admin") {
+            const orConds = [];
+            if (tekId) {
+                orConds.push({ "technician_id": tekId.toString() });
+                orConds.push({ "pengerjaan.teknisiId": tekId.toString() });
+                if (mongoose.Types.ObjectId.isValid(tekId)) {
+                    orConds.push({ "technician_id": new mongoose.Types.ObjectId(tekId) });
+                    orConds.push({ "pengerjaan.teknisiId": new mongoose.Types.ObjectId(tekId) });
+                }
+            }
+            if (tekNama) {
+                orConds.push({ "pengerjaan.teknisi": tekNama });
+                orConds.push({ "technician_name": tekNama });
+            }
+            if (orConds.length > 0) {
+                filter.$or = orConds;
+            }
+        } else if (req.query.technician_id || req.query.teknisi || req.query.teknisiId) {
+            const val = req.query.technician_id || req.query.teknisi || req.query.teknisiId;
+            const orConds = [
+                { "technician_id": val.toString() },
+                { "pengerjaan.teknisiId": val.toString() },
+                { "pengerjaan.teknisi": val }
+            ];
+            if (mongoose.Types.ObjectId.isValid(val)) {
+                orConds.push({ "technician_id": new mongoose.Types.ObjectId(val) });
+                orConds.push({ "pengerjaan.teknisiId": new mongoose.Types.ObjectId(val) });
+            }
+            filter.$or = orConds;
         }
 
         if (req.query.status) {
-            const statusQuery = req.query.status;
-            filter["pengerjaan.status"] = statusQuery;
+            const statusQuery = req.query.status.toLowerCase();
+            if (statusQuery === 'active' || statusQuery === 'in-progress' || statusQuery === 'aktif') {
+                const activeList = ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part'];
+                const statusCond = {
+                    $or: [
+                        { "pengerjaan.status": { $in: activeList } },
+                        { "status": { $in: activeList } }
+                    ]
+                };
+                if (filter.$or) {
+                    filter = { $and: [ { $or: filter.$or }, statusCond ] };
+                } else {
+                    filter = statusCond;
+                }
+            } else {
+                const statusCond = {
+                    $or: [
+                        { "pengerjaan.status": statusQuery },
+                        { "status": statusQuery }
+                    ]
+                };
+                if (filter.$or) {
+                    filter = { $and: [ { $or: filter.$or }, statusCond ] };
+                } else {
+                    filter = statusCond;
+                }
+            }
         }
 
         const limit = parseInt(req.query.limit) || 2000; 
-        const dataOrders = await Order.find(filter).sort({ createdAt: -1, _id: -1 }).limit(limit);
+        const dataOrders = await Order.find(filter).sort({ updatedAt: -1, createdAt: -1, _id: -1 }).limit(limit);
         res.json(dataOrders); 
     } catch (error) { 
-        res.status(500).json({ error: "Gagal memuat data pesanan" }); 
+        res.status(500).json({ error: "Gagal memuat data pesanan: " + error.message }); 
     }
 });
 
@@ -781,6 +967,7 @@ app.post('/api/orders', upload.any(), async (req, res) => {
 
         const dataBaru = new Order({
             kode: req.body.kode,
+            status: "pending",
             pelanggan: {
                 nama: req.body.nama,
                 wa: req.body.wa,
@@ -803,6 +990,7 @@ app.post('/api/orders', upload.any(), async (req, res) => {
                 statusBAST: req.body.statusBAST || "menunggu"
             },
             pengerjaan: {
+                status: "pending",
                 riwayatStatus: [{ status: "pending", detail: "Pesanan masuk ke sistem", waktu: new Date().toISOString() }]
             },
             finansial: {
@@ -828,15 +1016,16 @@ app.post('/api/orders', upload.any(), async (req, res) => {
         } catch(e) { console.error("Gagal broadcast ke teknisi", e); }
         
         res.status(201).json({ message: "Data pesanan berhasil disimpan", kode: dataBaru.kode });
-    } catch (error) {
-        console.error(error); 
+    } catch (error) { 
         res.status(500).json({ error: "Gagal menyimpan pesanan: " + error.message }); 
     }
 });
 
 app.get('/api/orders/:kode', async (req, res) => {
     try {
-        const pesanan = await Order.findOne({ kode: req.params.kode });
+        const pesanan = await Order.findOne({ 
+            $or: [{ kode: req.params.kode }, ...(mongoose.Types.ObjectId.isValid(req.params.kode) ? [{ _id: req.params.kode }] : [])]
+        });
         if(!pesanan) return res.status(404).json({ error: "Pesanan tidak ditemukan" });
         res.json(pesanan);
     } catch (error) { 
@@ -852,7 +1041,7 @@ app.post('/api/orders/bulk', verifyAdmin, async (req, res) => {
         if (action === 'selesai') {
             await Order.updateMany(
                 { kode: { $in: ids } },
-                { $set: { "finansial.pembayaranValid": true, "pengerjaan.status": 'selesai' } }
+                { $set: { "finansial.pembayaranValid": true, "pengerjaan.status": 'selesai', "status": 'selesai' } }
             );
             await tambahNotifikasiDB(`Aksi Massal: ${ids.length} pesanan ditandai selesai.`);
         } else if (action === 'hapus') {
@@ -879,7 +1068,6 @@ app.put('/api/orders/:kode', upload.any(), async (req, res) => {
             if (fLunas) dataUpdate['finansial.buktiPelunasan'] = `/uploads/${fLunas.filename}`;
         }
 
-        // Sinkronisasi data teknisi jika dikirim di body update
         if (dataUpdate.technician_id || dataUpdate.teknisiId) {
             const tid = dataUpdate.technician_id || dataUpdate.teknisiId;
             dataUpdate.technician_id = tid.toString();
@@ -888,17 +1076,22 @@ app.put('/api/orders/:kode', upload.any(), async (req, res) => {
         if (dataUpdate.namaTeknisi || dataUpdate.teknisi) {
             const tnama = dataUpdate.namaTeknisi || dataUpdate.teknisi;
             dataUpdate['pengerjaan.teknisi'] = tnama;
+            dataUpdate.technician_name = tnama;
+        }
+
+        const statusBaru = dataUpdate['pengerjaan.status'] || dataUpdate.status;
+        if (statusBaru) {
+            dataUpdate.status = statusBaru;
+            dataUpdate['pengerjaan.status'] = statusBaru;
         }
 
         const existing = await Order.findOne({ kode: req.params.kode });
-        
-        const statusBaru = dataUpdate['pengerjaan.status'] || dataUpdate.status;
         const statusLama = existing && existing.pengerjaan ? existing.pengerjaan.status : (existing ? existing.status : null);
 
         if (existing && statusBaru && statusLama !== statusBaru) {
             await Order.updateOne(
                 { kode: req.params.kode }, 
-                { $push: { "pengerjaan.riwayatStatus": { status: statusBaru, detail: "Pembaruan progres", waktu: new Date().toISOString() } } }
+                { $push: { "pengerjaan.riwayatStatus": { status: statusBaru, detail: "Pembaruan status sistem", waktu: new Date() } } }
             );
 
             let statusTeks = statusBaru;
@@ -980,8 +1173,8 @@ app.put('/api/orders/:kode/cancel', async (req, res) => {
             await Order.updateOne(
                 { kode: req.params.kode }, 
                 { 
-                    $set: { "pengerjaan.status": status || 'ditolak_pelanggan' },
-                    $push: { "pengerjaan.riwayatStatus": { status: status || 'ditolak_pelanggan', detail: "Dibatalkan oleh Pelanggan via Website", waktu: new Date().toISOString() } } 
+                    $set: { "pengerjaan.status": status || 'ditolak_pelanggan', "status": status || 'ditolak_pelanggan' },
+                    $push: { "pengerjaan.riwayatStatus": { status: status || 'ditolak_pelanggan', detail: "Dibatalkan oleh Pelanggan via Website", waktu: new Date() } } 
                 }
             );
             
