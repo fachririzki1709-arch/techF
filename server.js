@@ -91,7 +91,7 @@ function verifyAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader); 
     
-    if (!token) return res.status(401).json({ message: "Akses Ditolak: Token admin tidak ditemukan" });
+    if (!token) return res.status(401).json({ message: "Akses Ditolak: Token admin tidak ditemukan" }); 
     
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
@@ -1304,6 +1304,341 @@ async function prosesBalasanBot(kode, pesanUser) {
         io.emit('userStopTyping', { kode: kode, pengirim: 'admin' });
     }
 }
+
+// SINKRONISASI FILE FRONTEND PANEL TEKNISI (HTML & CLIENT-SIDE JS)
+// Memastikan data job aktif teknisi selalu dimuat ulang dari database saat halaman pertama kali dibuka atau di-refresh (F5)
+const panelTeknisiHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Teknisi - SF Tech Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: none; margin-bottom: 24px; }
+        .badge-status { padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+        .bg-taken { background-color: #e0f2fe; color: #0369a1; }
+        .bg-in-progress { background-color: #fef3c7; color: #b45309; }
+        .bg-pending { background-color: #fee2e2; color: #b91c1c; }
+        .bg-selesai { background-color: #dcfce7; color: #15803d; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark px-4 py-3">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1"><i class="fa-solid fa-wrench me-2 text-warning"></i>Panel Teknisi SF Tech</span>
+            <div class="d-flex align-items-center text-white">
+                <span id="labelNamaTeknisi" class="me-3 font-weight-bold">Teknisi</span>
+                <button id="btnRefresh" class="btn btn-outline-light btn-sm me-2" onclick="muatUlangSemuaDataJob()"><i class="fa-solid fa-rotate me-1"></i> Refresh Data</button>
+                <button id="btnLogout" class="btn btn-danger btn-sm" onclick="logoutTeknisi()"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4 px-4">
+        <div class="row">
+            <!-- DAFTAR JOB AKTIF TEKNISI (PERSISTEN SAAT REFRESH/F5) -->
+            <div class="col-lg-7">
+                <div class="card card-custom">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary"><i class="fa-solid fa-clipboard-check me-2"></i>Pekerjaan Aktif Saya (My Active Jobs)</h5>
+                        <span id="badgeJumlahJobAktif" class="badge bg-primary rounded-pill">0 Job</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="tabelJobAktif">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Pelanggan</th>
+                                        <th>Perangkat</th>
+                                        <th>Keluhan</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="daftarJobAktif">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Memuat daftar pekerjaan aktif dari database...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DAFTAR JOB TERSEDIA (BELUM DIAMBIL) -->
+            <div class="col-lg-5">
+                <div class="card card-custom">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-success"><i class="fa-solid fa-inbox me-2"></i>Job Tersedia Diambil</h5>
+                        <span id="badgeJumlahJobTersedia" class="badge bg-success rounded-pill">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="tabelJobTersedia">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Perangkat</th>
+                                        <th>Kerusakan</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="daftarJobTersedia">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Memuat job tersedia...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SCRIPT FRONTEND PANEL TEKNISI DENGAN FETCH OTOMATIS & RENDER DOM PADA ONLOAD / F5
+        const socket = io();
+
+        // 1. Script inisialisasi / onLoad yang berjalan setiap kali halaman dimuat pertama kali atau direfresh (F5)
+        window.addEventListener('DOMContentLoaded', () => {
+            initPanelTeknisi();
+        });
+
+        window.onload = function() {
+            if (!window.isPanelInitialized) {
+                initPanelTeknisi();
+            }
+        };
+
+        function initPanelTeknisi() {
+            window.isPanelInitialized = true;
+            
+            // Baca identitas teknisi dari localStorage atau fallback
+            const techId = localStorage.getItem('technician_id') || localStorage.getItem('teknisiId') || '';
+            const techNama = localStorage.getItem('namaTeknisi') || localStorage.getItem('teknisi') || 'Teknisi';
+            
+            const labelNama = document.getElementById('labelNamaTeknisi');
+            if (labelNama) labelNama.innerText = techNama;
+
+            // Muat ulang data asli dari server database setiap kali halaman dimuat/F5
+            muatUlangSemuaDataJob();
+
+            // Dengarkan pembaruan realtime via WebSocket
+            socket.on('orderSudahDiambil', () => { muatUlangSemuaDataJob(); });
+            socket.on('orderBaruTersedia', () => { muatUlangSemuaDataJob(); });
+            socket.on('updateDashboardAdmin', () => { muatUlangSemuaDataJob(); });
+        }
+
+        async function muatUlangSemuaDataJob() {
+            await Promise.all([
+                fetchDanRenderJobAktif(),
+                fetchDanRenderJobTersedia()
+            ]);
+        }
+
+        // 2 & 3. Fungsi fetch() GET daftar job aktif dari server dan render ke dalam DOM
+        async function fetchDanRenderJobAktif() {
+            const container = document.getElementById('daftarJobAktif');
+            const badgeCount = document.getElementById('badgeJumlahJobAktif');
+            
+            try {
+                const token = localStorage.getItem('tokenTeknisi') || localStorage.getItem('token') || '';
+                const techId = localStorage.getItem('technician_id') || localStorage.getItem('teknisiId') || '';
+                const techNama = localStorage.getItem('namaTeknisi') || localStorage.getItem('teknisi') || '';
+
+                const headers = {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                // Tembak endpoint GET daftar job aktif teknisi dari server database
+                const url = '/api/teknisi/orders?status=active&technician_id=' + encodeURIComponent(techId) + '&nama=' + encodeURIComponent(techNama);
+                const response = await fetch(url, { headers });
+                
+                if (!response.ok) throw new Error('HTTP status ' + response.status);
+                const jobsAktif = await response.json();
+
+                // Render data hasil fetch ke dalam DOM / tabel job aktif
+                renderDOMJobAktif(jobsAktif);
+
+            } catch (err) {
+                console.error('Gagal memuat job aktif dari database:', err);
+                if (container) {
+                    container.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>Gagal memuat pekerjaan aktif. Silakan klik Refresh Data.</td></tr>';
+                }
+            }
+        }
+
+        function renderDOMJobAktif(jobs) {
+            const container = document.getElementById('daftarJobAktif');
+            const badgeCount = document.getElementById('badgeJumlahJobAktif');
+            if (!container) return;
+
+            if (!Array.isArray(jobs) || jobs.length === 0) {
+                container.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fa-solid fa-box-open me-2"></i>Tidak ada pekerjaan aktif saat ini. Silakan ambil pesanan baru di samping.</td></tr>';
+                if (badgeCount) badgeCount.innerText = '0 Job';
+                return;
+            }
+
+            if (badgeCount) badgeCount.innerText = jobs.length + ' Job';
+
+            container.innerHTML = jobs.map(job => {
+                const status = (job.pengerjaan && job.pengerjaan.status) || job.status || 'taken';
+                let badgeClass = 'bg-taken';
+                if (status === 'diproses' || status === 'in-progress') badgeClass = 'bg-in-progress';
+                if (status === 'selesai' || status === 'selesai_servis') badgeClass = 'bg-selesai';
+
+                const pelangganNama = (job.pelanggan && job.pelanggan.nama) || '-';
+                const perangkatMerek = (job.perangkat && job.perangkat.merek) ? (job.perangkat.merek + ' ' + (job.perangkat.tipe || '')) : '-';
+                const keluhan = (job.perangkat && job.perangkat.keluhan) || '-';
+
+                return '<tr>' +
+                    '<td><strong>' + job.kode + '</strong></td>' +
+                    '<td>' + pelangganNama + '</td>' +
+                    '<td>' + perangkatMerek + '</td>' +
+                    '<td>' + keluhan + '</td>' +
+                    '<td><span class="badge badge-status ' + badgeClass + '">' + status + '</span></td>' +
+                    '<td>' +
+                        '<button class="btn btn-sm btn-outline-primary me-1" onclick="updateStatusJob(\\'' + job.kode + '\\', \\'diproses\\')"><i class="fa-solid fa-play"></i></button>' +
+                        '<button class="btn btn-sm btn-outline-success" onclick="updateStatusJob(\\'' + job.kode + '\\', \\'selesai_servis\\')"><i class="fa-solid fa-check"></i></button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        // Fetch dan render daftar job yang tersedia
+        async function fetchDanRenderJobTersedia() {
+            const container = document.getElementById('daftarJobTersedia');
+            const badgeCount = document.getElementById('badgeJumlahJobTersedia');
+            
+            try {
+                const token = localStorage.getItem('tokenTeknisi') || localStorage.getItem('token') || '';
+                const headers = { 'Cache-Control': 'no-cache' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const response = await fetch('/api/teknisi/orders/available', { headers });
+                if (!response.ok) throw new Error('HTTP status ' + response.status);
+                const ordersTersedia = await response.json();
+
+                renderDOMJobTersedia(ordersTersedia);
+            } catch (err) {
+                console.error('Gagal memuat job tersedia:', err);
+                if (container) {
+                    container.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Belum ada job baru yang tersedia.</td></tr>';
+                }
+            }
+        }
+
+        function renderDOMJobTersedia(orders) {
+            const container = document.getElementById('daftarJobTersedia');
+            const badgeCount = document.getElementById('badgeJumlahJobTersedia');
+            if (!container) return;
+
+            if (!Array.isArray(orders) || orders.length === 0) {
+                container.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Belum ada job baru yang tersedia.</td></tr>';
+                if (badgeCount) badgeCount.innerText = '0';
+                return;
+            }
+
+            if (badgeCount) badgeCount.innerText = orders.length;
+
+            container.innerHTML = orders.map(ord => {
+                const perangkat = (ord.perangkat && ord.perangkat.merek) ? (ord.perangkat.merek + ' ' + (ord.perangkat.tipe || '')) : '-';
+                const kerusakan = (ord.perangkat && ord.perangkat.keluhan) || '-';
+
+                return '<tr>' +
+                    '<td><strong>' + ord.kode + '</strong></td>' +
+                    '<td>' + perangkat + '</td>' +
+                    '<td>' + kerusakan + '</td>' +
+                    '<td>' +
+                        '<button class="btn btn-sm btn-success" onclick="ambilJobTeknisi(\\'' + ord.kode + '\\')"><i class="fa-solid fa-hand-holding-hand me-1"></i> Ambil</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        // 4. Aksi ambil job: Wajib menyimpan ke database dan memuat ulang data asli dari database
+        async function ambilJobTeknisi(kodeOrder) {
+            try {
+                const techId = localStorage.getItem('technician_id') || localStorage.getItem('teknisiId') || '';
+                const techNama = localStorage.getItem('namaTeknisi') || localStorage.getItem('teknisi') || 'Teknisi';
+                const token = localStorage.getItem('tokenTeknisi') || localStorage.getItem('token') || '';
+
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const res = await fetch('/api/teknisi/orders/' + encodeURIComponent(kodeOrder) + '/take', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        technician_id: techId,
+                        namaTeknisi: techNama,
+                        status: 'taken'
+                    })
+                });
+
+                if (res.ok) {
+                    // Setelah tersimpan di database, muat ulang data asli dari database
+                    await muatUlangSemuaDataJob();
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    alert('Gagal mengambil pekerjaan: ' + (errData.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                console.error('Error saat ambil job:', err);
+            }
+        }
+
+        async function updateStatusJob(kodeOrder, statusBaru) {
+            try {
+                const token = localStorage.getItem('tokenTeknisi') || '';
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                await fetch('/api/orders/' + encodeURIComponent(kodeOrder), {
+                    method: 'PUT',
+                    headers: headers,
+                    body: JSON.stringify({ status: statusBaru, 'pengerjaan.status': statusBaru })
+                });
+
+                // Muat ulang data asli dari database
+                await muatUlangSemuaDataJob();
+            } catch (err) {
+                console.error('Error update status:', err);
+            }
+        }
+
+        function logoutTeknisi() {
+            localStorage.removeItem('tokenTeknisi');
+            localStorage.removeItem('token');
+            localStorage.removeItem('technician_id');
+            localStorage.removeItem('namaTeknisi');
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>`;
+
+// Pastikan file frontend teknisi tersimpan di direktori public dan disinkronkan
+try {
+    const fileTeknisiHtml = path.join(publicPath, 'teknisi.html');
+    fs.writeFileSync(fileTeknisiHtml, panelTeknisiHtml, 'utf-8');
+} catch (err) {
+    console.error("Gagal menulis file teknisi.html:", err.message);
+}
+
+// Endpoint routing halaman frontend panel teknisi
+app.get(['/teknisi', '/teknisi.html', '/panel-teknisi'], (req, res) => {
+    res.send(panelTeknisiHtml);
+});
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
