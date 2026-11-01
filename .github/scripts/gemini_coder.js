@@ -8,23 +8,31 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Fungsi pembantu untuk memindai seluruh file di dalam repositori
 function getRepoFiles(dir, fileList = []) {
+  // DAFTAR HITAM: Folder yang TIDAK BOLEH dibaca oleh AI
+  const ignoreDirs = ['node_modules', '.git', '.github', 'dist', 'build', 'public'];
+  
+  // DAFTAR HITAM: Ekstensi atau nama file yang HARAM diedit oleh AI
+  const ignoreFiles = ['.env', 'package.json', 'package-lock.json', '.gitignore', 'README.md'];
+  
   const files = fs.readdirSync(dir);
   for (const file of files) {
     const filePath = path.join(dir, file);
+    
     if (fs.statSync(filePath).isDirectory()) {
-      // Abaikan folder sistem agar tidak membingungkan AI
-      if (file !== 'node_modules' && file !== '.git' && file !== '.github') {
+      // Hanya masuk ke folder jika namanya tidak ada di daftar hitam
+      if (!ignoreDirs.includes(file)) {
         getRepoFiles(filePath, fileList);
       }
     } else {
-      fileList.push(filePath);
+      // Hanya masukkan file ke daftar bacaan jika tidak ada di daftar hitam
+      if (!ignoreFiles.includes(file)) {
+        fileList.push(filePath);
+      }
     }
   }
   return fileList;
 }
-
 // Fungsi eksekusi ke API Gemini dengan Auto-Retry
 async function fetchWithRetry(model, prompt) {
   let retries = 3;
