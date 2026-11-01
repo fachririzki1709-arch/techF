@@ -163,14 +163,17 @@ app.get('/api/teknisi/orders/aktif', async (req, res) => {
             return res.json([]);
         }
         
-        // Perbaikan Regex: Gunakan exact match (case-insensitive) dengan anchor ^ dan $
         const escapedNama = namaTeknisi.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regexNama = new RegExp("^" + escapedNama + "$", "i");
 
-        // Perbaikan Query: Sertakan juga status 'diproses' secara eksplisit
+        // PERBAIKAN: Gunakan $nin (Not In) agar semua job yang sedang berjalan pasti tertangkap.
+        // Cek juga di level root 'teknisi' maupun 'pengerjaan.teknisi'
         const tugasAktif = await Order.find({ 
-            teknisi: regexNama,
-            status: { $in: ['diproses', 'diterima', 'diambil'] } // Lebih aman menggunakan $in daripada $nin
+            $or: [
+                { teknisi: regexNama },
+                { "pengerjaan.teknisi": regexNama }
+            ],
+            status: { $nin: ['baru', 'selesai_servis', 'batal', 'selesai', 'dibatalkan', ''] }
         }).sort({ _id: -1 });
         
         res.json(tugasAktif);
@@ -241,11 +244,14 @@ app.put('/api/orders/:kode', async (req, res) => {
             dataUpdate.buktiPelunasan = simpanBase64KeFile(dataUpdate.buktiPelunasan, 'LUNAS_' + kodeParam);
         }
 
-        // Paksa simpan teknisi ke level root jika ada
+// Paksa simpan teknisi ke level root jika ada
         if (dataUpdate["pengerjaan.teknisi"]) {
             dataUpdate.teknisi = dataUpdate["pengerjaan.teknisi"];
         }
-
+        // TAMBAHKAN BARIS INI: Sinkronkan juga statusnya
+        if (dataUpdate["pengerjaan.status"]) {
+            dataUpdate.status = dataUpdate["pengerjaan.status"];
+        }
         let updateData = await Order.findOneAndUpdate(
             { kode: new RegExp("^" + kodeParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i") }, 
             { $set: dataUpdate }, 
