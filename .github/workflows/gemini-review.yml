@@ -1,0 +1,24 @@
+name: AI Code Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Install Dependencies
+        # Kita menambahkan pustaka @actions/github untuk memanipulasi PR
+        run: npm install @google/generative-ai @actions/github
+      - name: Jalankan AI Reviewer
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # GITHUB_TOKEN adalah token bawaan otomatis, Anda TIDAK PERLU membuatnya di Secrets
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/gemini_reviewer.js
