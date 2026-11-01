@@ -411,7 +411,12 @@
 
         function muatOrderTersedia() {
             document.getElementById('listOrderMasukFull').innerHTML = "<div style='text-align:center; padding:2rem;'>Memuat data...</div>";
-            fetch(`${window.location.origin}/api/teknisi/orders/available`, { headers: getAuthHeaderTeknisi() })
+            
+            // Tambahkan cache buster & parameter no-store
+            fetch(`${window.location.origin}/api/teknisi/orders/available?_t=${Date.now()}`, { 
+                headers: getAuthHeaderTeknisi(),
+                cache: 'no-store' 
+            })
             .then(res => res.json()).then(data => {
                 document.getElementById('listOrderMasukFull').innerHTML = "";
                 if(Array.isArray(data) && data.length > 0) {
@@ -512,8 +517,10 @@
             const namaClean = (profilTeknisi.nama || "").trim();
             if (!namaClean) return;
 
-            fetch(`${window.location.origin}/api/teknisi/orders/aktif?teknisi=${encodeURIComponent(namaClean)}`, { 
-                headers: getAuthHeaderTeknisi() 
+            // Tambahkan cache buster & parameter no-store
+            fetch(`${window.location.origin}/api/teknisi/orders/aktif?teknisi=${encodeURIComponent(namaClean)}&_t=${Date.now()}`, { 
+                headers: getAuthHeaderTeknisi(),
+                cache: 'no-store'
             })
             .then(res => res.json())
             .then(data => {
@@ -532,7 +539,6 @@
             })
             .catch(err => console.error("Gagal memuat tugas aktif", err));
         }
-
         function renderTugasAktif(kodeOrder, nama, unit) {
             const el1 = document.getElementById(`ordAktifFull-${kodeOrder}`);
             if(el1) el1.remove();
@@ -586,7 +592,10 @@
         }
 
         function bukaWorkspace(kodeOrder) {
-            fetch(`${window.location.origin}/api/orders/${kodeOrder}`, { headers: getAuthHeaderTeknisi() })
+           fetch(`${window.location.origin}/api/orders/${kodeOrder}?_t=${Date.now()}`, { 
+                headers: getAuthHeaderTeknisi(),
+                cache: 'no-store'
+            })
             .then(res => res.json()).then(order => {
                 document.getElementById('serviceWorkspaceOverlay').style.display = 'flex';
                 document.getElementById('wsKodeOrder').innerText = "Ruang Kerja - " + kodeOrder;
@@ -682,7 +691,10 @@
         function muatPesanTeknisi() {
             if(!aktifChatKode) return;
             const box = document.getElementById("chatBoxTeknisi");
-            fetch(`${window.location.origin}/api/chats/${aktifChatKode}`, { headers: getAuthHeaderTeknisi() })
+            fetch(`${window.location.origin}/api/chats/${aktifChatKode}?_t=${Date.now()}`, { 
+                headers: getAuthHeaderTeknisi(),
+                cache: 'no-store'
+            })
             .then(res => res.json()).then(data => {
                 let html = "";
                 if(Array.isArray(data)) {
