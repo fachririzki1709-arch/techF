@@ -1,3 +1,4 @@
+// Diperbarui oleh Gemini otomatis
 require('dotenv').config();
 
 const express = require('express');
