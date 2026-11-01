@@ -3,70 +3,18 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const apiKey = process.env.GEMINI_API_KEY;
 const instruction = process.env.INSTRUCTION;
-const targetFile = process.env.TARGET_FILE || 'server.js';
-
-if (!apiKey) {
-  throw new Error('GEMINI_API_KEY is missing.');
-}
-
-if (!instruction) {
-  throw new Error('INSTRUCTION is missing.');
-}
-
 const genAI = new GoogleGenerativeAI(apiKey);
-const MODEL_CANDIDATES = ['gemini-2.0-flash', 'gemini-1.5-flash'];
 
-async function generateWithRetry(prompt, maxAttempts = 3) {
-  for (const modelName of MODEL_CANDIDATES) {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(prompt);
-        return { modelName, text: result.response.text() };
-      } catch (error) {
-        const status = error?.status || error?.response?.status;
-        const message = String(error?.message || '');
-        const transientError =
-          status === 429 ||
-          status === 503 ||
-          message.includes('Service Unavailable') ||
-          message.includes('high demand') ||
-          message.includes('Resource exhausted') ||
-          message.includes('temporarily');
-
-        const invalidModel =
-          status === 404 ||
-          message.includes('not found') ||
-          message.includes('unsupported') ||
-          message.includes('model');
-
-        if (attempt < maxAttempts && transientError) {
-          const delayMs = 2000 * attempt;
-          console.warn(`Model ${modelName} unavailable (${status || 'network'}), retrying in ${delayMs / 1000}s...`);
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-          continue;
-        }
-
-        if (invalidModel && modelName !== MODEL_CANDIDATES[MODEL_CANDIDATES.length - 1]) {
-          console.warn(`Skipping unsupported model: ${modelName}`);
-          break;
-        }
-
-        throw error;
-      }
-    }
-  }
-
-  throw new Error('No Gemini model was able to process the request.');
-}
+// Fungsi untuk memberi jeda waktu
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function autoEditCode() {
   try {
-    if (!fs.existsSync(targetFile)) {
-      throw new Error(`File not found: ${targetFile}`);
-    }
-
+    const targetFile = 'server.js'; 
     const originalCode = fs.readFileSync(targetFile, 'utf8');
+
+    // Menggunakan versi yang wajib di-support oleh server Anda
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
     const prompt = `
     Anda adalah asisten AI programmer.
@@ -74,21 +22,40 @@ async function autoEditCode() {
 
     Berikut adalah kode saat ini dari file ${targetFile}:
     \n\n${originalCode}\n\n
+
     Tugas Anda:
-    Tulis ulang seluruh kode tersebut dengan menerapkan instruksi modifikasi.
-    ATURAN KETAT: Berikan HANYA kode utuh yang sudah direvisi. JANGAN sertakan penjelasan apa pun. JANGAN gunakan format markdown atau backticks (\`\`). Output Anda akan langsung disimpan menjadi file ${targetFile}.
+    Tulis ulang seluruh kode tersebut. HANYA kode utuh yang sudah direvisi. JANGAN gunakan markdown atau backticks (\`\`\`).
     `;
 
-    console.log('Mengirim kode ke Gemini untuk direvisi...');
-    const { modelName, text } = await generateWithRetry(prompt);
-    console.log(`Menggunakan model Gemini: ${modelName}`);
+    console.log('Mengirim kode ke Gemini...');
+    
+    let result;
+    let retries = 3; // Sistem akan mencoba hingga 3 kali jika server sibuk
+    
+    while (retries > 0) {
+      try {
+        result = await model.generateContent(prompt);
+        break; // Jika berhasil, langsung keluar dari loop
+      } catch (err) {
+        if (err.status === 503) {
+          console.log(`Server Google sibuk (503). Mencoba ulang dalam 10 detik... (Sisa percobaan: ${retries - 1})`);
+          retries--;
+          if (retries === 0) throw err;
+          await delay(10000); // Jeda 10 detik sebelum mencoba lagi
+        } else {
+          throw err; // Lempar error jika masalahnya bukan 503
+        }
+      }
+    }
 
-    let newCode = text.replace(/^```[\s\S]*?\n/g, '').replace(/```$/g, '').trim();
+    let newCode = result.response.text();
+    newCode = newCode.replace(/^```[\s\S]*?\n/g, '').replace(/```$/g, '').trim();
 
     fs.writeFileSync(targetFile, newCode);
-    console.log(`Berhasil! File ${targetFile} telah diperbarui oleh Gemini.`);
+    console.log(`Berhasil! File ${targetFile} telah diperbarui.`);
+
   } catch (error) {
-    console.error('Gagal memproses kode:', error);
+    console.error("Gagal memproses kode:", error);
     process.exit(1);
   }
 }
