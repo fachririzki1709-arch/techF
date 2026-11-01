@@ -33,7 +33,7 @@ function getRepoFiles(dir, fileList = []) {
   }
   return fileList;
 }
-// Fungsi eksekusi ke API Gemini dengan Auto-Retry
+// Fungsi eksekusi ke API Gemini dengan Auto-Retry Super Kuat
 async function fetchWithRetry(model, prompt) {
   let retries = 3;
   while (retries > 0) {
@@ -41,12 +41,17 @@ async function fetchWithRetry(model, prompt) {
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (err) {
-      if (err.status === 503) {
-        console.log(`Server 503 (Sibuk). Mencoba ulang dalam 10 detik... (Sisa: ${retries - 1})`);
+      // Mendeteksi apakah errornya 503 ATAU jaringan terputus (fetch failed)
+      const isNetworkError = err.name === 'TypeError' && err.message === 'fetch failed';
+      const isServerBusy = err.status === 503;
+
+      if (isServerBusy || isNetworkError) {
+        console.log(`Gangguan koneksi/server terdeteksi. Mencoba ulang dalam 10 detik... (Sisa percobaan: ${retries - 1})`);
         retries--;
-        if (retries === 0) throw err;
+        if (retries === 0) throw err; // Menyerah jika sudah 3 kali gagal
         await delay(10000);
       } else {
+        // Lempar error jika masalahnya adalah otentikasi (403) atau model salah (404)
         throw err;
       }
     }
