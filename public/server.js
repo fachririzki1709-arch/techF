@@ -163,13 +163,14 @@ app.get('/api/teknisi/orders/aktif', async (req, res) => {
             return res.json([]);
         }
         
-        // Regex case-insensitive dan mengabaikan spasi berlebih di awal/akhir
+        // Perbaikan Regex: Gunakan exact match (case-insensitive) dengan anchor ^ dan $
         const escapedNama = namaTeknisi.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regexNama = new RegExp(escapedNama, "i");
+        const regexNama = new RegExp("^" + escapedNama + "$", "i");
 
+        // Perbaikan Query: Sertakan juga status 'diproses' secara eksplisit
         const tugasAktif = await Order.find({ 
             teknisi: regexNama,
-            status: { $nin: ['selesai_servis', 'batal', 'selesai', 'dibatalkan'] }
+            status: { $in: ['diproses', 'diterima', 'diambil'] } // Lebih aman menggunakan $in daripada $nin
         }).sort({ _id: -1 });
         
         res.json(tugasAktif);
