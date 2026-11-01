@@ -50,7 +50,7 @@ async function autoEditCode() {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
     
-    // TAHAP 1: MENCARI BANYAK TARGET FILE (Bentuk JSON Array)
+    // TAHAP 1: MENCARI BANYAK TARGET FILE (Format JSON Array)
     const allFiles = getRepoFiles('./').join('\n');
     const promptCariFile = `
     Tugas Anda adalah menemukan file-file yang perlu diedit berdasarkan instruksi dari GitHub Issue.
@@ -65,6 +65,8 @@ async function autoEditCode() {
     
     console.log('Tahap 1: Meminta Gemini menganalisis file yang perlu diubah...');
     let rawTarget = await fetchWithRetry(model, promptCariFile);
+    
+    // Membersihkan teks dari sisa-sisa markdown agar bisa di-parse
     rawTarget = rawTarget.replace(/^```json[\s\S]*?\n/g, '').replace(/^```[\s\S]*?\n/g, '').replace(/```$/g, '').trim();
 
     let targetFiles;
@@ -82,7 +84,7 @@ async function autoEditCode() {
 
     console.log(`Tahap 1 Selesai. Target file: ${targetFiles.join(', ')}`);
 
-    // TAHAP 2: MENGEDIT FILE SATU PER SATU
+    // TAHAP 2: MENGEDIT FILE SATU PER SATU DARI ARRAY
     for (const targetFile of targetFiles) {
       if (!fs.existsSync(targetFile)) {
         console.warn(`File ${targetFile} tidak ditemukan, melewati file ini...`);
