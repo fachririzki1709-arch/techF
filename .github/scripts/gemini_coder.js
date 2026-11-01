@@ -14,7 +14,7 @@ async function autoEditCode() {
     const originalCode = fs.readFileSync(targetFile, 'utf8');
 
     // Menggunakan model Gemini terbaru
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
     // 3. Merancang Prompt yang ketat
     const prompt = `
