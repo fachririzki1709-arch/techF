@@ -468,15 +468,21 @@
             cekStatsUpdate();
         }
 
-     function tarikOrder(kodeOrder, nama, unit) {
+    function tarikOrder(kodeOrder, nama, unit) {
             const namaClean = profilTeknisi.nama.trim();
+            
+            // Payload super lengkap untuk menambal semua celah skema database
+            const payloadUpdate = {
+                status: "diproses", 
+                teknisi: namaClean,
+                "pengerjaan.status": "diproses",
+                "pengerjaan.teknisi": namaClean
+            };
+
             fetch(`${window.location.origin}/api/orders/${kodeOrder}`, {
                 method: 'PUT',
                 headers: getAuthHeaderTeknisi(),
-                body: JSON.stringify({ 
-                    status: "diproses", 
-                    teknisi: namaClean // Cukup gunakan property root 'teknisi'
-                })
+                body: JSON.stringify(payloadUpdate)
             }).then(async res => {
                 const dataRes = await res.json();
                 if(res.ok) {
@@ -487,10 +493,12 @@
                     if(k) k.remove();
 
                     if (!daftarTugasAktif.includes(kodeOrder)) daftarTugasAktif.push(kodeOrder);
-                    // Beri sedikit jeda agar database benar-benar selesai diupdate sebelum di-fetch ulang
+                    
+                    // Jeda 800ms agar MongoDB selesai menyimpan sebelum kita memanggil data ulang
                     setTimeout(() => {
                         muatTugasAktif();
-                    }, 500); 
+                        muatOrderTersedia();
+                    }, 800); 
                 } else {
                     Swal.fire('Error', dataRes.error || 'Gagal mengambil order', 'error');
                 }
