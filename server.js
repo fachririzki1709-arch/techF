@@ -116,20 +116,20 @@ function verifyTeknisi(req, res, next) {
                 req.teknisiUser = user;
                 return next();
             }
-            if (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId) {
+            if (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId || req.headers['x-technician-id']) {
                 req.teknisiUser = {
-                    id: (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId).toString(),
-                    nama: req.body?.namaTeknisi || req.query?.namaTeknisi || req.body?.teknisi || req.query?.teknisi || ""
+                    id: (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId || req.headers['x-technician-id']).toString(),
+                    nama: req.body?.namaTeknisi || req.query?.namaTeknisi || req.body?.teknisi || req.query?.teknisi || req.headers['x-technician-name'] || ""
                 };
                 return next();
             }
             return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
         });
     } else {
-        if (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId) {
+        if (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId || req.headers['x-technician-id']) {
             req.teknisiUser = {
-                id: (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId).toString(),
-                nama: req.body?.namaTeknisi || req.query?.namaTeknisi || req.body?.teknisi || req.query?.teknisi || ""
+                id: (req.body?.technician_id || req.query?.technician_id || req.body?.teknisiId || req.query?.teknisiId || req.headers['x-technician-id']).toString(),
+                nama: req.body?.namaTeknisi || req.query?.namaTeknisi || req.body?.teknisi || req.query?.teknisi || req.headers['x-technician-name'] || ""
             };
             return next();
         }
@@ -148,25 +148,25 @@ function verifyAdminOrTeknisi(req, res, next) {
                 if (decoded.role === "admin") {
                     req.admin = decoded;
                     return next();
-                } else if (decoded.role === "teknisi") {
+                } else {
                     req.teknisiUser = decoded;
                     return next();
                 }
             }
-            if (req.query?.technician_id || req.query?.teknisi || req.body?.technician_id || req.query?.teknisiId) {
+            if (req.query?.technician_id || req.query?.teknisi || req.body?.technician_id || req.query?.teknisiId || req.headers['x-technician-id']) {
                 req.teknisiUser = {
-                    id: (req.query?.technician_id || req.body?.technician_id || req.query?.teknisiId || "").toString(),
-                    nama: req.query?.teknisi || req.body?.namaTeknisi || ""
+                    id: (req.query?.technician_id || req.body?.technician_id || req.query?.teknisiId || req.headers['x-technician-id'] || "").toString(),
+                    nama: req.query?.teknisi || req.body?.namaTeknisi || req.headers['x-technician-name'] || ""
                 };
                 return next();
             }
             return res.status(403).json({ message: "Token Tidak Valid atau Kadaluarsa" });
         });
     } else {
-        if (req.query?.technician_id || req.query?.teknisi || req.body?.technician_id || req.query?.teknisiId) {
+        if (req.query?.technician_id || req.query?.teknisi || req.body?.technician_id || req.query?.teknisiId || req.headers['x-technician-id']) {
             req.teknisiUser = {
-                id: (req.query?.technician_id || req.body?.technician_id || req.query?.teknisiId || "").toString(),
-                nama: req.query?.teknisi || req.body?.namaTeknisi || ""
+                id: (req.query?.technician_id || req.body?.technician_id || req.query?.teknisiId || req.headers['x-technician-id'] || "").toString(),
+                nama: req.query?.teknisi || req.body?.namaTeknisi || req.headers['x-technician-name'] || ""
             };
             return next();
         }
@@ -323,8 +323,8 @@ io.on('connection', (socket) => {
     // Handler Socket Ambil Order dengan persistensi database MongoDB mutlak
     socket.on('teknisiAmbilOrder', async (data) => {
         try {
-            const { kodeOrder, namaTeknisi, technician_id, teknisiId, status } = data;
-            const tekId = technician_id || teknisiId || "";
+            const { kodeOrder, namaTeknisi, technician_id, teknisiId, status } = data || {};
+            let tekId = technician_id || teknisiId || "";
             const statusBaru = status || "taken";
             
             let nama = namaTeknisi;
@@ -332,18 +332,28 @@ io.on('connection', (socket) => {
                 const tek = await Teknisi.findById(tekId);
                 if (tek) nama = tek.nama;
             }
+            if (!tekId && nama) {
+                const tek = await Teknisi.findOne({ nama: new RegExp(`^${nama}$`, 'i') });
+                if (tek) tekId = tek._id.toString();
+            }
             nama = nama || "Teknisi";
+            const tekIdStr = tekId ? tekId.toString().trim() : "";
+
+            const cleanKode = (kodeOrder || "").toString().trim();
+            const queryFilter = mongoose.Types.ObjectId.isValid(cleanKode)
+                ? { $or: [{ _id: new mongoose.Types.ObjectId(cleanKode) }, { kode: cleanKode }, { kode: new RegExp(`^${cleanKode}$`, 'i') }] }
+                : { $or: [{ kode: cleanKode }, { kode: new RegExp(`^${cleanKode}$`, 'i') }] };
 
             const updatedOrder = await Order.findOneAndUpdate(
-                { kode: kodeOrder },
+                queryFilter,
                 {
                     $set: {
                         status: statusBaru,
-                        technician_id: tekId.toString(),
+                        technician_id: tekIdStr,
                         technician_name: nama,
                         "pengerjaan.status": statusBaru,
                         "pengerjaan.teknisi": nama,
-                        "pengerjaan.teknisiId": tekId.toString()
+                        "pengerjaan.teknisiId": tekIdStr
                     },
                     $push: {
                         "pengerjaan.riwayatStatus": { 
@@ -360,7 +370,7 @@ io.on('connection', (socket) => {
                 io.emit('orderSudahDiambil', { 
                     kodeOrder: updatedOrder.kode, 
                     oleh: nama, 
-                    technician_id: tekId.toString(), 
+                    technician_id: tekIdStr, 
                     status: statusBaru 
                 });
                 io.emit("updateDashboardAdmin");
@@ -482,18 +492,30 @@ const getTeknisiJobsHandler = async (req, res) => {
         let tekId = "";
         let tekNama = "";
 
-        if (req.teknisiUser && req.teknisiUser.id) {
-            tekId = req.teknisiUser.id.toString();
+        // 1. Ekstrak dari Token Authorization bila tersedia
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader);
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                if (decoded) {
+                    req.teknisiUser = decoded;
+                    tekId = decoded.id || decoded.technician_id || decoded._id || "";
+                    tekNama = decoded.nama || decoded.name || "";
+                }
+            } catch (e) {}
         }
-        if (req.teknisiUser && req.teknisiUser.nama) {
-            tekNama = req.teknisiUser.nama;
+
+        if (req.teknisiUser) {
+            tekId = tekId || (req.teknisiUser.id ? req.teknisiUser.id.toString() : "");
+            tekNama = tekNama || req.teknisiUser.nama || "";
         }
 
         if (!tekId) {
-            tekId = (req.query.technician_id || req.query.teknisiId || req.params.id || "").toString();
+            tekId = (req.query.technician_id || req.query.teknisiId || req.query.technicianId || req.params.id || req.headers['x-technician-id'] || "").toString();
         }
         if (!tekNama) {
-            tekNama = req.query.nama || req.query.teknisi || req.query.namaTeknisi || "";
+            tekNama = req.query.nama || req.query.teknisi || req.query.namaTeknisi || req.headers['x-technician-name'] || "";
         }
 
         const conditions = [];
@@ -509,6 +531,7 @@ const getTeknisiJobsHandler = async (req, res) => {
             conditions.push({ "pengerjaan.teknisi": tekNama });
             conditions.push({ "technician_name": tekNama });
             conditions.push({ "pengerjaan.teknisi": { $regex: new RegExp(`^${tekNama}$`, 'i') } });
+            conditions.push({ "technician_name": { $regex: new RegExp(`^${tekNama}$`, 'i') } });
         }
 
         let filter = {};
@@ -525,34 +548,26 @@ const getTeknisiJobsHandler = async (req, res) => {
             };
         }
 
-        // Filter status jika diberikan oleh query
+        // Filter status jika diberikan oleh query parameter
         if (req.query.status) {
             const qStatus = req.query.status.toLowerCase();
-            if (qStatus === 'active' || qStatus === 'in-progress' || qStatus === 'aktif') {
-                const activeStatuses = ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part'];
-                filter = {
-                    $and: [
-                        filter,
-                        {
-                            $or: [
-                                { "pengerjaan.status": { $in: activeStatuses } },
-                                { "status": { $in: activeStatuses } }
-                            ]
-                        }
+            if (['active', 'in-progress', 'aktif', 'diproses', 'dijadwalkan', 'taken'].includes(qStatus)) {
+                const activeStatuses = ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part', 'pending_part'];
+                const statusCond = {
+                    $or: [
+                        { "pengerjaan.status": { $in: activeStatuses } },
+                        { "status": { $in: activeStatuses } }
                     ]
                 };
+                filter = { $and: [ filter, statusCond ] };
             } else {
-                filter = {
-                    $and: [
-                        filter,
-                        {
-                            $or: [
-                                { "pengerjaan.status": qStatus },
-                                { "status": qStatus }
-                            ]
-                        }
+                const statusCond = {
+                    $or: [
+                        { "pengerjaan.status": qStatus },
+                        { "status": qStatus }
                     ]
                 };
+                filter = { $and: [ filter, statusCond ] };
             }
         }
 
@@ -568,13 +583,14 @@ app.get('/api/teknisi/orders/my-jobs', getTeknisiJobsHandler);
 app.get('/api/teknisi/orders/active', getTeknisiJobsHandler);
 app.get('/api/teknisi/my-jobs', getTeknisiJobsHandler);
 app.get('/api/teknisi/active-jobs', getTeknisiJobsHandler);
+app.get('/api/teknisi/jobs', getTeknisiJobsHandler);
 app.get('/api/teknisi/:id/orders', getTeknisiJobsHandler);
 app.get('/api/teknisi/:id/jobs', getTeknisiJobsHandler);
 
-// HANDLER PENGAMBILAN JOB (TAKE JOB) - PERSISTENSI ABSOLUT MONGODB DENGAN findOneAndUpdate
+// HANDLER PENGAMBILAN JOB (TAKE JOB) - PERSISTENSI MUTLAK MONGODB DENGAN findOneAndUpdate
 async function takeJobHandler(req, res) {
     try {
-        const orderIdentifier = req.params.kode || req.params.id || req.body.kode || req.body.orderId || req.body.kodeOrder || req.body.id || req.params.orderId;
+        const orderIdentifier = req.params.kode || req.params.id || req.params.orderId || req.body?.kode || req.body?.orderId || req.body?.kodeOrder || req.body?.id || req.query?.kode || req.query?.orderId;
         if (!orderIdentifier) {
             return res.status(400).json({ error: "ID atau Kode Pesanan wajib disertakan" });
         }
@@ -582,36 +598,91 @@ async function takeJobHandler(req, res) {
         let technician_id = "";
         let namaTeknisi = "";
 
-        if (req.teknisiUser) {
-            technician_id = req.teknisiUser.id ? req.teknisiUser.id.toString() : "";
-            namaTeknisi = req.teknisiUser.nama || "";
-        }
-
-        if (!technician_id) {
-            technician_id = req.body.technician_id || req.body.teknisiId || req.query.technician_id || req.query.teknisiId || "";
-        }
-        if (!namaTeknisi) {
-            namaTeknisi = req.body.namaTeknisi || req.body.nama || req.body.teknisi || req.query.namaTeknisi || req.query.teknisi || "";
-        }
-
-        const techIdStr = technician_id ? technician_id.toString() : "";
-
-        if (techIdStr && !namaTeknisi && mongoose.Types.ObjectId.isValid(techIdStr)) {
+        // 1. Ekstrak dari Token JWT di Header jika tersedia
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader);
+        if (token) {
             try {
-                const tekDoc = await Teknisi.findById(techIdStr);
-                if (tekDoc) namaTeknisi = tekDoc.nama;
+                const decoded = jwt.verify(token, JWT_SECRET);
+                if (decoded) {
+                    req.teknisiUser = decoded;
+                    technician_id = decoded.id || decoded.technician_id || decoded._id || "";
+                    namaTeknisi = decoded.nama || decoded.name || "";
+                }
             } catch (e) {}
         }
-        namaTeknisi = namaTeknisi || "Teknisi";
 
-        // Status default saat job diambil adalah 'taken'
-        const statusBaru = req.body.status || "taken";
+        // 2. Ekstrak dari req.teknisiUser bila diset oleh middleware sebelumnya
+        if (req.teknisiUser) {
+            technician_id = technician_id || req.teknisiUser.id || req.teknisiUser.technician_id || req.teknisiUser._id || "";
+            namaTeknisi = namaTeknisi || req.teknisiUser.nama || req.teknisiUser.name || "";
+        }
 
-        let query = {};
-        if (mongoose.Types.ObjectId.isValid(orderIdentifier)) {
-            query = { $or: [{ _id: orderIdentifier }, { kode: orderIdentifier }] };
+        // 3. Fallback parameter body, query, atau custom headers
+        if (!technician_id) {
+            technician_id = req.body?.technician_id || 
+                            req.body?.teknisiId || 
+                            req.body?.technicianId || 
+                            req.body?.idTeknisi || 
+                            req.body?.userId || 
+                            req.query?.technician_id || 
+                            req.query?.teknisiId || 
+                            req.query?.technicianId || 
+                            req.headers['x-technician-id'] || 
+                            "";
+        }
+        if (!namaTeknisi) {
+            namaTeknisi = req.body?.namaTeknisi || 
+                          req.body?.teknisi || 
+                          req.body?.nama || 
+                          req.body?.technician_name || 
+                          req.query?.namaTeknisi || 
+                          req.query?.teknisi || 
+                          req.query?.nama || 
+                          req.headers['x-technician-name'] || 
+                          "";
+        }
+
+        // 4. Cari nama teknisi di database jika ID tersedia tapi nama kosong
+        if (technician_id && (!namaTeknisi || namaTeknisi === "Teknisi") && mongoose.Types.ObjectId.isValid(technician_id)) {
+            try {
+                const tekDoc = await Teknisi.findById(technician_id);
+                if (tekDoc) {
+                    namaTeknisi = tekDoc.nama;
+                }
+            } catch (e) {}
+        }
+        // 5. Cari ID teknisi jika nama tersedia tapi ID kosong
+        if (!technician_id && namaTeknisi && namaTeknisi !== "Teknisi") {
+            try {
+                const tekDoc = await Teknisi.findOne({ nama: new RegExp(`^${namaTeknisi}$`, 'i') });
+                if (tekDoc) {
+                    technician_id = tekDoc._id.toString();
+                }
+            } catch (e) {}
+        }
+
+        const techIdStr = technician_id ? technician_id.toString().trim() : "";
+        namaTeknisi = namaTeknisi ? namaTeknisi.trim() : "Teknisi";
+        const statusBaru = req.body?.status || req.query?.status || "taken";
+
+        const cleanId = (orderIdentifier || "").toString().trim();
+        let queryFilter = {};
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+            queryFilter = { 
+                $or: [
+                    { _id: new mongoose.Types.ObjectId(cleanId) }, 
+                    { kode: cleanId }, 
+                    { kode: new RegExp(`^${cleanId}$`, 'i') }
+                ] 
+            };
         } else {
-            query = { kode: orderIdentifier };
+            queryFilter = { 
+                $or: [
+                    { kode: cleanId }, 
+                    { kode: new RegExp(`^${cleanId}$`, 'i') }
+                ] 
+            };
         }
 
         const riwayatItem = {
@@ -620,9 +691,9 @@ async function takeJobHandler(req, res) {
             waktu: new Date()
         };
 
-        // Eksekusi pembaruan database secara asinkron dengan findOneAndUpdate
+        // Eksekusi pembaruan status dan teknisi_id secara permanen ke MongoDB
         const updatedOrder = await Order.findOneAndUpdate(
-            query,
+            queryFilter,
             {
                 $set: {
                     status: statusBaru,
@@ -656,6 +727,7 @@ async function takeJobHandler(req, res) {
         return res.status(200).json({ 
             message: "Job berhasil diambil dan status tersimpan di database", 
             order: updatedOrder,
+            data: updatedOrder,
             success: true
         });
     } catch (error) {
@@ -664,7 +736,7 @@ async function takeJobHandler(req, res) {
     }
 }
 
-// Endpoint Rute POST & PUT Take Job
+// Endpoint Rute POST & PUT Take Job Lengkap
 app.post('/api/teknisi/orders/:kode/take', takeJobHandler);
 app.put('/api/teknisi/orders/:kode/take', takeJobHandler);
 app.post('/api/teknisi/orders/:id/take', takeJobHandler);
@@ -679,6 +751,12 @@ app.post('/api/orders/take-job', takeJobHandler);
 app.put('/api/orders/take-job', takeJobHandler);
 app.post('/api/orders/:kode/claim', takeJobHandler);
 app.put('/api/orders/:kode/claim', takeJobHandler);
+app.post('/api/teknisi/jobs/:id/take', takeJobHandler);
+app.put('/api/teknisi/jobs/:id/take', takeJobHandler);
+app.post('/api/teknisi/jobs/:kode/take', takeJobHandler);
+app.put('/api/teknisi/jobs/:kode/take', takeJobHandler);
+app.post('/api/orders/:kode/ambil', takeJobHandler);
+app.put('/api/orders/:kode/ambil', takeJobHandler);
 
 app.put('/api/teknisi/status', verifyTeknisi, async (req, res) => {
     try {
@@ -880,8 +958,8 @@ app.get('/api/orders', verifyAdminOrTeknisi, async (req, res) => {
     try {
         let filter = {};
         
-        const tekId = req.teknisiUser ? req.teknisiUser.id : (req.query.technician_id || req.query.teknisiId || "");
-        const tekNama = req.teknisiUser ? req.teknisiUser.nama : (req.query.teknisi || req.query.nama || "");
+        const tekId = req.teknisiUser ? req.teknisiUser.id : (req.query.technician_id || req.query.teknisiId || req.query.technicianId || req.headers['x-technician-id'] || "");
+        const tekNama = req.teknisiUser ? req.teknisiUser.nama : (req.query.teknisi || req.query.nama || req.query.namaTeknisi || req.headers['x-technician-name'] || "");
 
         if (req.teknisiUser && req.teknisiUser.role !== "admin") {
             const orConds = [];
@@ -896,16 +974,19 @@ app.get('/api/orders', verifyAdminOrTeknisi, async (req, res) => {
             if (tekNama) {
                 orConds.push({ "pengerjaan.teknisi": tekNama });
                 orConds.push({ "technician_name": tekNama });
+                orConds.push({ "pengerjaan.teknisi": { $regex: new RegExp(`^${tekNama}$`, 'i') } });
+                orConds.push({ "technician_name": { $regex: new RegExp(`^${tekNama}$`, 'i') } });
             }
             if (orConds.length > 0) {
                 filter.$or = orConds;
             }
-        } else if (req.query.technician_id || req.query.teknisi || req.query.teknisiId) {
-            const val = req.query.technician_id || req.query.teknisi || req.query.teknisiId;
+        } else if (req.query.technician_id || req.query.teknisi || req.query.teknisiId || req.query.technicianId || req.headers['x-technician-id']) {
+            const val = req.query.technician_id || req.query.teknisi || req.query.teknisiId || req.query.technicianId || req.headers['x-technician-id'];
             const orConds = [
                 { "technician_id": val.toString() },
                 { "pengerjaan.teknisiId": val.toString() },
-                { "pengerjaan.teknisi": val }
+                { "pengerjaan.teknisi": val },
+                { "technician_name": val }
             ];
             if (mongoose.Types.ObjectId.isValid(val)) {
                 orConds.push({ "technician_id": new mongoose.Types.ObjectId(val) });
@@ -916,8 +997,8 @@ app.get('/api/orders', verifyAdminOrTeknisi, async (req, res) => {
 
         if (req.query.status) {
             const statusQuery = req.query.status.toLowerCase();
-            if (statusQuery === 'active' || statusQuery === 'in-progress' || statusQuery === 'aktif') {
-                const activeList = ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part'];
+            if (['active', 'in-progress', 'aktif', 'diproses', 'dijadwalkan', 'taken'].includes(statusQuery)) {
+                const activeList = ['taken', 'in-progress', 'dijadwalkan', 'diproses', 'menunggu_part', 'pending_part'];
                 const statusCond = {
                     $or: [
                         { "pengerjaan.status": { $in: activeList } },
@@ -1073,8 +1154,8 @@ app.put('/api/orders/:kode', upload.any(), async (req, res) => {
             dataUpdate.technician_id = tid.toString();
             dataUpdate['pengerjaan.teknisiId'] = tid.toString();
         }
-        if (dataUpdate.namaTeknisi || dataUpdate.teknisi) {
-            const tnama = dataUpdate.namaTeknisi || dataUpdate.teknisi;
+        if (dataUpdate.namaTeknisi || dataUpdate.teknisi || dataUpdate.technician_name) {
+            const tnama = dataUpdate.namaTeknisi || dataUpdate.teknisi || dataUpdate.technician_name;
             dataUpdate['pengerjaan.teknisi'] = tnama;
             dataUpdate.technician_name = tnama;
         }
