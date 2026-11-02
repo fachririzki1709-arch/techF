@@ -489,6 +489,8 @@ app.get('/api/teknisi/orders/available', async (req, res) => {
 // GET: Handler Pesanan Teknisi (Active Jobs / My Jobs) - Mendukung Pemuatan Ulang Setelah Refresh Browser
 const getTeknisiJobsHandler = async (req, res) => {
     try {
+        console.log('GET JOBS QUERY:', req.query);
+
         let tekId = "";
         let tekNama = "";
 
@@ -572,6 +574,7 @@ const getTeknisiJobsHandler = async (req, res) => {
         }
 
         const jobs = await Order.find(filter).sort({ updatedAt: -1, createdAt: -1, _id: -1 });
+        console.log('GET JOBS RESULT:', jobs);
         res.json(jobs);
     } catch (error) {
         res.status(500).json({ error: "Gagal memuat daftar pekerjaan teknisi: " + error.message });
@@ -691,8 +694,10 @@ async function takeJobHandler(req, res) {
             waktu: new Date()
         };
 
+        console.log('TAKE JOB PAYLOAD:', req.body);
+
         // Eksekusi pembaruan status dan teknisi_id secara permanen ke MongoDB
-        const updatedOrder = await Order.findOneAndUpdate(
+        const result = await Order.findOneAndUpdate(
             queryFilter,
             {
                 $set: {
@@ -710,6 +715,10 @@ async function takeJobHandler(req, res) {
             { new: true, runValidators: false }
         );
 
+        console.log('TAKE JOB RESULT:', result);
+
+        const updatedOrder = result;
+
         if (!updatedOrder) {
             return res.status(404).json({ error: "Pesanan tidak ditemukan di database" });
         }
@@ -718,7 +727,7 @@ async function takeJobHandler(req, res) {
         io.emit('orderSudahDiambil', { 
             kodeOrder: updatedOrder.kode, 
             oleh: namaTeknisi, 
-            technician_id: techIdStr,
+            technician_id: techIdStr, 
             status: statusBaru 
         });
         io.emit("updateDashboardAdmin");
@@ -956,6 +965,7 @@ app.get('/api/reviews', async (req, res) => {
 // GET: Tampilkan pesanan (Admin melihat semua, Teknisi melihat miliknya dan job berstatus taken/in-progress)
 app.get('/api/orders', verifyAdminOrTeknisi, async (req, res) => {
     try {
+        console.log('GET JOBS QUERY:', req.query);
         let filter = {};
         
         const tekId = req.teknisiUser ? req.teknisiUser.id : (req.query.technician_id || req.query.teknisiId || req.query.technicianId || req.headers['x-technician-id'] || "");
@@ -1027,6 +1037,7 @@ app.get('/api/orders', verifyAdminOrTeknisi, async (req, res) => {
 
         const limit = parseInt(req.query.limit) || 2000; 
         const dataOrders = await Order.find(filter).sort({ updatedAt: -1, createdAt: -1, _id: -1 }).limit(limit);
+        console.log('GET JOBS RESULT:', dataOrders);
         res.json(dataOrders); 
     } catch (error) { 
         res.status(500).json({ error: "Gagal memuat data pesanan: " + error.message }); 
